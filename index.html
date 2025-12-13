@@ -1320,7 +1320,12 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
       enemyId: defenderId,
       teams,
       phase:"deploy",
-      youField: [],
+      youField: [fx: {
+  projs: [],   // mermi/ok
+  hits: [],    // vuruş flaşı + yazı
+  death: []    // ölüm poof
+},
+],
       enemyField: [],
       t: 0,
       ended:false,
@@ -1519,9 +1524,33 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
         const d=Math.max(0.001, Math.hypot(dx,dy));
         u.x += (dx/d)*def.speed*dt;
         u.y += (dy/d)*def.speed*dt;
-      } else if(u.cd<=0){
-        best.hp -= def.dmg;
-        u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.60 : 0.75));
+      } } else if (u.cd <= 0) {
+  // hasar uygula
+  best.hp -= def.dmg;
+
+  // ✅ 1) projectile (ok/mermi/top mermisi)
+  // melee değilse projectile yapalım
+  if (def.type !== "melee") {
+    b.fx.projs.push({
+      x: u.x, y: u.y,
+      tx: best.x, ty: best.y,
+      t: 0,
+      dur: def.type === "range" ? 0.18 : 0.14, // kısa uçuş
+      kind: def.id // unit tipine göre çizim
+    });
+  }
+
+  // ✅ 2) hit flash + damage text
+  b.fx.hits.push({
+    x: best.x, y: best.y,
+    t: 0, dur: 0.35,
+    dmg: def.dmg
+  });
+
+  // cooldown
+  u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.60 : 0.75));
+}
+
       }
 
       u.x = clamp(u.x, 18, w-18);
@@ -1537,7 +1566,10 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
 
     for(const u of b.youField) stepUnit(u, b.enemyField);
     for(const e of b.enemyField) stepUnit(e, b.youField);
-
+// ✅ 3) death poof: ölenleri yakala
+  
+for (const u of b.youField) if (u.hp <= 0) b.fx.death.push({ x:u.x, y:u.y, t:0, dur:0.6 });
+for (const e of b.enemyField) if (e.hp <= 0) b.fx.death.push({ x:e.x, y:e.y, t:0, dur:0.6 });
     b.youField = b.youField.filter(u=>u.hp>0);
     b.enemyField = b.enemyField.filter(u=>u.hp>0);
 
@@ -1545,6 +1577,16 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
     $("#uiEnemyUnits").textContent = b.enemyField.length;
 
     b.t += dt;
+  // ✅ FX update
+for (const p of b.fx.projs) p.t += dt;
+b.fx.projs = b.fx.projs.filter(p => p.t < p.dur);
+
+for (const h of b.fx.hits) h.t += dt;
+b.fx.hits = b.fx.hits.filter(h => h.t < h.dur);
+
+for (const d of b.fx.death) d.t += dt;
+b.fx.death = b.fx.death.filter(d => d.t < d.dur);
+
 
     if(b.youField.length===0 && b.enemyField.length===0) battleEnd("B");
     else if(b.enemyField.length===0) battleEnd("A");
@@ -1598,6 +1640,72 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
     }
 
     for(const u of b.youField) drawUnit(u);
+    // ✅ FX draw (projectiles, hits, deaths)
+if (b && b.fx) {
+  // Projectiles
+  for (const p of b.fx.projs) {
+    const k = clamp(p.t / p.dur, 0, 1);
+    const x = p.x + (p.tx - p.x) * k;
+    const y = p.y + (p.ty - p.y) * k;
+
+    // çizim: ok/mermi çizgisi
+    battleCtx.globalAlpha = 0.9;
+    battleCtx.lineWidth = 2;
+    battleCtx.strokeStyle = "rgba(255,255,255,.75)";
+    battleCtx.beginPath();
+    battleCtx.moveTo(x, y);
+    battleCtx.lineTo(x - (p.tx - p.x) * 0.03, y - (p.ty - p.y) * 0.03);
+    battleCtx.stroke();
+
+    // uçta küçük nokta
+    battleCtx.fillStyle = "rgba(255,255,255,.9)";
+    battleCtx.fillRect(x-1.5, y-1.5, 3, 3);
+    battleCtx.globalAlpha = 1;
+  }
+
+  // Hit flash + damage number
+  for (const h of b.fx.hits) {
+    const k = clamp(h.t / h.dur, 0, 1);
+    const a = (1 - k);
+    const r = 10 + k * 18;
+
+    battleCtx.globalAlpha = 0.65 * a;
+    battleCtx.beginPath();
+    battleCtx.arc(h.x, h.y, r, 0, Math.PI*2);
+    battleCtx.fillStyle = "rgba(255,255,255,.9)";
+    battleCtx.fill();
+
+    // damage text yukarı doğru aksın
+    battleCtx.globalAlpha = 0.9 * a;
+    battleCtx.font = "12px system-ui";
+    battleCtx.fillStyle = "rgba(0,0,0,.55)";
+    battleCtx.fillText("-"+h.dmg, h.x + 1, h.y - 14 - k*18 + 1);
+    battleCtx.fillStyle = "rgba(255,255,255,.92)";
+    battleCtx.fillText("-"+h.dmg, h.x,     h.y - 14 - k*18);
+
+    battleCtx.globalAlpha = 1;
+  }
+
+  // Death poof
+  for (const d of b.fx.death) {
+    const k = clamp(d.t / d.dur, 0, 1);
+    const a = (1 - k);
+    battleCtx.globalAlpha = 0.55 * a;
+
+    // 6 küçük parçacık
+    for (let i=0;i<6;i++){
+      const ang = (Math.PI*2) * (i/6);
+      const rr = 6 + k*22;
+      const x = d.x + Math.cos(ang)*rr;
+      const y = d.y + Math.sin(ang)*rr;
+      battleCtx.fillStyle = "rgba(255,255,255,.85)";
+      battleCtx.fillRect(x-2, y-2, 4, 4);
+    }
+
+    battleCtx.globalAlpha = 1;
+  }
+}
+
     for(const e of b.enemyField) drawUnit(e);
 
     battleCtx.fillStyle = "rgba(0,0,0,.40)";
@@ -1860,4 +1968,5 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
 </script>
 </body>
 </html>
+
 
