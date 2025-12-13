@@ -1,0 +1,1537 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>20 Ülke Strateji — GitHub Pages Prototip</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#111a2e; --panel2:#0f1730; --txt:#e7eefc; --muted:#9fb0d0;
+      --accent:#4dd4ff; --accent2:#7cff8b; --danger:#ff5c7a; --warn:#ffd166;
+      --line:#203255; --shadow: 0 14px 40px rgba(0,0,0,.35);
+      --radius:16px;
+      font-synthesis-weight:none;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background: radial-gradient(1200px 800px at 30% 20%, #12224b 0%, var(--bg) 55%, #070b14 100%);
+      color:var(--txt); font: 14px/1.35 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      user-select:none;
+    }
+    a{color:var(--accent)}
+    .app{display:flex; min-height:100vh; gap:12px; padding:12px}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+    .left, .right{
+      width:320px; display:flex; flex-direction:column; gap:12px;
+    }
+    .center{
+      flex:1; display:flex; flex-direction:column; gap:12px; min-width:620px;
+    }
+    .topbar{
+      padding:10px 12px; display:flex; align-items:center; gap:10px;
+    }
+    .badge{
+      font-size:12px; padding:3px 8px; border-radius:999px;
+      background:rgba(77,212,255,.14); border:1px solid rgba(77,212,255,.25); color:var(--accent);
+    }
+    .news{
+      flex:1; padding:8px 10px; border-radius:12px;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.10);
+      overflow:hidden; white-space:nowrap;
+    }
+    .news span{display:inline-block; padding-left:100%; animation: marquee 18s linear infinite;}
+    @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
+    .btn{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--txt);
+      padding:9px 10px; border-radius:12px;
+      transition:transform .05s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover{background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.22)}
+    .btn:active{transform:translateY(1px)}
+    .btn.primary{background: rgba(77,212,255,.14); border-color: rgba(77,212,255,.35)}
+    .btn.good{background: rgba(124,255,139,.12); border-color: rgba(124,255,139,.30)}
+    .btn.danger{background: rgba(255,92,122,.12); border-color: rgba(255,92,122,.30)}
+    .btn.warn{background: rgba(255,209,102,.12); border-color: rgba(255,209,102,.35)}
+    .row{display:flex; gap:8px; flex-wrap:wrap}
+    .col{display:flex; flex-direction:column; gap:8px}
+    .title{font-weight:700; letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .hr{height:1px; background:rgba(255,255,255,.10); margin:8px 0}
+    .pad{padding:12px}
+    .kv{display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,.10)}
+    .kv:last-child{border-bottom:none}
+    canvas{display:block; width:100%; height:100%;}
+    .mapWrap{flex:1; min-height:520px; position:relative; overflow:hidden}
+    .hint{
+      position:absolute; left:12px; bottom:12px; padding:8px 10px; border-radius:12px;
+      background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.12);
+      max-width:520px;
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
+      font-size:12px; color:var(--muted);
+    }
+    .shopGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    .unitCard{
+      border-radius:14px; padding:10px; border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.20);
+      display:flex; gap:10px; align-items:center;
+    }
+    .unitImg{
+      width:42px; height:42px; border-radius:12px; background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      display:grid; place-items:center; overflow:hidden;
+    }
+    .unitImg img{width:100%; height:100%; object-fit:cover}
+    .unitMeta{flex:1}
+    .unitMeta .name{font-weight:700}
+    .pill{
+      display:inline-block; font-size:11px; padding:2px 7px; border-radius:999px; margin-top:4px;
+      border:1px solid rgba(255,255,255,.14); color:var(--muted);
+    }
+    .pill.melee{border-color: rgba(255,92,122,.35); color: rgba(255,92,122,.95)}
+    .pill.mid{border-color: rgba(255,209,102,.45); color: rgba(255,209,102,.95)}
+    .pill.range{border-color: rgba(77,212,255,.40); color: rgba(77,212,255,.95)}
+    .small{font-size:12px}
+    .overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center; padding:16px;
+    }
+    .modal{
+      width:min(980px, 96vw); max-height:92vh; overflow:auto;
+      border-radius:24px; padding:14px; background:linear-gradient(180deg, rgba(25,38,72,.95), rgba(12,18,36,.95));
+      border:1px solid rgba(255,255,255,.14); box-shadow:var(--shadow);
+    }
+    .modalHead{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 6px 10px 6px}
+    .countryGrid{
+      display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;
+    }
+    .countryBtn{
+      padding:12px; border-radius:18px; border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06); cursor:pointer;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .countryBtn:hover{background:rgba(255,255,255,.10)}
+    .flag{
+      width:32px; height:32px; border-radius:10px; border:1px solid rgba(255,255,255,.14);
+      background: conic-gradient(from 210deg, rgba(77,212,255,.55), rgba(124,255,139,.45), rgba(255,209,102,.50), rgba(255,92,122,.50), rgba(77,212,255,.55));
+    }
+    .battleWrap{height:560px; border-radius:18px; overflow:hidden; position:relative}
+    .battleHud{
+      position:absolute; left:12px; top:12px; right:12px; display:flex; justify-content:space-between; gap:10px;
+      pointer-events:none;
+    }
+    .battleHud .box{
+      pointer-events:none;
+      padding:8px 10px; border-radius:14px;
+      background: rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14);
+      min-width:220px;
+    }
+    .deployBar{
+      position:absolute; left:12px; right:12px; bottom:12px;
+      display:flex; gap:10px; flex-wrap:wrap;
+      padding:10px; border-radius:18px;
+      background: rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.14);
+    }
+    .miniCard{
+      display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
+      cursor:grab;
+    }
+    .miniCard:active{cursor:grabbing}
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06)}
+    input[type="file"]{width:100%}
+  </style>
+</head>
+<body>
+<div class="app">
+  <!-- LEFT -->
+  <div class="left">
+    <div class="card pad">
+      <div class="title">Oyuncu</div>
+      <div class="hr"></div>
+      <div class="kv"><span class="muted">Ülke</span><b id="uiPlayerCountry">—</b></div>
+      <div class="kv"><span class="muted">Gün</span><b id="uiDay">0</b></div>
+      <div class="kv"><span class="muted">Altın</span><b id="uiGold">0</b></div>
+      <div class="kv"><span class="muted">Müttefik</span><b id="uiAlly">Yok</b></div>
+      <div class="kv"><span class="muted">Seçili Ülke</span><b id="uiSelectedCountry">—</b></div>
+      <div class="kv"><span class="muted">Seçili Eyalet</span><b id="uiSelectedState">—</b></div>
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn primary" id="btnChooseCountry">Ülke Seç</button>
+        <button class="btn" id="btnSave">Save (JSON)</button>
+        <button class="btn" id="btnLoad">Load (JSON)</button>
+      </div>
+      <div class="row">
+        <button class="btn warn" id="btnUploadCards">Kart Resmi Yükle</button>
+        <button class="btn" id="btnReset">Sıfırla</button>
+      </div>
+      <div class="hr"></div>
+      <div class="small muted">
+        Harita: <span class="kbd">Wheel</span> zoom, <span class="kbd">Sol tık + sürükle</span> pan, <span class="kbd">Sağ tık</span> iptal.
+      </div>
+    </div>
+
+    <div class="card pad">
+      <div class="title">Diplomasi</div>
+      <div class="hr"></div>
+      <div class="col">
+        <button class="btn danger" id="btnDeclareWar">Savaş İlan Et (komşu)</button>
+        <button class="btn good" id="btnOfferAlliance">Müttefik Teklifi</button>
+        <button class="btn danger" id="btnBreakAlliance">Müttefiki Boz</button>
+        <button class="btn" id="btnRequestPassage">Asker Geçiş İzni İste</button>
+      </div>
+      <div class="hr"></div>
+      <div class="muted small">
+        Kural: Savaş ilanı sonrası o iki ülke arasında <b>20 gün ateşkes</b>. Yeni savaş ilanı için ayrıca <b>10 gün bekleme</b> var.
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="card topbar">
+      <span class="badge" id="uiMode">HARİTA</span>
+      <div class="news" title="Olaylar">
+        <span id="uiNews">Oyun hazır. Bir ülke seç ve haritada eyaletlere tıkla.</span>
+      </div>
+      <button class="btn" id="btnPause">Duraklat</button>
+    </div>
+
+    <div class="card mapWrap">
+      <canvas id="mapCanvas"></canvas>
+      <div class="hint">
+        <div class="row" style="align-items:center; gap:10px">
+          <span class="chip">60 eyalet</span>
+          <span class="chip">20 ülke</span>
+          <span class="chip">%15 asker geri döner</span>
+          <span class="chip">1 gün = 1 sn</span>
+        </div>
+        <div class="muted small" style="margin-top:6px">
+          Eyalete tıkla → o ülkeyi seç. Komşuysa savaş ilan edebilirsin.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="card pad">
+      <div class="title">Mağaza (Kartlar)</div>
+      <div class="muted small">Herkes 5000 altınla başlar. Kart aldıkça orduna eklenir.</div>
+      <div class="hr"></div>
+      <div class="shopGrid" id="shopGrid"></div>
+    </div>
+
+    <div class="card pad">
+      <div class="title">Ordu</div>
+      <div class="muted small">Toplam kart sayın (elde olan).</div>
+      <div class="hr"></div>
+      <div id="armyList" class="col"></div>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTRY SELECT MODAL -->
+<div class="overlay" id="countryOverlay">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <div class="title" style="font-size:18px">Ülke Seç (20)</div>
+        <div class="muted small">Seçince oyun başlar: 5000 altın + başlangıç ordu.</div>
+      </div>
+      <button class="btn" id="btnCloseCountry">Kapat</button>
+    </div>
+    <div class="countryGrid" id="countryGrid"></div>
+  </div>
+</div>
+
+<!-- UPLOAD CARDS MODAL -->
+<div class="overlay" id="cardsOverlay">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <div class="title" style="font-size:18px">Kart Resimleri Yükle</div>
+        <div class="muted small">
+          İpucu: Dosya adını şu ID’lerle aynı yaparsan otomatik eşleşir:
+          <span class="kbd">infantry</span> <span class="kbd">archer</span> <span class="kbd">spearman</span> <span class="kbd">cavalry</span> <span class="kbd">crossbow</span>
+          <span class="kbd">musketeer</span> <span class="kbd">cannon</span> <span class="kbd">grenadier</span> <span class="kbd">rifleman</span> <span class="kbd">scout</span>
+        </div>
+      </div>
+      <button class="btn" id="btnCloseCards">Kapat</button>
+    </div>
+    <div class="card pad" style="background:rgba(0,0,0,.20)">
+      <div class="title">Dosya seç</div>
+      <div class="muted small">Birden çok PNG/JPG seçebilirsin.</div>
+      <div class="hr"></div>
+      <input type="file" id="cardsFile" accept="image/*" multiple />
+      <div class="hr"></div>
+      <div class="row">
+        <button class="btn primary" id="btnApplyCards">Uygula</button>
+        <button class="btn" id="btnClearCards">Kartları Temizle</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD SAVE MODAL (file input hidden) -->
+<input type="file" id="saveFile" accept="application/json" style="display:none"/>
+
+<!-- BATTLE MODAL -->
+<div class="overlay" id="battleOverlay">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <div class="title" style="font-size:18px" id="battleTitle">Savaş</div>
+        <div class="muted small" id="battleSub">Kartları sürükleyip kendi tarafına yerleştir.</div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="btnStartBattle">Savaşı Başlat</button>
+        <button class="btn" id="btnCloseBattle">Çık</button>
+      </div>
+    </div>
+
+    <div class="battleWrap card" style="background:rgba(0,0,0,.18); border-radius:18px">
+      <canvas id="battleCanvas"></canvas>
+
+      <div class="battleHud">
+        <div class="box">
+          <div class="muted small">Sen</div>
+          <div><b id="uiBattleYou">—</b></div>
+          <div class="muted small">Sahadaki Birim: <b id="uiYouUnits">0</b></div>
+        </div>
+        <div class="box" style="text-align:right">
+          <div class="muted small">Düşman</div>
+          <div><b id="uiBattleEnemy">—</b></div>
+          <div class="muted small">Sahadaki Birim: <b id="uiEnemyUnits">0</b></div>
+        </div>
+      </div>
+
+      <div class="deployBar" id="deployBar" title="Kartları buradan sürükle">
+        <!-- mini cards -->
+      </div>
+    </div>
+
+    <div class="muted small" style="margin-top:10px">
+      Kural: Savaş sonunda her iki taraf için de toplam askerinin <b>%15’i</b> hayatta kalıp envantere geri döner.
+      Kazanan: <b>altın + 1 eyalet</b>.
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  /***********************
+   * DATA DEFINITIONS
+   ***********************/
+  const UNITS = [
+    { id:"infantry",   name:"Piyade",        type:"melee", cost:220, hp:120, dmg:10, range:18, speed:24 },
+    { id:"spearman",   name:"Mızrakçı",      type:"melee", cost:240, hp:140, dmg:11, range:18, speed:22 },
+    { id:"cavalry",    name:"Süvari",        type:"mid",   cost:360, hp:160, dmg:13, range:42, speed:36 },
+    { id:"archer",     name:"Okçu",          type:"range", cost:260, hp:90,  dmg:9,  range:120, speed:22 },
+    { id:"crossbow",   name:"Arbaletçi",     type:"range", cost:320, hp:95,  dmg:11, range:140, speed:20 },
+    { id:"musketeer",  name:"Tüfekçi",       type:"range", cost:420, hp:105, dmg:14, range:170, speed:20 },
+    { id:"grenadier",  name:"Bombacı",       type:"mid",   cost:460, hp:120, dmg:18, range:90,  speed:18 },
+    { id:"cannon",     name:"Topçu",         type:"range", cost:650, hp:160, dmg:26, range:220, speed:12 },
+    { id:"rifleman",   name:"Keskin Nişancı",type:"range", cost:520, hp:95,  dmg:20, range:240, speed:18 },
+    { id:"scout",      name:"İzci",          type:"mid",   cost:300, hp:85,  dmg:8,  range:70,  speed:40 },
+  ];
+
+  // 20 countries in a 5x4 grid (neighbors by grid)
+  const COUNTRY_NAMES = [
+    "Nordland","Westoria","Eldoria","Valoria",
+    "Rivemarch","Stonehelm","Aurelia","Kryos",
+    "Saharim","Verdantia","Lunaris","Ironpeak",
+    "Azuria","Drakoria","Novagrad","Solhaven",
+    "Umbra","Calderon","Myrrh","Eastreach"
+  ];
+
+  // Map layout
+  const GRID_W = 5, GRID_H = 4;
+  const STATES_PER_COUNTRY = 3; // total 60
+  const START_GOLD = 5000;
+
+  // Gameplay cooldowns
+  const WAR_COOLDOWN = 10;      // days after declaring any war
+  const ARMISTICE_DAYS = 20;    // between two countries after war ends
+
+  // Simple event/news system
+  const NEWS_QUEUE_MAX = 6;
+
+  /***********************
+   * STATE
+   ***********************/
+  const state = {
+    day: 0,
+    running: true,
+    playerCountryId: null,
+    selectedCountryId: null,
+    selectedStateId: null,
+
+    // per-country data
+    countries: [],       // {id,name,gold,allyId,inventory:{unitId:count}, states:[stateIds], atWarWith:Set, armistice:Map(otherId->untilDay), lastWarDay, passage:Set}
+    states: [],          // {id,countryId,name,rect:{x,y,w,h}}
+    cardImages: {},      // unitId -> dataURL
+
+    // battle
+    battle: null,        // {attackerId, defenderId, attackerStatesBordering, chosenStateId, youId, enemyId, phase:"deploy|fight|done"}
+    news: [],
+  };
+
+  /***********************
+   * HELPERS
+   ***********************/
+  const $ = sel => document.querySelector(sel);
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+  function pushNews(text){
+    state.news.unshift(`[Gün ${state.day}] ${text}`);
+    if(state.news.length > NEWS_QUEUE_MAX) state.news.pop();
+    $("#uiNews").textContent = state.news.join("  •  ");
+  }
+
+  function unitPillClass(t){ return t==="melee"?"melee":(t==="mid"?"mid":"range"); }
+  function unitTypeTR(t){ return t==="melee"?"Yakın":(t==="mid"?"Orta":"Uzak"); }
+
+  function makePlaceholderSVG(seedText){
+    // small unique-ish placeholder
+    const svg =
+`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="rgba(77,212,255,.9)"/>
+      <stop offset="1" stop-color="rgba(255,92,122,.85)"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="84" height="84" rx="18" fill="url(#g)"/>
+  <circle cx="48" cy="44" r="18" fill="rgba(0,0,0,.18)"/>
+  <path d="M28 72 L68 72" stroke="rgba(0,0,0,.28)" stroke-width="8" stroke-linecap="round"/>
+  <text x="48" y="50" text-anchor="middle" font-family="system-ui,Segoe UI,Arial" font-size="14" fill="rgba(255,255,255,.92)">${seedText}</text>
+</svg>`;
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  function getCountry(id){ return state.countries.find(c=>c.id===id); }
+  function getState(id){ return state.states.find(s=>s.id===id); }
+
+  function neighborsOf(countryId){
+    // neighbor by grid adjacency
+    const idx = countryId;
+    const x = idx % GRID_W;
+    const y = Math.floor(idx / GRID_W);
+    const n = [];
+    if(x>0) n.push(idx-1);
+    if(x<GRID_W-1) n.push(idx+1);
+    if(y>0) n.push(idx-GRID_W);
+    if(y<GRID_H-1) n.push(idx+GRID_W);
+    return n;
+  }
+
+  function areNeighbors(a,b){
+    return neighborsOf(a).includes(b);
+  }
+
+  function canDeclareWar(youId, targetId){
+    const you = getCountry(youId);
+    const target = getCountry(targetId);
+    if(!you || !target) return {ok:false, reason:"Ülke seçili değil."};
+    if(youId === targetId) return {ok:false, reason:"Kendine savaş açamazsın."};
+    if(!areNeighbors(youId,targetId) && !you.passage.has(targetId)) {
+      return {ok:false, reason:"Sadece komşu ülkelere savaş açabilirsin. Uzaksa geçiş izni lazım."};
+    }
+    if(state.day - you.lastWarDay < WAR_COOLDOWN){
+      return {ok:false, reason:`Yeni savaş için ${WAR_COOLDOWN} gün beklemelisin.`};
+    }
+    const until = you.armistice.get(targetId) || 0;
+    if(state.day < until){
+      return {ok:false, reason:`Ateşkes var. ${until}. güne kadar savaş açamazsın.`};
+    }
+    return {ok:true, reason:""};
+  }
+
+  function awardSurvivors(countryId, totalDeployed){
+    // 15% survivors
+    const survivors = Math.ceil(totalDeployed * 0.15);
+    return survivors;
+  }
+
+  function totalInventory(countryId){
+    const c = getCountry(countryId);
+    let sum = 0;
+    for(const u of UNITS) sum += (c.inventory[u.id]||0);
+    return sum;
+  }
+
+  /***********************
+   * INIT WORLD
+   ***********************/
+  function initWorld(){
+    state.day = 0;
+    state.running = true;
+    state.playerCountryId = null;
+    state.selectedCountryId = null;
+    state.selectedStateId = null;
+    state.news = [];
+    state.cardImages = {};
+
+    // countries
+    state.countries = [];
+    for(let i=0;i<20;i++){
+      state.countries.push({
+        id:i,
+        name:COUNTRY_NAMES[i],
+        gold: START_GOLD,
+        allyId: null,
+        inventory: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+        states: [],
+        armistice: new Map(),
+        lastWarDay: -999,
+        passage: new Set(), // passage permissions with non-neighbors (simple)
+      });
+    }
+
+    // states (60): make rectangles arranged like a world mosaic
+    state.states = [];
+    let sid = 0;
+    const cellW = 240, cellH = 200;
+    const pad = 16;
+
+    for(let cid=0; cid<20; cid++){
+      const gx = cid % GRID_W, gy = Math.floor(cid / GRID_W);
+      const baseX = gx * (cellW + pad);
+      const baseY = gy * (cellH + pad);
+
+      // 3 sub-rects
+      const rects = [
+        {x: baseX + 0,             y: baseY + 0,              w: cellW*0.60, h: cellH*0.55},
+        {x: baseX + cellW*0.62,    y: baseY + 0,              w: cellW*0.38, h: cellH*0.55},
+        {x: baseX + 0,             y: baseY + cellH*0.57,     w: cellW,      h: cellH*0.43},
+      ];
+
+      for(let k=0;k<STATES_PER_COUNTRY;k++){
+        const s = {
+          id: sid,
+          countryId: cid,
+          name: `${COUNTRY_NAMES[cid]}-${k+1}`,
+          rect: rects[k],
+        };
+        state.states.push(s);
+        state.countries[cid].states.push(sid);
+        sid++;
+      }
+
+      // AI: give small starting army
+      const c = state.countries[cid];
+      c.inventory.infantry += 6;
+      c.inventory.archer += 4;
+      c.inventory.spearman += 3;
+      c.inventory.scout += 2;
+    }
+
+    // default card images
+    for(const u of UNITS){
+      state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
+    }
+
+    pushNews("Oyun dünyası kuruldu. Ülke seçerek başla.");
+    renderAllUI();
+    buildShop();
+    buildArmyList();
+    buildCountryPicker();
+    mapView.reset();
+    drawMap();
+  }
+
+  /***********************
+   * UI BUILDERS
+   ***********************/
+  function buildCountryPicker(){
+    const grid = $("#countryGrid");
+    grid.innerHTML = "";
+    state.countries.forEach(c=>{
+      const btn = document.createElement("div");
+      btn.className = "countryBtn";
+      btn.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="flag"></div>
+          <div>
+            <div style="font-weight:800">${c.name}</div>
+            <div class="muted small">Başlangıç: ${START_GOLD} altın</div>
+          </div>
+        </div>
+        <div class="muted small">Seç</div>`;
+      btn.onclick = () => choosePlayerCountry(c.id);
+      grid.appendChild(btn);
+    });
+  }
+
+  function buildShop(){
+    const grid = $("#shopGrid");
+    grid.innerHTML = "";
+    for(const u of UNITS){
+      const card = document.createElement("div");
+      card.className = "unitCard";
+      card.innerHTML = `
+        <div class="unitImg"><img alt="" src="${state.cardImages[u.id]}"></div>
+        <div class="unitMeta">
+          <div class="name">${u.name}</div>
+          <div class="muted small">${u.cost} altın</div>
+          <span class="pill ${unitPillClass(u.type)}">${unitTypeTR(u.type)}</span>
+        </div>
+        <button class="btn good" style="padding:7px 10px">Al</button>
+      `;
+      card.querySelector("button").onclick = () => buyUnit(u.id);
+      grid.appendChild(card);
+    }
+  }
+
+  function buildArmyList(){
+    const el = $("#armyList");
+    el.innerHTML = "";
+    const youId = state.playerCountryId;
+    if(youId == null){
+      el.innerHTML = `<div class="muted small">Ülke seçilmedi.</div>`;
+      return;
+    }
+    const you = getCountry(youId);
+    for(const u of UNITS){
+      const row = document.createElement("div");
+      row.className = "kv";
+      row.innerHTML = `<span class="muted">${u.name}</span><b>${you.inventory[u.id]||0}</b>`;
+      el.appendChild(row);
+    }
+  }
+
+  function renderAllUI(){
+    const you = state.playerCountryId!=null ? getCountry(state.playerCountryId) : null;
+    $("#uiPlayerCountry").textContent = you ? you.name : "—";
+    $("#uiDay").textContent = state.day;
+    $("#uiGold").textContent = you ? you.gold : 0;
+    $("#uiAlly").textContent = (you && you.allyId!=null) ? getCountry(you.allyId).name : "Yok";
+    $("#uiSelectedCountry").textContent = state.selectedCountryId!=null ? getCountry(state.selectedCountryId).name : "—";
+    $("#uiSelectedState").textContent = state.selectedStateId!=null ? getState(state.selectedStateId).name : "—";
+  }
+
+  /***********************
+   * PLAYER ACTIONS
+   ***********************/
+  function choosePlayerCountry(cid){
+    state.playerCountryId = cid;
+    state.selectedCountryId = cid;
+    state.selectedStateId = state.countries[cid].states[0];
+    pushNews(`Sen "${getCountry(cid).name}" oldun. Haritadan hedef ülke seç.`);
+    $("#countryOverlay").style.display = "none";
+    renderAllUI();
+    buildArmyList();
+    drawMap();
+  }
+
+  function buyUnit(unitId){
+    const youId = state.playerCountryId;
+    if(youId==null){ pushNews("Önce bir ülke seç."); return; }
+    const you = getCountry(youId);
+    const unit = UNITS.find(u=>u.id===unitId);
+    if(you.gold < unit.cost){
+      pushNews("Yetersiz altın.");
+      return;
+    }
+    you.gold -= unit.cost;
+    you.inventory[unitId] = (you.inventory[unitId]||0) + 1;
+    pushNews(`${unit.name} satın alındı. (+1)`);
+    renderAllUI();
+    buildArmyList();
+  }
+
+  function requestPassage(){
+    const youId = state.playerCountryId;
+    const targetId = state.selectedCountryId;
+    if(youId==null || targetId==null){ pushNews("Ülke seç ve hedef ülkeyi seç."); return; }
+    if(youId===targetId){ pushNews("Kendinden geçiş izni istemezsin :)"); return; }
+    const you = getCountry(youId);
+    // AI acceptance: 50% if not enemy and not at armistice; simple
+    const until = you.armistice.get(targetId) || 0;
+    const ok = (state.day>=until) && Math.random() < 0.55;
+    if(ok){
+      you.passage.add(targetId);
+      pushNews(`${getCountry(targetId).name} geçiş izni verdi.`);
+    } else {
+      pushNews(`${getCountry(targetId).name} geçiş iznini reddetti.`);
+    }
+    renderAllUI();
+  }
+
+  function offerAlliance(){
+    const youId = state.playerCountryId;
+    const targetId = state.selectedCountryId;
+    if(youId==null || targetId==null){ pushNews("Ülke seç ve hedef ülkeyi seç."); return; }
+    if(youId===targetId){ pushNews("Kendinle müttefik olamazsın."); return; }
+    const you = getCountry(youId);
+    const target = getCountry(targetId);
+    if(you.allyId!=null){ pushNews("Zaten müttefikin var. Önce bozmalısın."); return; }
+    if(target.allyId!=null){ pushNews("Hedef ülkenin zaten müttefiki var."); return; }
+
+    // AI: do not accept instantly; accept with probability based on random + if neighbors
+    const accept = (Math.random() < (areNeighbors(youId,targetId) ? 0.55 : 0.35));
+    if(accept){
+      you.allyId = targetId;
+      target.allyId = youId;
+      pushNews(`${target.name} müttefik teklifini kabul etti.`);
+    } else {
+      pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
+    }
+    renderAllUI();
+  }
+
+  function breakAlliance(){
+    const youId = state.playerCountryId;
+    if(youId==null){ pushNews("Önce ülke seç."); return; }
+    const you = getCountry(youId);
+    if(you.allyId==null){ pushNews("Müttefikin yok."); return; }
+    const ally = getCountry(you.allyId);
+    ally.allyId = null;
+    you.allyId = null;
+    pushNews("Müttefik bozuldu. (AI hemen tekrar kabul etmeyebilir)");
+    renderAllUI();
+  }
+
+  function declareWar(){
+    const youId = state.playerCountryId;
+    const targetId = state.selectedCountryId;
+    if(youId==null || targetId==null){ pushNews("Önce ülke seç ve hedef ülke seç."); return; }
+
+    const chk = canDeclareWar(youId, targetId);
+    if(!chk.ok){ pushNews(chk.reason); return; }
+
+    // Start battle
+    startBattle(youId, targetId);
+  }
+
+  /***********************
+   * AI BEHAVIOR (light)
+   ***********************/
+  function aiDailyTick(){
+    // each day, some AI may declare war with small chance
+    // also buy random units
+    for(const c of state.countries){
+      if(state.playerCountryId!=null && c.id === state.playerCountryId) continue;
+
+      // buy units if enough gold
+      if(Math.random()<0.35){
+        const u = pick(UNITS);
+        if(c.gold >= u.cost){
+          c.gold -= u.cost;
+          c.inventory[u.id] = (c.inventory[u.id]||0) + 1;
+        }
+      }
+
+      // alliance call: if ally exists and ally is at war (we simulate only when battles happen via player or AI-AI rare)
+      // (prototype: only player battles, so skip)
+
+      // AI war (rare) -> news only (no full sim)
+      if(Math.random()<0.02){
+        const neighbors = neighborsOf(c.id);
+        const t = pick(neighbors);
+        if(t==null) continue;
+        const chk = canDeclareWar(c.id, t);
+        if(chk.ok){
+          // resolve instantly (simple)
+          const winner = (Math.random()<0.5) ? c.id : t;
+          const loser = (winner===c.id) ? t : c.id;
+          resolveAIAIWar(winner, loser);
+        }
+      }
+    }
+  }
+
+  function resolveAIAIWar(winnerId, loserId){
+    const win = getCountry(winnerId);
+    const lose = getCountry(loserId);
+    // capture one state from loser if any
+    const loseStates = lose.states.slice();
+    if(loseStates.length>0){
+      const captured = pick(loseStates);
+      // move state ownership
+      transferState(captured, winnerId);
+      // gold reward
+      const reward = rand(700, 1400);
+      win.gold += reward;
+
+      // set armistice both ways
+      win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
+      lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
+      win.lastWarDay = state.day;
+      lose.lastWarDay = state.day;
+
+      pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. 1 eyalet aldı +${reward} altın.`);
+      renderAllUI();
+      drawMap();
+    }
+  }
+
+  /***********************
+   * MAP RENDER + INPUT
+   ***********************/
+  const mapCanvas = $("#mapCanvas");
+  const mapCtx = mapCanvas.getContext("2d");
+
+  const mapView = {
+    scale: 1,
+    ox: 0,
+    oy: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+    reset(){
+      this.scale = 0.85;
+      this.ox = 60;
+      this.oy = 50;
+    },
+    screenToWorld(px,py){
+      return {
+        x:(px - this.ox)/this.scale,
+        y:(py - this.oy)/this.scale
+      };
+    }
+  };
+
+  function resizeCanvas(){
+    const rect = mapCanvas.parentElement.getBoundingClientRect();
+    mapCanvas.width = Math.floor(rect.width * devicePixelRatio);
+    mapCanvas.height = Math.floor(rect.height * devicePixelRatio);
+    mapCanvas.style.width = rect.width + "px";
+    mapCanvas.style.height = rect.height + "px";
+    mapCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+
+    const brect = $("#battleCanvas").parentElement.getBoundingClientRect();
+    const bc = $("#battleCanvas");
+    bc.width = Math.floor(brect.width * devicePixelRatio);
+    bc.height = Math.floor(brect.height * devicePixelRatio);
+    bc.style.width = brect.width + "px";
+    bc.style.height = brect.height + "px";
+    battleCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+
+    drawMap();
+    drawBattle();
+  }
+  window.addEventListener("resize", resizeCanvas);
+
+  function countryColor(cid){
+    // deterministic-ish color
+    const hue = (cid * 23) % 360;
+    return `hsla(${hue}, 70%, 55%, 0.85)`;
+  }
+
+  function drawMap(){
+    const rect = mapCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    mapCtx.clearRect(0,0,w,h);
+
+    // background dots
+    mapCtx.globalAlpha = 0.12;
+    mapCtx.fillStyle = "#a9c3ff";
+    for(let i=0;i<160;i++){
+      const x = (i*73)%w;
+      const y = (i*119)%h;
+      mapCtx.fillRect(x,y,1,1);
+    }
+    mapCtx.globalAlpha = 1;
+
+    // transform world->screen
+    mapCtx.save();
+    mapCtx.translate(mapView.ox, mapView.oy);
+    mapCtx.scale(mapView.scale, mapView.scale);
+
+    // draw states
+    for(const s of state.states){
+      const owner = getCountry(s.countryId);
+      const {x,y,w,h} = s.rect;
+
+      // fill
+      mapCtx.fillStyle = countryColor(owner.id);
+      mapCtx.fillRect(x,y,w,h);
+
+      // outline
+      mapCtx.lineWidth = 2;
+      mapCtx.strokeStyle = "rgba(0,0,0,.35)";
+      mapCtx.strokeRect(x,y,w,h);
+
+      // highlight selected state
+      if(state.selectedStateId === s.id){
+        mapCtx.lineWidth = 4;
+        mapCtx.strokeStyle = "rgba(255,255,255,.75)";
+        mapCtx.strokeRect(x+2,y+2,w-4,h-4);
+      }
+
+      // text
+      mapCtx.fillStyle = "rgba(0,0,0,.45)";
+      mapCtx.font = "12px system-ui";
+      mapCtx.fillText(s.name, x+8, y+18);
+    }
+
+    mapCtx.restore();
+  }
+
+  function hitTestState(px,py){
+    const p = mapView.screenToWorld(px,py);
+    for(const s of state.states){
+      const r = s.rect;
+      if(p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h){
+        return s;
+      }
+    }
+    return null;
+  }
+
+  mapCanvas.addEventListener("contextmenu", e => e.preventDefault());
+  mapCanvas.addEventListener("mousedown", (e)=>{
+    if(e.button===2){
+      // right click cancel selection
+      state.selectedStateId = null;
+      state.selectedCountryId = null;
+      renderAllUI();
+      drawMap();
+      return;
+    }
+    mapView.dragging = true;
+    mapView.lastX = e.clientX;
+    mapView.lastY = e.clientY;
+  });
+  mapCanvas.addEventListener("mousemove",(e)=>{
+    if(!mapView.dragging) return;
+    const dx = e.clientX - mapView.lastX;
+    const dy = e.clientY - mapView.lastY;
+    mapView.lastX = e.clientX;
+    mapView.lastY = e.clientY;
+    mapView.ox += dx;
+    mapView.oy += dy;
+    drawMap();
+  });
+  window.addEventListener("mouseup", ()=> mapView.dragging = false);
+
+  mapCanvas.addEventListener("wheel",(e)=>{
+    e.preventDefault();
+    const delta = -Math.sign(e.deltaY) * 0.08;
+    const old = mapView.scale;
+    const next = clamp(old * (1+delta), 0.45, 2.2);
+
+    // zoom around mouse
+    const rect = mapCanvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const before = mapView.screenToWorld(mx,my);
+    mapView.scale = next;
+    const after = mapView.screenToWorld(mx,my);
+    mapView.ox += (after.x - before.x) * mapView.scale;
+    mapView.oy += (after.y - before.y) * mapView.scale;
+
+    drawMap();
+  }, {passive:false});
+
+  mapCanvas.addEventListener("click",(e)=>{
+    const rect = mapCanvas.getBoundingClientRect();
+    const s = hitTestState(e.clientX - rect.left, e.clientY - rect.top);
+    if(!s) return;
+    state.selectedStateId = s.id;
+    state.selectedCountryId = s.countryId;
+    renderAllUI();
+    drawMap();
+  });
+
+  /***********************
+   * BATTLE SYSTEM
+   ***********************/
+  const battleCanvas = $("#battleCanvas");
+  const battleCtx = battleCanvas.getContext("2d");
+
+  const battleView = {
+    draggingUnit: null, // {unitId, fromIndex}
+  };
+
+  function startBattle(attackerId, defenderId){
+    const youId = attackerId;
+    const enemyId = defenderId;
+
+    // ally join chance: if either side has ally, ally may join
+    // prototype: if attacker has ally -> 40% join; if defender has ally -> 40% join
+    const att = getCountry(attackerId);
+    const def = getCountry(defenderId);
+
+    let teams = {A:[attackerId], B:[defenderId]};
+    if(att.allyId!=null && Math.random()<0.40){
+      teams.A.push(att.allyId);
+      pushNews(`Müttefik çağrısı: ${getCountry(att.allyId).name}, ${att.name} yanında savaşa katıldı!`);
+    }
+    if(def.allyId!=null && Math.random()<0.40){
+      teams.B.push(def.allyId);
+      pushNews(`Müttefik çağrısı: ${getCountry(def.allyId).name}, ${def.name} yanında savaşa katıldı!`);
+    }
+
+    state.battle = {
+      attackerId, defenderId,
+      youId, enemyId,
+      teams,
+      phase:"deploy",
+      youField: [],    // units on field {unitId, hp, x, y, team:"A"}
+      enemyField: [],
+      youUsedCounts: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      // simple timer
+      t: 0,
+      ended: false,
+      result: null, // {winnerId, loserId}
+    };
+
+    $("#uiMode").textContent = "SAVAŞ";
+    $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
+    $("#uiBattleYou").textContent = getCountry(youId).name;
+    $("#uiBattleEnemy").textContent = getCountry(enemyId).name;
+
+    buildDeployBar();
+    $("#battleOverlay").style.display = "flex";
+    drawBattle();
+  }
+
+  function buildDeployBar(){
+    const bar = $("#deployBar");
+    bar.innerHTML = "";
+    const you = getCountry(state.battle.youId);
+
+    for(const u of UNITS){
+      const count = you.inventory[u.id] || 0;
+      if(count<=0) continue;
+
+      const mini = document.createElement("div");
+      mini.className = "miniCard";
+      mini.draggable = true;
+      mini.innerHTML = `
+        <div class="unitImg" style="width:34px;height:34px;border-radius:12px">
+          <img alt="" src="${state.cardImages[u.id]}">
+        </div>
+        <div>
+          <div style="font-weight:800; font-size:12px">${u.name}</div>
+          <div class="muted small">Elde: <b>${count}</b></div>
+        </div>
+      `;
+
+      mini.addEventListener("dragstart",(e)=>{
+        battleView.draggingUnit = {unitId:u.id};
+        e.dataTransfer.setData("text/plain", u.id);
+      });
+
+      bar.appendChild(mini);
+    }
+
+    // allow drop on canvas
+    battleCanvas.addEventListener("dragover", (e)=> e.preventDefault());
+    battleCanvas.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/plain");
+      if(!id) return;
+      tryDeployUnit(id, e.offsetX, e.offsetY);
+    }, {once:true});
+  }
+
+  function tryDeployUnit(unitId, sx, sy){
+    const b = state.battle;
+    if(!b || b.phase!=="deploy") return;
+
+    const you = getCountry(b.youId);
+    if((you.inventory[unitId]||0) <= 0){
+      pushNews("Bu kart sende yok.");
+      return;
+    }
+
+    // only deploy on your side (bottom half) and not beyond center line
+    const rect = battleCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    const centerY = h/2;
+    const maxY = centerY + 70; // can't cross into enemy zone
+
+    if(sy < centerY) { pushNews("Kendi tarafına koymalısın."); return; }
+    if(sy < maxY) { pushNews("Sınır çizgisine çok yakın, biraz aşağı koy."); return; }
+
+    // place
+    const u = UNITS.find(x=>x.id===unitId);
+    you.inventory[unitId] -= 1;
+    b.youField.push({unitId, hp:u.hp, x:sx, y:sy, team:"A", cd:0});
+    b.youUsedCounts[unitId] = (b.youUsedCounts[unitId]||0)+1;
+
+    buildDeployBar();
+    buildArmyList();
+    renderAllUI();
+    drawBattle();
+  }
+
+  function aiDeploy(){
+    const b = state.battle;
+    const enemy = getCountry(b.enemyId);
+
+    const rect = battleCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+
+    // AI deploy up to N units based on inventory
+    let want = 10;
+    const total = totalInventory(b.enemyId);
+    want = clamp(Math.floor(total*0.55), 5, 14);
+
+    const ids = UNITS.map(u=>u.id);
+    let tries = 0;
+    while(want>0 && tries<500){
+      tries++;
+      const uid = pick(ids);
+      if((enemy.inventory[uid]||0) <= 0) continue;
+      const u = UNITS.find(x=>x.id===uid);
+
+      // deploy on top half
+      const x = rand(60, Math.floor(w-60));
+      const y = rand(60, Math.floor(h/2 - 90));
+      enemy.inventory[uid] -= 1;
+      b.enemyField.push({unitId:uid, hp:u.hp, x, y, team:"B", cd:0});
+      want--;
+    }
+  }
+
+  function battleStart(){
+    const b = state.battle;
+    if(!b) return;
+    if(b.phase!=="deploy") return;
+
+    // AI deploy
+    aiDeploy();
+
+    b.phase = "fight";
+    b.t = 0;
+    pushNews(`Savaş başladı: ${getCountry(b.attackerId).name} vs ${getCountry(b.defenderId).name}`);
+    drawBattle();
+  }
+
+  function battleEnd(winnerSide){
+    const b = state.battle;
+    if(!b || b.ended) return;
+    b.ended = true;
+    b.phase = "done";
+
+    const winnerId = (winnerSide==="A") ? b.attackerId : b.defenderId;
+    const loserId  = (winnerSide==="A") ? b.defenderId : b.attackerId;
+
+    // total deployed counts (both sides)
+    const deployedA = b.youField.length;
+    const deployedB = b.enemyField.length;
+
+    const winner = getCountry(winnerId);
+    const loser = getCountry(loserId);
+
+    // survivors rule: 15% of deployed returns to inventory (for each side)
+    const survA = awardSurvivors(b.attackerId, deployedA);
+    const survB = awardSurvivors(b.defenderId, deployedB);
+
+    // distribute survivors randomly among unit types (simple)
+    function returnSurvivors(countryId, n){
+      const c = getCountry(countryId);
+      const pool = UNITS.map(u=>u.id);
+      for(let i=0;i<n;i++){
+        const uid = pick(pool);
+        c.inventory[uid] = (c.inventory[uid]||0)+1;
+      }
+    }
+    returnSurvivors(b.attackerId, survA);
+    returnSurvivors(b.defenderId, survB);
+
+    // winner gets gold reward
+    const reward = rand(900, 1700);
+    winner.gold += reward;
+
+    // winner captures 1 state from loser (prefer a border-ish state)
+    // In this prototype, capture a random loser state.
+    if(loser.states.length>0){
+      const captured = pick(loser.states);
+      transferState(captured, winnerId);
+      pushNews(`${winner.name} savaşı kazandı! +${reward} altın ve 1 eyalet aldı (${getState(captured).name}).`);
+    } else {
+      pushNews(`${winner.name} savaşı kazandı! +${reward} altın aldı.`);
+    }
+
+    // set armistice both ways
+    winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
+    loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
+    winner.lastWarDay = state.day;
+    loser.lastWarDay = state.day;
+
+    renderAllUI();
+    buildArmyList();
+    drawMap();
+    drawBattle();
+  }
+
+  function transferState(stateId, newCountryId){
+    const st = getState(stateId);
+    const old = getCountry(st.countryId);
+    const neu = getCountry(newCountryId);
+
+    // remove from old list
+    old.states = old.states.filter(x=>x!==stateId);
+    // add to new
+    neu.states.push(stateId);
+    st.countryId = newCountryId;
+  }
+
+  function updateBattle(dt){
+    const b = state.battle;
+    if(!b || b.phase!=="fight" || b.ended) return;
+
+    const rect = battleCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    const centerY = h/2;
+
+    function stepUnit(u, enemies){
+      const def = UNITS.find(x=>x.id===u.unitId);
+      u.cd = Math.max(0, u.cd - dt);
+
+      // pick nearest enemy
+      let best = null;
+      let bestD = Infinity;
+      for(const e of enemies){
+        const dx = e.x - u.x, dy = e.y - u.y;
+        const d = Math.hypot(dx,dy);
+        if(d < bestD){ bestD = d; best = e; }
+      }
+      if(!best) return;
+
+      // move toward if out of range
+      if(bestD > def.range){
+        const dx = best.x - u.x, dy = best.y - u.y;
+        const d = Math.max(0.001, Math.hypot(dx,dy));
+        const vx = (dx/d) * def.speed;
+        const vy = (dy/d) * def.speed;
+        u.x += vx * dt;
+        u.y += vy * dt;
+      } else {
+        // attack if cooldown ready
+        if(u.cd <= 0){
+          best.hp -= def.dmg;
+          u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.60 : 0.75));
+        }
+      }
+
+      // keep in bounds
+      u.x = clamp(u.x, 18, w-18);
+      if(u.team==="A") u.y = clamp(u.y, centerY+10, h-18);
+      else u.y = clamp(u.y, 18, centerY-10);
+    }
+
+    // update
+    for(const u of b.youField) stepUnit(u, b.enemyField);
+    for(const e of b.enemyField) stepUnit(e, b.youField);
+
+    // cleanup dead
+    b.youField = b.youField.filter(u=>u.hp>0);
+    b.enemyField = b.enemyField.filter(u=>u.hp>0);
+
+    $("#uiYouUnits").textContent = b.youField.length;
+    $("#uiEnemyUnits").textContent = b.enemyField.length;
+
+    b.t += dt;
+    // end conditions
+    if(b.youField.length===0 && b.enemyField.length===0){
+      // draw -> defender wins
+      battleEnd("B");
+    } else if(b.enemyField.length===0){
+      battleEnd("A");
+    } else if(b.youField.length===0){
+      battleEnd("B");
+    } else if(b.t > 60){
+      // time over: who has more units
+      battleEnd(b.youField.length >= b.enemyField.length ? "A" : "B");
+    }
+  }
+
+  function drawBattle(){
+    const rect = battleCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+    battleCtx.clearRect(0,0,w,h);
+
+    // grass
+    battleCtx.fillStyle = "rgba(80, 180, 110, .22)";
+    battleCtx.fillRect(0,0,w,h);
+
+    // center line
+    battleCtx.strokeStyle = "rgba(255,255,255,.25)";
+    battleCtx.lineWidth = 3;
+    battleCtx.beginPath();
+    battleCtx.moveTo(0,h/2);
+    battleCtx.lineTo(w,h/2);
+    battleCtx.stroke();
+
+    // deploy limit line for player
+    battleCtx.strokeStyle = "rgba(255,209,102,.30)";
+    battleCtx.setLineDash([8,8]);
+    battleCtx.beginPath();
+    battleCtx.moveTo(0,h/2 + 70);
+    battleCtx.lineTo(w,h/2 + 70);
+    battleCtx.stroke();
+    battleCtx.setLineDash([]);
+
+    const b = state.battle;
+    if(!b) return;
+
+    // units as squares
+    function drawUnit(u){
+      const def = UNITS.find(x=>x.id===u.unitId);
+      const size = 14 + Math.min(10, def.hp/20);
+
+      battleCtx.fillStyle = (u.team==="A") ? "rgba(77,212,255,.85)" : "rgba(255,92,122,.82)";
+      battleCtx.fillRect(u.x - size/2, u.y - size/2, size, size);
+
+      // hp bar
+      const maxHp = def.hp;
+      const pct = clamp(u.hp/maxHp, 0, 1);
+      battleCtx.fillStyle = "rgba(0,0,0,.35)";
+      battleCtx.fillRect(u.x - size/2, u.y - size/2 - 8, size, 5);
+      battleCtx.fillStyle = "rgba(255,255,255,.75)";
+      battleCtx.fillRect(u.x - size/2, u.y - size/2 - 8, size*pct, 5);
+    }
+
+    for(const u of b.youField) drawUnit(u);
+    for(const e of b.enemyField) drawUnit(e);
+
+    // status
+    battleCtx.fillStyle = "rgba(0,0,0,.35)";
+    battleCtx.fillRect(12, h-52, 360, 40);
+    battleCtx.fillStyle = "rgba(255,255,255,.85)";
+    battleCtx.font = "12px system-ui";
+    const txt = b.phase==="deploy"
+      ? "DEPLOY: Kartı sürükleyip kendi tarafına bırak. Sonra 'Savaşı Başlat'."
+      : (b.phase==="fight" ? "FIGHT: Birimler otomatik savaşıyor." : "BİTTİ: Çıkabilirsin.");
+    battleCtx.fillText(txt, 22, h-28);
+  }
+
+  /***********************
+   * LOOP (1 day = 1 second)
+   ***********************/
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now-last)/1000);
+    last = now;
+
+    if(state.running){
+      // every 1s -> new day
+      tickAccumulator += dt;
+      while(tickAccumulator >= 1.0){
+        tickAccumulator -= 1.0;
+        dayTick();
+      }
+    }
+
+    updateBattle(dt);
+    drawBattle();
+    requestAnimationFrame(loop);
+  }
+  let tickAccumulator = 0;
+
+  function dayTick(){
+    state.day += 1;
+
+    // some random news
+    if(Math.random()<0.10 && state.playerCountryId!=null){
+      const c = pick(state.countries);
+      const t = pick(state.countries.filter(x=>x.id!==c.id));
+      pushNews(`Haber: ${c.name}, ${t.name} hakkında sert açıklama yaptı.`);
+    }
+
+    aiDailyTick();
+    renderAllUI();
+
+    // if player has ally, ally may ask you to join a war (prototype: news + small reward)
+    const youId = state.playerCountryId;
+    if(youId!=null){
+      const you = getCountry(youId);
+      if(you.allyId!=null && Math.random()<0.04){
+        pushNews(`Müttefik mesajı: ${getCountry(you.allyId).name} senden destek istiyor (prototipte otomatik haber).`);
+      }
+    }
+  }
+
+  /***********************
+   * SAVE / LOAD
+   ***********************/
+  function exportSave(){
+    const data = {
+      day: state.day,
+      running: state.running,
+      playerCountryId: state.playerCountryId,
+      selectedCountryId: state.selectedCountryId,
+      selectedStateId: state.selectedStateId,
+      cardImages: state.cardImages,
+      countries: state.countries.map(c=>({
+        id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
+        inventory:c.inventory,
+        states:c.states,
+        armistice: Array.from(c.armistice.entries()),
+        lastWarDay:c.lastWarDay,
+        passage: Array.from(c.passage.values()),
+      })),
+      states: state.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name, rect:s.rect}))
+    };
+    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "save.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    pushNews("Save indirildi (save.json).");
+  }
+
+  function importSave(obj){
+    state.day = obj.day||0;
+    state.running = !!obj.running;
+    state.playerCountryId = obj.playerCountryId;
+    state.selectedCountryId = obj.selectedCountryId;
+    state.selectedStateId = obj.selectedStateId;
+    state.cardImages = obj.cardImages || {};
+
+    // rebuild countries
+    state.countries = obj.countries.map(c=>({
+      id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
+      inventory:c.inventory || Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      states:c.states || [],
+      armistice: new Map(c.armistice || []),
+      lastWarDay: c.lastWarDay ?? -999,
+      passage: new Set(c.passage || []),
+    }));
+
+    state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name, rect:s.rect}));
+
+    // ensure all unit images exist
+    for(const u of UNITS){
+      if(!state.cardImages[u.id]) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
+    }
+
+    pushNews("Save yüklendi.");
+    buildShop();
+    buildArmyList();
+    renderAllUI();
+    drawMap();
+  }
+
+  /***********************
+   * CARD IMAGE UPLOAD
+   ***********************/
+  async function filesToDataURLs(files){
+    const out = [];
+    for(const f of files){
+      const url = await new Promise((res, rej)=>{
+        const r = new FileReader();
+        r.onload = ()=>res(r.result);
+        r.onerror = rej;
+        r.readAsDataURL(f);
+      });
+      out.push({file:f, url});
+    }
+    return out;
+  }
+
+  async function applyCardImages(){
+    const input = $("#cardsFile");
+    const files = Array.from(input.files || []);
+    if(files.length===0){ pushNews("Dosya seçmedin."); return; }
+    const items = await filesToDataURLs(files);
+
+    let matched = 0;
+    for(const it of items){
+      const name = it.file.name.toLowerCase().replace(/\.(png|jpg|jpeg|webp|gif)$/,"");
+      const unit = UNITS.find(u=>u.id===name);
+      if(unit){
+        state.cardImages[unit.id] = it.url;
+        matched++;
+      }
+    }
+    if(matched===0){
+      pushNews("Eşleşen kart bulunamadı. Dosya adlarını unit ID’leriyle aynı yap.");
+    } else {
+      pushNews(`${matched} kart resmi uygulandı.`);
+    }
+    buildShop();
+    if(state.battle) buildDeployBar();
+  }
+
+  /***********************
+   * EVENTS (BUTTONS)
+   ***********************/
+  $("#btnChooseCountry").onclick = ()=> $("#countryOverlay").style.display="flex";
+  $("#btnCloseCountry").onclick = ()=> $("#countryOverlay").style.display="none";
+
+  $("#btnDeclareWar").onclick = declareWar;
+  $("#btnOfferAlliance").onclick = offerAlliance;
+  $("#btnBreakAlliance").onclick = breakAlliance;
+  $("#btnRequestPassage").onclick = requestPassage;
+
+  $("#btnPause").onclick = ()=>{
+    state.running = !state.running;
+    $("#btnPause").textContent = state.running ? "Duraklat" : "Devam";
+    pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
+  };
+
+  $("#btnSave").onclick = exportSave;
+  $("#btnLoad").onclick = ()=> $("#saveFile").click();
+  $("#saveFile").addEventListener("change", async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const text = await file.text();
+    try{
+      const obj = JSON.parse(text);
+      importSave(obj);
+    } catch(err){
+      pushNews("Save dosyası okunamadı (JSON hatası).");
+      console.error(err);
+    }
+    e.target.value = "";
+  });
+
+  $("#btnUploadCards").onclick = ()=> $("#cardsOverlay").style.display="flex";
+  $("#btnCloseCards").onclick = ()=> $("#cardsOverlay").style.display="none";
+  $("#btnApplyCards").onclick = applyCardImages;
+  $("#btnClearCards").onclick = ()=>{
+    for(const u of UNITS) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
+    buildShop();
+    if(state.battle) buildDeployBar();
+    pushNews("Kart görselleri temizlendi (placeholder).");
+  };
+
+  $("#btnReset").onclick = ()=>{
+    initWorld();
+    $("#btnPause").textContent = "Duraklat";
+    pushNews("Oyun sıfırlandı.");
+  };
+
+  $("#btnStartBattle").onclick = battleStart;
+  $("#btnCloseBattle").onclick = ()=>{
+    $("#battleOverlay").style.display="none";
+    $("#uiMode").textContent = "HARİTA";
+    state.battle = null;
+    drawMap();
+  };
+
+  /***********************
+   * STARTUP
+   ***********************/
+  initWorld();
+  resizeCanvas();
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
