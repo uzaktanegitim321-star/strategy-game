@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fantazi Strateji — 20 Ülke / 60 Eyalet (Tek Dosya)</title>
+  <title>Fantazi Strateji — HEX Ada (20 Ülke / 60 Eyalet)</title>
   <style>
     :root{
       --bg:#07101f; --txt:#e8f0ff; --muted:#9fb1d2; --line:#203255;
@@ -17,6 +17,7 @@
       background:
         radial-gradient(1100px 700px at 25% 15%, #142a5a 0%, #081227 55%, #040814 100%);
       user-select:none;
+      overflow:hidden;
     }
     .app{display:flex; gap:12px; padding:12px; min-height:100vh}
     .card{
@@ -25,9 +26,10 @@
       border-radius:var(--radius);
       box-shadow:var(--shadow);
       backdrop-filter: blur(8px);
+      overflow:hidden;
     }
-    .left,.right{width:320px; display:flex; flex-direction:column; gap:12px}
-    .center{flex:1; min-width:680px; display:flex; flex-direction:column; gap:12px}
+    .left,.right{width:320px; display:flex; flex-direction:column; gap:12px; min-width:320px}
+    .center{flex:1; min-width:680px; display:flex; flex-direction:column; gap:12px; overflow:hidden}
 
     .pad{padding:12px}
     .title{font-weight:800; letter-spacing:.2px}
@@ -85,32 +87,31 @@
       font-size:12px; color:var(--muted);
     }
 
-    /* ✅ FIX: mağazada 10 kartın tamamı görünsün + tıklanabilsin */
-    .shopGrid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:8px;
-      max-height: 520px;
-      overflow-y: auto;
-      padding-right: 6px;
+    .shopWrap{
+      max-height:46vh;
+      overflow:auto;
+      padding-right:4px;
     }
-
+    .shopWrap::-webkit-scrollbar{width:10px}
+    .shopWrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10); border-radius:999px}
+    .shopGrid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
     .unitCard{
-      border-radius:14px; padding:10px; border:1px solid rgba(255,255,255,.12);
-      background:rgba(0,0,0,.20);
-      display:flex; gap:10px; align-items:center;
+      border-radius:16px; padding:12px; border:1px solid rgba(255,255,255,.12);
+      background:rgba(0,0,0,.22);
+      display:flex; gap:12px; align-items:center;
+      min-height:110px;
     }
     .unitImg{
-      width:42px; height:42px; border-radius:12px; background:rgba(255,255,255,.06);
+      width:52px; height:52px; border-radius:14px; background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
       display:grid; place-items:center; overflow:hidden;
       flex:0 0 auto;
     }
     .unitImg img{width:100%; height:100%; object-fit:cover}
-    .unitMeta{flex:1}
-    .unitMeta .name{font-weight:800}
+    .unitMeta{flex:1; min-width:0}
+    .unitMeta .name{font-weight:900; font-size:15px}
     .pill{
-      display:inline-block; font-size:11px; padding:2px 7px; border-radius:999px; margin-top:4px;
+      display:inline-block; font-size:11px; padding:2px 7px; border-radius:999px; margin-top:6px;
       border:1px solid rgba(255,255,255,.14); color:var(--muted);
     }
     .pill.melee{border-color: rgba(255,92,122,.35); color: rgba(255,92,122,.95)}
@@ -120,7 +121,7 @@
     .overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.58);
       display:none; align-items:center; justify-content:center; padding:16px;
-      z-index: 50;
+      z-index:20;
     }
     .modal{
       width:min(1020px, 96vw); max-height:92vh; overflow:auto;
@@ -163,11 +164,16 @@
       display:flex; gap:10px; flex-wrap:wrap;
       padding:10px; border-radius:18px;
       background: rgba(0,0,0,.40); border:1px solid rgba(255,255,255,.14);
+      max-height:140px;
+      overflow:auto;
     }
+    .deployBar::-webkit-scrollbar{height:10px;width:10px}
+    .deployBar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10); border-radius:999px}
     .miniCard{
       display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:14px;
       border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
       cursor:grab;
+      min-width:180px;
     }
     .miniCard:active{cursor:grabbing}
 
@@ -207,7 +213,7 @@
         <span class="kbd">Sağ tık</span> iptal.
       </div>
       <div class="small muted" style="margin-top:6px">
-        Not: <b>Ülke seçmeden zaman akmaz.</b>
+        Not: <b>Ülke seçmeden zaman akmaz.</b> Savaşta zaman <b>durur</b>.
       </div>
     </div>
 
@@ -234,7 +240,7 @@
     <div class="card topbar">
       <span class="badge" id="uiMode">HARİTA</span>
       <div class="news" title="Haberler / olaylar">
-        <span id="uiNews">Ülke seç: oyun başlayacak. Fantazi dünya hazır.</span>
+        <span id="uiNews">Ülke seç: oyun başlayacak. Fantazi HEX ada hazır.</span>
       </div>
       <button class="btn" id="btnPause" disabled>Duraklat</button>
     </div>
@@ -261,7 +267,9 @@
       <div class="title">Mağaza (Kartlar)</div>
       <div class="muted small">5000 altınla başlarsın. Kart aldıkça orduna eklenir.</div>
       <div class="hr"></div>
-      <div class="shopGrid" id="shopGrid"></div>
+      <div class="shopWrap">
+        <div class="shopGrid" id="shopGrid"></div>
+      </div>
     </div>
 
     <div class="card pad">
@@ -311,10 +319,6 @@
         <button class="btn primary" id="btnApplyCards">Uygula</button>
         <button class="btn" id="btnClearCards">Kartları Temizle</button>
       </div>
-      <div class="hr"></div>
-      <div class="muted small">
-        Not: Kart yüklemezsen oyun otomatik <b>canvas/paint</b> kartları kullanır.
-      </div>
     </div>
   </div>
 </div>
@@ -363,7 +367,7 @@
 
     <div class="muted small" style="margin-top:10px">
       Savaş sonu: iki tarafın da askerlerinin <b>%15’i</b> envantere geri döner.
-      Kazanan: <b>altın + 1 eyalet</b>. (Sonra 20 gün ateşkes)
+      Kazanan: <b>+1 altın + 1 eyalet</b>. Kaybeden: <b>-1000 altın (min 0)</b>.
     </div>
   </div>
 </div>
@@ -410,18 +414,16 @@
     selectedStateId: null,
     countries: [],
     states: [],
-
     cardImages: {},
     flags: {},
     news: [],
     battle: null,
 
-    // HEX MAP
     map: {
       hexSize: 22,
-      hexes: [],       // 60: {id,q,r,x,y,countryId,stateId}
-      byQR: new Map(), // "q,r" -> id
-      neighbors: null, // Array<Set> per country
+      hexes: [],
+      byQR: new Map(),
+      neighbors: null,
     }
   };
 
@@ -552,124 +554,118 @@
   }
 
   /*************************
-   * ✅ CANVAS/PAINT KART ÇİZİMİ (AUTO)
+   * CARD ICON GENERATOR (canvas "paint")
    *************************/
-  function unitAccent(type){
-    if(type==="melee") return {a:"#ff5c7a", b:"#ffd166"};
-    if(type==="mid")   return {a:"#ffd166", b:"#7cff8b"};
-    return {a:"#4dd4ff", b:"#b9d0ff"};
-  }
-
-  function drawUnitCardCanvas(unit){
+  function makeUnitIconDataURL(unit){
+    const seed = 20000 + unit.id.split("").reduce((a,ch)=>a+ch.charCodeAt(0),0);
+    const r = mulberry32(seed);
     const c = document.createElement("canvas");
     c.width = 96; c.height = 96;
     const ctx = c.getContext("2d");
 
     // bg gradient
-    const ac = unitAccent(unit.type);
     const g = ctx.createLinearGradient(0,0,96,96);
-    g.addColorStop(0, ac.a);
-    g.addColorStop(1, ac.b);
+    g.addColorStop(0, `hsla(${Math.floor(r()*360)},85%,60%,.95)`);
+    g.addColorStop(1, `hsla(${Math.floor(r()*360)},85%,55%,.90)`);
     ctx.fillStyle = g;
-    ctx.fillRect(0,0,96,96);
+    roundRect(ctx, 8,8,80,80,18); ctx.fill();
 
-    // inner dark panel
-    ctx.fillStyle = "rgba(0,0,0,.25)";
-    roundRect(ctx, 8, 8, 80, 80, 18, true, false);
+    // inner panel
+    ctx.globalAlpha = .25;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, 14,14,68,68,16); ctx.fill();
+    ctx.globalAlpha = 1;
 
-    // icon base
-    ctx.fillStyle = "rgba(255,255,255,.14)";
-    roundRect(ctx, 16, 16, 64, 44, 14, true, false);
-
-    // simple "pixel" icon (asker/ok/top vs)
+    // draw symbol by type
     ctx.save();
-    ctx.translate(48, 38);
+    ctx.translate(48,48);
+    ctx.strokeStyle = "rgba(255,255,255,.9)";
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.lineWidth = 6;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
 
-    ctx.fillStyle = "rgba(0,0,0,.45)";
-    // head
-    ctx.beginPath();
-    ctx.arc(0,-14,7,0,Math.PI*2);
-    ctx.fill();
-    // body
-    ctx.fillRect(-5,-7,10,18);
-    // legs
-    ctx.fillRect(-10,10,20,6);
-
-    // weapon by type
-    if(unit.id==="archer" || unit.id==="crossbow"){
-      ctx.strokeStyle = "rgba(0,0,0,.55)";
+    const t = unit.id;
+    if(t==="infantry" || t==="spearman"){
+      // shield + sword
+      ctx.beginPath();
+      ctx.moveTo(-18,-16); ctx.lineTo(18,-16); ctx.lineTo(16,10); ctx.lineTo(0,22); ctx.lineTo(-16,10); ctx.closePath();
+      ctx.stroke();
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(-6,16); ctx.lineTo(14,-18); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(8,-6); ctx.lineTo(18,-16); ctx.stroke();
+    } else if(t==="archer" || t==="crossbow" || t==="rifleman" || t==="musketeer"){
+      // bow/gun line
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(-6,0,18,-Math.PI/2,Math.PI/2,true);
+      ctx.stroke();
       ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(10,-2,10, -Math.PI/2, Math.PI/2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(10,-12); ctx.lineTo(10,8);
-      ctx.stroke();
-    } else if(unit.id==="cannon"){
-      ctx.fillStyle = "rgba(0,0,0,.55)";
-      ctx.fillRect(10,0,18,8);
-      ctx.beginPath();
-      ctx.arc(6,8,7,0,Math.PI*2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(22,8,7,0,Math.PI*2);
-      ctx.fill();
-    } else if(unit.id==="rifleman" || unit.id==="musketeer"){
-      ctx.strokeStyle = "rgba(0,0,0,.55)";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(6,-2); ctx.lineTo(26,6);
-      ctx.stroke();
-    } else if(unit.id==="cavalry"){
-      ctx.fillStyle = "rgba(0,0,0,.45)";
-      ctx.fillRect(-18,14,36,8);
-      ctx.fillRect(-10,6,20,10);
-    } else {
-      ctx.strokeStyle = "rgba(0,0,0,.55)";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(6,0); ctx.lineTo(26,-10);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(10,-18); ctx.lineTo(10,18); ctx.stroke();
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(12,0); ctx.lineTo(26,0); ctx.stroke();
+    } else if(t==="cavalry" || t==="scout"){
+      // horse-ish (simple)
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(-20,6); ctx.quadraticCurveTo(-6,-18,10,-6); ctx.quadraticCurveTo(20,2,10,16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-6,18); ctx.lineTo(-12,28); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(6,18); ctx.lineTo(2,28); ctx.stroke();
+    } else if(t==="grenadier"){
+      // bomb circle + fuse
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(0,6,18,0,Math.PI*2); ctx.stroke();
+      ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(10,-10); ctx.quadraticCurveTo(18,-18,24,-8); ctx.stroke();
+      ctx.fillRect(20,-12,6,6);
+    } else if(t==="cannon"){
+      // cannon wheel + barrel
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(-10,10,14,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-2,2); ctx.lineTo(24,-10); ctx.stroke();
+      ctx.lineWidth = 8;
+      ctx.beginPath(); ctx.moveTo(4,-2); ctx.lineTo(26,-12); ctx.stroke();
     }
 
     ctx.restore();
 
-    // initials badge
-    const initials = unit.name.split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();
-    ctx.fillStyle = "rgba(255,255,255,.18)";
-    roundRect(ctx, 14, 62, 28, 20, 10, true, false);
+    // unit initials
+    ctx.globalAlpha = .85;
+    ctx.fillStyle = "rgba(0,0,0,.35)";
+    roundRect(ctx, 12,62,72,20,10); ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = "bold 12px system-ui";
+    ctx.font = "bold 14px system-ui";
     ctx.textAlign = "center";
-    ctx.fillText(initials, 28, 76);
+    ctx.fillText(unit.name.slice(0,2).toUpperCase(), 48, 77);
 
     // border
-    ctx.strokeStyle = "rgba(255,255,255,.55)";
-    ctx.lineWidth = 3;
-    roundRect(ctx, 3, 3, 90, 90, 20, false, true);
+    ctx.strokeStyle = "rgba(255,255,255,.22)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 6,6,84,84,18); ctx.stroke();
+
+    // noise pixels
+    ctx.globalAlpha = .12;
+    ctx.fillStyle = "#000";
+    for(let i=0;i<140;i++){
+      ctx.fillRect(Math.floor(r()*96), Math.floor(r()*96), 1, 1);
+    }
+    ctx.globalAlpha = 1;
 
     return c.toDataURL("image/png");
   }
 
-  function roundRect(ctx, x, y, w, h, r, fill, stroke) {
-    if (typeof r === "number") r = {tl:r, tr:r, br:r, bl:r};
+  function roundRect(ctx,x,y,w,h,r){
     ctx.beginPath();
-    ctx.moveTo(x + r.tl, y);
-    ctx.lineTo(x + w - r.tr, y);
-    ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
-    ctx.lineTo(x + w, y + h - r.br);
-    ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
-    ctx.lineTo(x + r.bl, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
-    ctx.lineTo(x, y + r.tl);
-    ctx.quadraticCurveTo(x, y, x + r.tl, y);
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
     ctx.closePath();
-    if (fill) ctx.fill();
-    if (stroke) ctx.stroke();
   }
 
   /*************************
-   * HEX MAP (Catan-style)
+   * HEX MAP (Catan-style, 60)
    *************************/
   function keyQR(q,r){ return q + "," + r; }
 
@@ -696,12 +692,14 @@
   function genHexIsland60(){
     const R = 4;
     const size = state.map.hexSize;
+
     const all=[];
     for(let q=-R;q<=R;q++){
       const r1=Math.max(-R, -q-R);
       const r2=Math.min(R, -q+R);
       for(let r=r1;r<=r2;r++) all.push({q,r});
     }
+    // 61 -> 60 (kenardan 1 sil)
     all.sort((a,b)=> (Math.abs(b.q)+Math.abs(b.r)) - (Math.abs(a.q)+Math.abs(a.r)));
     all.shift();
 
@@ -709,11 +707,13 @@
       const p = axialToPixel(h.q,h.r,size);
       return { id:i, q:h.q, r:h.r, x:p.x, y:p.y, countryId:-1, stateId:i };
     });
+
     state.map.byQR = new Map();
     for(const h of state.map.hexes){
       state.map.byQR.set(keyQR(h.q,h.r), h.id);
     }
 
+    // countries
     state.countries = [];
     for(let i=0;i<20;i++){
       state.countries.push({
@@ -729,6 +729,7 @@
       });
     }
 
+    // initial armies
     for(const c of state.countries){
       c.inventory.infantry += 6;
       c.inventory.archer += 4;
@@ -736,6 +737,7 @@
       c.inventory.scout += 2;
     }
 
+    // pick 20 seeds near center
     const rng = mulberry32(9001);
     const byCenter = [...state.map.hexes].sort((a,b)=> (a.x*a.x+a.y*a.y)-(b.x*b.x+b.y*b.y));
     const free = new Set(state.map.hexes.map(h=>h.id));
@@ -758,6 +760,7 @@
       return out;
     }
 
+    // grow each country to 3 hexes
     for(let round=0; round<2; round++){
       for(let cid=0; cid<20; cid++){
         const owned = state.countries[cid].states;
@@ -775,18 +778,32 @@
       }
     }
 
+    // states (60)
     state.states = [];
     for(let sid=0; sid<60; sid++){
       const owner = state.map.hexes[sid].countryId;
-      const idxInCountry = state.countries[owner].states.indexOf(sid);
-      state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(idxInCountry+1)}` });
+      state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.indexOf(sid)+1)}` });
     }
 
+    rebuildNeighbors();
+  }
+
+  function rebuildNeighbors(){
     const neighbors = Array.from({length:20}, ()=>new Set());
+    const byQR = state.map.byQR;
+
+    function neighborsOfHex(h){
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id = byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(state.map.hexes[id]);
+      }
+      return out;
+    }
+
     for(const h of state.map.hexes){
-      for(const nb of neighborsOf(h.id)){
-        const other = state.map.hexes[nb];
-        if(other.countryId !== h.countryId){
+      for(const other of neighborsOfHex(h)){
+        if(other.countryId!==h.countryId){
           neighbors[h.countryId].add(other.countryId);
         }
       }
@@ -821,6 +838,12 @@
     mapCanvas.style.width = rect.width + "px";
     mapCanvas.style.height = rect.height + "px";
     mapCtx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+
+    // center map if not positioned yet
+    if(mapView.ox===0 && mapView.oy===0){
+      mapView.ox = rect.width/2;
+      mapView.oy = rect.height/2;
+    }
 
     const brect = battleCanvas.parentElement.getBoundingClientRect();
     battleCanvas.width = Math.floor(brect.width * devicePixelRatio);
@@ -863,12 +886,9 @@
     mapCtx.translate(mapView.ox, mapView.oy);
     mapCtx.scale(mapView.scale, mapView.scale);
 
-    const cx = (w/2)/mapView.scale;
-    const cy = (h/2)/mapView.scale;
-
     const size = state.map.hexSize;
     for(const hx of state.map.hexes){
-      const pts = hexCorners(hx.x+cx, hx.y+cy, size);
+      const pts = hexCorners(hx.x, hx.y, size);
 
       mapCtx.beginPath();
       mapCtx.moveTo(pts[0].x,pts[0].y);
@@ -889,16 +909,17 @@
       }
     }
 
+    // country labels (small)
     mapCtx.font = "10px system-ui";
     mapCtx.textAlign = "center";
-    mapCtx.globalAlpha = 0.75;
+    mapCtx.globalAlpha = 0.78;
     mapCtx.lineWidth = 2;
     mapCtx.strokeStyle = "rgba(0,0,0,.65)";
     mapCtx.fillStyle = "rgba(255,255,255,.86)";
     for(let cid=0; cid<20; cid++){
       const list = state.map.hexes.filter(hx=>hx.countryId===cid);
-      const mx = list.reduce((a,hx)=>a+hx.x,0)/list.length + cx;
-      const my = list.reduce((a,hx)=>a+hx.y,0)/list.length + cy;
+      const mx = list.reduce((a,hx)=>a+hx.x,0)/list.length;
+      const my = list.reduce((a,hx)=>a+hx.y,0)/list.length;
       const name = state.countries[cid].name;
       mapCtx.strokeText(name, mx, my);
       mapCtx.fillText(name, mx, my);
@@ -909,15 +930,9 @@
   }
 
   function hitTest(px,py){
-    const rect = mapCanvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
     const p = mapView.screenToWorld(px,py);
-
-    const cx = (w/2)/mapView.scale;
-    const cy = (h/2)/mapView.scale;
-
-    const wx = p.x - cx;
-    const wy = p.y - cy;
+    const wx = p.x;
+    const wy = p.y;
 
     let best=null, bestD=1e18;
     for(const hx of state.map.hexes){
@@ -925,7 +940,7 @@
       const d = dx*dx + dy*dy;
       if(d<bestD){ bestD=d; best=hx; }
     }
-    const maxD = (state.map.hexSize*state.map.hexSize*1.6);
+    const maxD = (state.map.hexSize*state.map.hexSize*1.8);
     if(best && bestD<=maxD){
       return {sea:false, stateId: best.stateId, countryId: best.countryId};
     }
@@ -946,11 +961,11 @@
         <div class="unitMeta">
           <div class="name">${u.name}</div>
           <div class="muted small">${u.cost} altın</div>
-          <div class="muted small">HP:${u.hp} DMG:${u.dmg}</div>
-          <div class="muted small">Range:${u.range} Speed:${u.speed}</div>
+          <div class="muted small">HP:${u.hp} &nbsp; DMG:${u.dmg}</div>
+          <div class="muted small">Range:${u.range} &nbsp; Speed:${u.speed}</div>
           <span class="pill ${pillClass(u.type)}">${unitTypeTR(u.type)}</span>
         </div>
-        <button class="btn good" style="padding:7px 10px" ${state.playerCountryId==null ? "disabled":""}>Al</button>
+        <button class="btn good" style="padding:8px 10px" ${state.playerCountryId==null ? "disabled":""}>Al</button>
       `;
       card.querySelector("button").onclick = () => buyUnit(u.id);
       grid.appendChild(card);
@@ -1114,7 +1129,7 @@
     if(you.allyId!=null){ pushNews("Zaten müttefikin var. Önce boz."); return; }
     if(target.allyId!=null){ pushNews("Hedef ülkenin zaten müttefiki var."); return; }
 
-    const p = areNeighbors(youId,targetId) ? 0.58 : 0.35;
+    const p = areNeighbors(youId,targetId) ? 0.60 : 0.35;
     if(Math.random() < p){
       you.allyId = targetId;
       target.allyId = youId;
@@ -1133,7 +1148,7 @@
     const ally = getCountry(you.allyId);
     ally.allyId = null;
     you.allyId = null;
-    pushNews("Müttefik bozuldu. (AI hemen tekrar kabul etmeyebilir)");
+    pushNews("Müttefik bozuldu.");
     renderUI();
   }
 
@@ -1148,7 +1163,7 @@
   }
 
   /*************************
-   * AI TICK
+   * AI TICK (improved)
    *************************/
   function aiDailyTick(){
     if(state.playerCountryId==null) return;
@@ -1156,30 +1171,38 @@
     for(const c of state.countries){
       if(c.id === state.playerCountryId) continue;
 
-      // ✅ BOT ALIŞVERİŞİ: daha sık + paraya göre daha mantıklı kart seçsin
-if (Math.random() < 0.60) { // 0.35 -> 0.60
-  // önce satın alabileceği kartları filtrele
-  const affordable = UNITS.filter(u => u.cost <= c.gold);
-  if (affordable.length) {
-    // pahalıya biraz daha eğilim (daha güçlü olur)
-    affordable.sort((a,b)=> b.cost - a.cost);
-    const u = affordable[Math.floor(Math.random() * Math.min(3, affordable.length))];
-    c.gold -= u.cost;
-    c.inventory[u.id] = (c.inventory[u.id] || 0) + 1;
-  }
-}
+      // better buy logic: prefers cheap units if low gold, else mixed
+      if(Math.random() < 0.55){
+        const affordable = UNITS.filter(u=>u.cost<=c.gold);
+        if(affordable.length){
+          affordable.sort((a,b)=>a.cost-b.cost);
+          const pickPool = (c.gold<400) ? affordable.slice(0,3) : affordable;
+          const u = pick(pickPool);
+          c.gold -= u.cost;
+          c.inventory[u.id] = (c.inventory[u.id]||0)+1;
+        }
+      }
 
-
-      if(Math.random() < 0.030){
+      // AI-AI wars a bit smarter: only if has enough army
+      if(Math.random() < 0.020){
+        if(totalInventory(c.id) < 10) continue;
         const neigh = Array.from(state.map.neighbors[c.id]);
         if(neigh.length===0) continue;
         const t = pick(neigh);
+
         if(state.day - c.lastWarDay < WAR_COOLDOWN) continue;
         const until = c.armistice.get(t) || 0;
         if(state.day < until) continue;
 
-        const winner = (Math.random()<0.5) ? c.id : t;
-        const loser = (winner===c.id) ? t : c.id;
+        // prefer weaker neighbor (less inventory)
+        const cand = neigh.sort((a,b)=>totalInventory(a)-totalInventory(b))[0];
+        const target = (Math.random()<0.70) ? cand : t;
+
+        const winner = (totalInventory(c.id) >= totalInventory(target))
+          ? (Math.random()<0.62 ? c.id : target)
+          : (Math.random()<0.62 ? target : c.id);
+
+        const loser = (winner===c.id) ? target : c.id;
         resolveAIAIWar(winner, loser);
       }
     }
@@ -1193,9 +1216,9 @@ if (Math.random() < 0.60) { // 0.35 -> 0.60
     const captured = pick(lose.states);
     transferState(captured, winnerId);
 
-    win.gold += 1;
-lose.gold = Math.max(0, (lose.gold || 0) - 1000);
-    
+    const reward = 1; // per your request: win +1 altın
+    win.gold += reward;
+
     win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
     lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
     win.lastWarDay = state.day;
@@ -1219,30 +1242,8 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
     neu.states.push(stateId);
 
     st.countryId = newCountryId;
-    state.map.hexes[stateId].countryId = newCountryId;
-  }
-
-  function rebuildNeighbors(){
-    const neighbors = Array.from({length:20}, ()=>new Set());
-    const byQR = state.map.byQR;
-
-    function neighborsOfHex(h){
-      const out=[];
-      for(const nb of axialNeighbors(h.q,h.r)){
-        const id = byQR.get(keyQR(nb.q,nb.r));
-        if(id!=null) out.push(state.map.hexes[id]);
-      }
-      return out;
-    }
-
-    for(const h of state.map.hexes){
-      for(const other of neighborsOfHex(h)){
-        if(other.countryId!==h.countryId){
-          neighbors[h.countryId].add(other.countryId);
-        }
-      }
-    }
-    state.map.neighbors = neighbors;
+    state.map.hexes[stateId].countryId = newCountryId; // stateId==hexId
+    st.name = `${neu.name}-${(neu.states.indexOf(stateId)+1)}`;
   }
 
   /*************************
@@ -1277,7 +1278,7 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
     e.preventDefault();
     const delta = -Math.sign(e.deltaY) * 0.10;
     const old = mapView.scale;
-    const next = clamp(old*(1+delta), 0.65, 3.0);
+    const next = clamp(old*(1+delta), 0.65, 3.2);
 
     const rect = mapCanvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
@@ -1304,11 +1305,13 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
   /*************************
    * BATTLE SYSTEM
    *************************/
-  const battleView = { draggingUnit:null };
-
   function startBattle(attackerId, defenderId){
     const att = getCountry(attackerId);
     const def = getCountry(defenderId);
+
+    // ✅ pause world time during battle
+    state.running = false;
+    renderUI();
 
     const teams = {A:[attackerId], B:[defenderId]};
     if(att.allyId!=null && Math.random()<0.40){ teams.A.push(att.allyId); pushNews(`Müttefik: ${getCountry(att.allyId).name} savaşa katıldı!`); }
@@ -1320,19 +1323,11 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
       enemyId: defenderId,
       teams,
       phase:"deploy",
-      youField: [fx: {
-  projs: [],   // mermi/ok
-  hits: [],    // vuruş flaşı + yazı
-  death: []    // ölüm poof
-},
-],
+      youField: [],
       enemyField: [],
       t: 0,
       ended:false,
     };
-
-    // ✅ savaşdayken zaman donacak (loop'ta)
-    pushNews("Savaş moduna geçildi: zaman DURDU.");
 
     $("#uiMode").textContent = "SAVAŞ";
     $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
@@ -1350,9 +1345,10 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
   }
 
   function buildDeployBar(){
+    const b = state.battle;
     const bar = $("#deployBar");
     bar.innerHTML = "";
-    const you = getCountry(state.battle.youId);
+    const you = getCountry(b.youId);
 
     for(const u of UNITS){
       const count = you.inventory[u.id] || 0;
@@ -1372,7 +1368,6 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
       `;
 
       mini.addEventListener("dragstart",(e)=>{
-        battleView.draggingUnit = {unitId:u.id};
         e.dataTransfer.setData("text/plain", u.id);
       });
       bar.appendChild(mini);
@@ -1415,12 +1410,19 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
 
-    let want = clamp(Math.floor(totalInventory(b.enemyId)*0.55), 5, 14);
+    // better deploy: uses stronger mix, more if has big army
+    const inv = totalInventory(b.enemyId);
+    let want = clamp(Math.floor(inv*0.65), 6, 18);
+
     const ids = UNITS.map(u=>u.id);
     let tries=0;
-    while(want>0 && tries<600){
+    while(want>0 && tries<900){
       tries++;
-      const uid = pick(ids);
+      // prefer ranged a bit
+      const uid = (Math.random()<0.55)
+        ? pick(UNITS.filter(x=>x.type==="range").map(x=>x.id))
+        : pick(ids);
+
       if((enemy.inventory[uid]||0) <= 0) continue;
       const def = UNITS.find(x=>x.id===uid);
 
@@ -1471,19 +1473,22 @@ lose.gold = Math.max(0, (lose.gold || 0) - 1000);
     returnSurvivors(b.attackerId, survA);
     returnSurvivors(b.defenderId, survB);
 
-    // ✅ ÖDÜL / CEZA (senin istediğin)
-winner.gold += 1; // kazanana +1 altın
+    // ✅ economy rules (your request)
+    if(winnerId === state.playerCountryId){
+      winner.gold += 1;
+    } else {
+      winner.gold += 1;
+    }
 
-// kaybedenden -1000 altın (eksiye düşmesin)
-loser.gold = Math.max(0, (loser.gold || 0) - 1000);
-
+    // loser penalty
+    loser.gold = Math.max(0, loser.gold - 1000);
 
     if(loser.states.length>0){
       const captured = pick(loser.states);
       transferState(captured, winnerId);
-      pushNews(`${winner.name} kazandı! +${reward} altın ve 1 eyalet aldı (${getState(captured).name}).`);
+      pushNews(`${winner.name} kazandı! +1 altın ve 1 eyalet aldı (${getState(captured).name}).`);
     } else {
-      pushNews(`${winner.name} kazandı! +${reward} altın aldı.`);
+      pushNews(`${winner.name} kazandı! +1 altın aldı.`);
     }
 
     winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
@@ -1505,7 +1510,6 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
 
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
-    const centerY = h/2;
 
     function stepUnit(u, enemies){
       const def = UNITS.find(x=>x.id===u.unitId);
@@ -1524,52 +1528,19 @@ loser.gold = Math.max(0, (loser.gold || 0) - 1000);
         const d=Math.max(0.001, Math.hypot(dx,dy));
         u.x += (dx/d)*def.speed*dt;
         u.y += (dy/d)*def.speed*dt;
-      } } else if (u.cd <= 0) {
-  // hasar uygula
-  best.hp -= def.dmg;
-
-  // ✅ 1) projectile (ok/mermi/top mermisi)
-  // melee değilse projectile yapalım
-  if (def.type !== "melee") {
-    b.fx.projs.push({
-      x: u.x, y: u.y,
-      tx: best.x, ty: best.y,
-      t: 0,
-      dur: def.type === "range" ? 0.18 : 0.14, // kısa uçuş
-      kind: def.id // unit tipine göre çizim
-    });
-  }
-
-  // ✅ 2) hit flash + damage text
-  b.fx.hits.push({
-    x: best.x, y: best.y,
-    t: 0, dur: 0.35,
-    dmg: def.dmg
-  });
-
-  // cooldown
-  u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.60 : 0.75));
-}
-
+      } else if(u.cd<=0){
+        best.hp -= def.dmg;
+        u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.60 : 0.75));
       }
 
       u.x = clamp(u.x, 18, w-18);
-
-      // ✅ FIX: savaş başladığında beyaz sınır kilidi kalkar
-      if(b.phase === "deploy"){
-        if(u.team==="A") u.y = clamp(u.y, centerY+10, h-18);
-        else u.y = clamp(u.y, 18, centerY-10);
-      } else {
-        u.y = clamp(u.y, 18, h-18);
-      }
+      // ✅ no border lock in fight:
+      u.y = clamp(u.y, 18, h-18);
     }
 
     for(const u of b.youField) stepUnit(u, b.enemyField);
     for(const e of b.enemyField) stepUnit(e, b.youField);
-// ✅ 3) death poof: ölenleri yakala
-  
-for (const u of b.youField) if (u.hp <= 0) b.fx.death.push({ x:u.x, y:u.y, t:0, dur:0.6 });
-for (const e of b.enemyField) if (e.hp <= 0) b.fx.death.push({ x:e.x, y:e.y, t:0, dur:0.6 });
+
     b.youField = b.youField.filter(u=>u.hp>0);
     b.enemyField = b.enemyField.filter(u=>u.hp>0);
 
@@ -1577,16 +1548,6 @@ for (const e of b.enemyField) if (e.hp <= 0) b.fx.death.push({ x:e.x, y:e.y, t:0
     $("#uiEnemyUnits").textContent = b.enemyField.length;
 
     b.t += dt;
-  // ✅ FX update
-for (const p of b.fx.projs) p.t += dt;
-b.fx.projs = b.fx.projs.filter(p => p.t < p.dur);
-
-for (const h of b.fx.hits) h.t += dt;
-b.fx.hits = b.fx.hits.filter(h => h.t < h.dur);
-
-for (const d of b.fx.death) d.t += dt;
-b.fx.death = b.fx.death.filter(d => d.t < d.dur);
-
 
     if(b.youField.length===0 && b.enemyField.length===0) battleEnd("B");
     else if(b.enemyField.length===0) battleEnd("A");
@@ -1604,7 +1565,7 @@ b.fx.death = b.fx.death.filter(d => d.t < d.dur);
 
     const b = state.battle;
 
-    // ✅ FIX: çizgiler sadece DEPLOY'da
+    // lines only in deploy
     if(b && b.phase === "deploy"){
       battleCtx.strokeStyle = "rgba(255,255,255,.25)";
       battleCtx.lineWidth = 3;
@@ -1640,76 +1601,10 @@ b.fx.death = b.fx.death.filter(d => d.t < d.dur);
     }
 
     for(const u of b.youField) drawUnit(u);
-    // ✅ FX draw (projectiles, hits, deaths)
-if (b && b.fx) {
-  // Projectiles
-  for (const p of b.fx.projs) {
-    const k = clamp(p.t / p.dur, 0, 1);
-    const x = p.x + (p.tx - p.x) * k;
-    const y = p.y + (p.ty - p.y) * k;
-
-    // çizim: ok/mermi çizgisi
-    battleCtx.globalAlpha = 0.9;
-    battleCtx.lineWidth = 2;
-    battleCtx.strokeStyle = "rgba(255,255,255,.75)";
-    battleCtx.beginPath();
-    battleCtx.moveTo(x, y);
-    battleCtx.lineTo(x - (p.tx - p.x) * 0.03, y - (p.ty - p.y) * 0.03);
-    battleCtx.stroke();
-
-    // uçta küçük nokta
-    battleCtx.fillStyle = "rgba(255,255,255,.9)";
-    battleCtx.fillRect(x-1.5, y-1.5, 3, 3);
-    battleCtx.globalAlpha = 1;
-  }
-
-  // Hit flash + damage number
-  for (const h of b.fx.hits) {
-    const k = clamp(h.t / h.dur, 0, 1);
-    const a = (1 - k);
-    const r = 10 + k * 18;
-
-    battleCtx.globalAlpha = 0.65 * a;
-    battleCtx.beginPath();
-    battleCtx.arc(h.x, h.y, r, 0, Math.PI*2);
-    battleCtx.fillStyle = "rgba(255,255,255,.9)";
-    battleCtx.fill();
-
-    // damage text yukarı doğru aksın
-    battleCtx.globalAlpha = 0.9 * a;
-    battleCtx.font = "12px system-ui";
-    battleCtx.fillStyle = "rgba(0,0,0,.55)";
-    battleCtx.fillText("-"+h.dmg, h.x + 1, h.y - 14 - k*18 + 1);
-    battleCtx.fillStyle = "rgba(255,255,255,.92)";
-    battleCtx.fillText("-"+h.dmg, h.x,     h.y - 14 - k*18);
-
-    battleCtx.globalAlpha = 1;
-  }
-
-  // Death poof
-  for (const d of b.fx.death) {
-    const k = clamp(d.t / d.dur, 0, 1);
-    const a = (1 - k);
-    battleCtx.globalAlpha = 0.55 * a;
-
-    // 6 küçük parçacık
-    for (let i=0;i<6;i++){
-      const ang = (Math.PI*2) * (i/6);
-      const rr = 6 + k*22;
-      const x = d.x + Math.cos(ang)*rr;
-      const y = d.y + Math.sin(ang)*rr;
-      battleCtx.fillStyle = "rgba(255,255,255,.85)";
-      battleCtx.fillRect(x-2, y-2, 4, 4);
-    }
-
-    battleCtx.globalAlpha = 1;
-  }
-}
-
     for(const e of b.enemyField) drawUnit(e);
 
     battleCtx.fillStyle = "rgba(0,0,0,.40)";
-    battleCtx.fillRect(12, h-52, 420, 40);
+    battleCtx.fillRect(12, h-52, 520, 40);
     battleCtx.fillStyle = "rgba(255,255,255,.88)";
     battleCtx.font = "12px system-ui";
     const txt = b.phase==="deploy"
@@ -1719,11 +1614,11 @@ if (b && b.fx) {
   }
 
   /*************************
-   * SAVE / LOAD (HEX)
+   * SAVE / LOAD
    *************************/
   function exportSave(){
     const data = {
-      version: 2,
+      version: 3,
       mapType: "hex",
       day: state.day,
       running: state.running,
@@ -1781,9 +1676,8 @@ if (b && b.fx) {
     }));
     state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name}));
 
-    // ✅ eksik kart görseli varsa canvas ile üret
     for(const u of UNITS){
-      if(!state.cardImages[u.id]) state.cardImages[u.id] = drawUnitCardCanvas(u);
+      if(!state.cardImages[u.id]) state.cardImages[u.id] = makeUnitIconDataURL(u);
     }
     for(let i=0;i<20;i++){
       if(!state.flags[i]) state.flags[i] = genFlagDataURL(i);
@@ -1849,6 +1743,8 @@ if (b && b.fx) {
 
   $("#btnPause").onclick = ()=>{
     if(state.playerCountryId==null) return;
+    // if battle open, do nothing
+    if(state.battle) { pushNews("Savaş sırasında zaman durur."); return; }
     state.running = !state.running;
     pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
     renderUI();
@@ -1868,13 +1764,11 @@ if (b && b.fx) {
   $("#btnUploadCards").onclick = ()=> $("#cardsOverlay").style.display="flex";
   $("#btnCloseCards").onclick = ()=> $("#cardsOverlay").style.display="none";
   $("#btnApplyCards").onclick = applyCardImages;
-
-  // ✅ kart temizle -> tekrar CANVAS/PAINT kartlarına dön
   $("#btnClearCards").onclick = ()=>{
-    for(const u of UNITS) state.cardImages[u.id] = drawUnitCardCanvas(u);
+    for(const u of UNITS) state.cardImages[u.id] = makeUnitIconDataURL(u);
     buildShop();
     if(state.battle) buildDeployBar();
-    pushNews("Kartlar canvas/paint görsellerine döndürüldü.");
+    pushNews("Kart görselleri sıfırlandı (otomatik çizim).");
   };
 
   $("#btnReset").onclick = ()=> initAll();
@@ -1884,7 +1778,11 @@ if (b && b.fx) {
     $("#battleOverlay").style.display="none";
     $("#uiMode").textContent = "HARİTA";
     state.battle = null;
-    pushNews("Savaştan çıkıldı: zaman devam edebilir.");
+
+    // ✅ resume time after closing battle
+    if(state.playerCountryId!=null) state.running = true;
+
+    renderUI();
     drawMap();
   };
 
@@ -1911,7 +1809,7 @@ if (b && b.fx) {
     const dt = Math.min(0.05, (now-last)/1000);
     last = now;
 
-    // ✅ 1) FIX: savaşdayken zaman DURUR (gün akmaz)
+    // time passes only if running and no battle
     if(state.playerCountryId!=null && state.running && !state.battle){
       tickAcc += dt;
       while(tickAcc >= 1.0){
@@ -1938,17 +1836,19 @@ if (b && b.fx) {
     state.news = [];
     state.battle = null;
 
-    // ✅ 2) FIX: kartlar artık CANVAS/PAINT ile otomatik çiziliyor
-    state.cardImages = {};
-    for(const u of UNITS) state.cardImages[u.id] = drawUnitCardCanvas(u);
-
+    // flags
     state.flags = {};
     for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
 
+    // map
     genHexIsland60();
-    rebuildNeighbors();
+
+    // icons
+    state.cardImages = {};
+    for(const u of UNITS) state.cardImages[u.id] = makeUnitIconDataURL(u);
 
     mapView.reset();
+
     pushNews("Fantazi HEX ada hazır. Ülke seçince oyun başlar.");
     buildCountryPicker();
     buildShop();
@@ -1960,6 +1860,7 @@ if (b && b.fx) {
     $("#btnPause").textContent = "Duraklat";
   }
 
+  // startup
   initAll();
   resizeCanvas();
   requestAnimationFrame(loop);
@@ -1968,5 +1869,3 @@ if (b && b.fx) {
 </script>
 </body>
 </html>
-
-
