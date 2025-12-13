@@ -232,7 +232,7 @@
       <canvas id="mapCanvas"></canvas>
       <div class="hint">
         <div class="row" style="align-items:center; gap:10px">
-          <span class="chip">Fantazi harita</span>
+          <span class="chip">Fantazi HEX ada</span>
           <span class="chip">20 ülke</span>
           <span class="chip">60 eyalet</span>
           <span class="chip">%15 asker geri</span>
@@ -343,8 +343,7 @@
         </div>
       </div>
 
-      <div class="deployBar" id="deployBar" title="Kartları buradan sürükle">
-      </div>
+      <div class="deployBar" id="deployBar" title="Kartları buradan sürükle"></div>
     </div>
 
     <div class="muted small" style="margin-top:10px">
@@ -364,7 +363,6 @@
   const ARMISTICE_DAYS = 20;
   const NEWS_QUEUE_MAX = 6;
 
-  // Fantazi ülke isimleri
   const COUNTRY_NAMES = [
     "Alderyn","Varkûn","Solmara","Kryth",
     "Eldros","Neravia","Thalor","Umbrael",
@@ -391,30 +389,24 @@
    *************************/
   const state = {
     day: 0,
-    running: false,          // IMPORTANT: starts paused until country selected
+    running: false,
     playerCountryId: null,
     selectedCountryId: null,
     selectedStateId: null,
     countries: [],
-    states: [],              // 60 states objects
-    cardImages: {},          // unitId -> dataURL
-    flags: {},               // countryId -> dataURL
+    states: [],
+
+    cardImages: {},
+    flags: {},
     news: [],
     battle: null,
 
-    // map data (organic)
+    // HEX MAP
     map: {
-      W: 360,
-      H: 240,
-      cellCountry: null,   // Int16Array length W*H: -1 sea, 0..19 country
-      cellState: null,     // Int16Array length W*H: -1 sea, 0..59 state
-      land: null,          // Uint8Array length W*H: 0 sea 1 land
-      neighbors: null,     // Array<Set> per country adjacency
-      offscreen: null,     // Offscreen rendered image (canvas)
-      offctx: null,
-      imageData: null,
-      cellSize: 5,         // world units per cell (render scaled by zoom)
-      baseNoise: null,
+      hexSize: 22,
+      hexes: [],       // 60: {id,q,r,x,y,countryId,stateId}
+      byQR: new Map(), // "q,r" -> id
+      neighbors: null, // Array<Set> per country
     }
   };
 
@@ -433,10 +425,10 @@
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
   const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-  const key = (x,y,W)=>y*W+x;
-
   function unitTypeTR(t){ return t==="melee"?"Yakın":(t==="mid"?"Orta":"Uzak"); }
   function pillClass(t){ return t==="melee"?"melee":(t==="mid"?"mid":"range"); }
+  function getCountry(id){ return state.countries.find(c=>c.id===id); }
+  function getState(id){ return state.states.find(s=>s.id===id); }
 
   function pushNews(text){
     state.news.unshift(`[Gün ${state.day}] ${text}`);
@@ -444,11 +436,8 @@
     $("#uiNews").textContent = state.news.join("  •  ");
   }
 
-  function getCountry(id){ return state.countries.find(c=>c.id===id); }
-  function getState(id){ return state.states.find(s=>s.id===id); }
-
   /*************************
-   * SEEDED RNG (for deterministic map/flags)
+   * SEEDED RNG
    *************************/
   function mulberry32(a){
     return function(){
@@ -460,7 +449,7 @@
   }
 
   /*************************
-   * FLAG GENERATOR (pixel-art "paint-like")
+   * FLAG GENERATOR
    *************************/
   function genFlagDataURL(countryId){
     const r = mulberry32(1000 + countryId*97);
@@ -468,20 +457,14 @@
     const c = document.createElement("canvas");
     c.width=w; c.height=h;
     const ctx=c.getContext("2d");
-
-    // palette
     const pal = [
       `hsl(${Math.floor(r()*360)},80%,55%)`,
       `hsl(${Math.floor(r()*360)},85%,60%)`,
       `hsl(${Math.floor(r()*360)},70%,45%)`,
       "#0b1020", "#f2f6ff"
     ];
-
-    // background pattern
-    ctx.fillStyle = pal[0];
-    ctx.fillRect(0,0,w,h);
-
-    const style = Math.floor(r()*4); // 0 stripes,1 split,2 cross,3 emblem
+    ctx.fillStyle = pal[0]; ctx.fillRect(0,0,w,h);
+    const style = Math.floor(r()*4);
     ctx.globalAlpha = 0.95;
 
     if(style===0){
@@ -505,20 +488,17 @@
       ctx.fillRect(Math.floor(w/2-2),0,4,h);
       ctx.fillRect(0,Math.floor(h/2-2),w,4);
     } else {
-      // diagonal + emblem
       ctx.fillStyle = pal[1];
       ctx.beginPath();
       ctx.moveTo(0,0); ctx.lineTo(w,0); ctx.lineTo(0,h); ctx.closePath();
       ctx.fill();
     }
 
-    // emblem (pixel diamond / circle)
     const em = Math.floor(r()*3);
     ctx.fillStyle = pal[4];
     const cx = Math.floor(w*(0.48 + (r()*0.10-0.05)));
     const cy = Math.floor(h*(0.52 + (r()*0.10-0.05)));
     if(em===0){
-      // diamond
       ctx.beginPath();
       ctx.moveTo(cx, cy-8);
       ctx.lineTo(cx+8, cy);
@@ -529,15 +509,10 @@
       ctx.fillStyle = pal[3];
       ctx.fillRect(cx-2,cy-2,4,4);
     } else if(em===1){
-      ctx.beginPath();
-      ctx.arc(cx,cy,8,0,Math.PI*2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,cy,8,0,Math.PI*2); ctx.fill();
       ctx.fillStyle = pal[2];
-      ctx.beginPath();
-      ctx.arc(cx,cy,4,0,Math.PI*2);
-      ctx.fill();
+      ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
     } else {
-      // star-ish
       ctx.fillStyle = pal[4];
       for(let i=0;i<5;i++){
         ctx.fillRect(cx-1 + i*2 - 4, cy-10 + i*4, 3, 3);
@@ -545,7 +520,6 @@
       }
     }
 
-    // border + "pixel" noise
     ctx.globalAlpha = 1;
     ctx.strokeStyle = "rgba(255,255,255,.35)";
     ctx.lineWidth = 2;
@@ -583,213 +557,56 @@
   }
 
   /*************************
-   * ORGANIC MAP GENERATION
-   * - land mask by value noise + blobs
-   * - 20 country seeds on land
-   * - assign each land cell to nearest seed (Voronoi)
-   * - 3 state seeds per country -> 60 states
-   * - neighbors computed from border contacts
+   * HEX MAP (Catan-style)
+   * - radius 4 -> 61 hex, remove 1 -> 60 eyalet
+   * - 20 ülke, her biri 3 hex (komşu büyütme)
    *************************/
-  function smoothstep(t){ return t*t*(3-2*t); }
+  function keyQR(q,r){ return q + "," + r; }
 
-  function valueNoise(W,H,seed){
-    const r = mulberry32(seed);
-    const gW = Math.floor(W/18)+2;
-    const gH = Math.floor(H/18)+2;
-    const grid = new Float32Array(gW*gH);
-    for(let i=0;i<grid.length;i++) grid[i] = r();
-
-    const out = new Float32Array(W*H);
-    const scaleX = (gW-1)/(W-1);
-    const scaleY = (gH-1)/(H-1);
-
-    for(let y=0;y<H;y++){
-      const gy = y*scaleY;
-      const y0 = Math.floor(gy);
-      const fy = smoothstep(gy - y0);
-      for(let x=0;x<W;x++){
-        const gx = x*scaleX;
-        const x0 = Math.floor(gx);
-        const fx = smoothstep(gx - x0);
-
-        const a = grid[(y0)*gW + (x0)];
-        const b = grid[(y0)*gW + (x0+1)];
-        const c = grid[(y0+1)*gW + (x0)];
-        const d = grid[(y0+1)*gW + (x0+1)];
-
-        const ab = a + (b-a)*fx;
-        const cd = c + (d-c)*fx;
-        out[y*W+x] = ab + (cd-ab)*fy;
-      }
-    }
-    return out;
+  function axialToPixel(q,r,size){
+    // pointy-top hex
+    return {
+      x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r),
+      y: size * (3/2 * r),
+    };
   }
-
-  function genLandMask(){
-    const {W,H} = state.map;
-    const base = valueNoise(W,H, 1337);
-    const base2 = valueNoise(W,H, 7777);
-    state.map.baseNoise = base;
-
-    const land = new Uint8Array(W*H);
-
-    // multiple "continents" using radial blobs + noise
-    const blobs = [
-      {cx: W*0.45, cy:H*0.52, r: Math.min(W,H)*0.38},
-      {cx: W*0.70, cy:H*0.35, r: Math.min(W,H)*0.20},
-      {cx: W*0.22, cy:H*0.30, r: Math.min(W,H)*0.18},
-      {cx: W*0.18, cy:H*0.66, r: Math.min(W,H)*0.16},
-      {cx: W*0.78, cy:H*0.72, r: Math.min(W,H)*0.14},
+  function axialNeighbors(q,r){
+    return [
+      {q:q+1,r:r},{q:q-1,r:r},{q:q,r:r+1},{q:q,r:r-1},{q:q+1,r:r-1},{q:q-1,r:r+1}
     ];
-
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        let v = 0;
-        for(const b of blobs){
-          const dx=x-b.cx, dy=y-b.cy;
-          const d = Math.hypot(dx,dy);
-          const t = clamp(1 - d/b.r, 0, 1);
-          v += t*t; // blob strength
-        }
-        v = v/1.9; // normalize-ish
-        // add noise detail
-        const n = base[y*W+x]*0.55 + base2[y*W+x]*0.45;
-        // coastline threshold
-        const coast = v + (n-0.5)*0.38;
-        land[y*W+x] = (coast > 0.35) ? 1 : 0;
-      }
+  }
+  function hexCorners(x,y,size){
+    const pts=[];
+    for(let i=0;i<6;i++){
+      const ang = (Math.PI/180) * (60*i - 30);
+      pts.push({x:x + size*Math.cos(ang), y:y + size*Math.sin(ang)});
     }
-
-    // carve some inner seas & channels
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        if(!land[y*W+x]) continue;
-        const n = base2[y*W+x];
-        if(n < 0.06 && Math.abs(x-W*0.48) < W*0.18 && Math.abs(y-H*0.50) < H*0.22){
-          land[y*W+x] = 0;
-        }
-      }
-    }
-
-    // tiny islands
-    const r = mulberry32(2025);
-    for(let i=0;i<380;i++){
-      const x = Math.floor(r()*W), y = Math.floor(r()*H);
-      if(land[y*W+x]) continue;
-      if(r() < 0.12){
-        for(let oy=-1;oy<=1;oy++){
-          for(let ox=-1;ox<=1;ox++){
-            const xx=x+ox, yy=y+oy;
-            if(xx>=0&&yy>=0&&xx<W&&yy<H) land[yy*W+xx]=1;
-          }
-        }
-      }
-    }
-
-    state.map.land = land;
+    return pts;
   }
 
-  function pickLandCell(rng){
-    const {W,H,land} = state.map;
-    for(let tries=0;tries<10000;tries++){
-      const x = Math.floor(rng()*W);
-      const y = Math.floor(rng()*H);
-      if(land[y*W+x]) return {x,y};
+  function genHexIsland60(){
+    const R = 4;
+    const size = state.map.hexSize;
+    const all=[];
+    for(let q=-R;q<=R;q++){
+      const r1=Math.max(-R, -q-R);
+      const r2=Math.min(R, -q+R);
+      for(let r=r1;r<=r2;r++) all.push({q,r});
     }
-    // fallback
-    return {x:Math.floor(W/2), y:Math.floor(H/2)};
-  }
+    // 61 -> 60 (kenardan 1 sil)
+    all.sort((a,b)=> (Math.abs(b.q)+Math.abs(b.r)) - (Math.abs(a.q)+Math.abs(a.r)));
+    all.shift();
 
-  function dist2(ax,ay,bx,by){ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; }
-
-  function genCountriesAndStates(){
-    const {W,H,land} = state.map;
-    const rng = mulberry32(4444);
-
-    // 20 country seeds
-    const countrySeeds = [];
-    for(let i=0;i<20;i++){
-      let p = pickLandCell(rng);
-      // spread out a bit
-      for(let k=0;k<8;k++){
-        const q = pickLandCell(rng);
-        let ok = true;
-        for(const s of countrySeeds){
-          if(dist2(q.x,q.y,s.x,s.y) < (W*0.10)*(W*0.10)) { ok=false; break; }
-        }
-        if(ok){ p=q; break; }
-      }
-      countrySeeds.push({id:i, x:p.x, y:p.y});
+    state.map.hexes = all.map((h,i)=>{
+      const p = axialToPixel(h.q,h.r,size);
+      return { id:i, q:h.q, r:h.r, x:p.x, y:p.y, countryId:-1, stateId:i };
+    });
+    state.map.byQR = new Map();
+    for(const h of state.map.hexes){
+      state.map.byQR.set(keyQR(h.q,h.r), h.id);
     }
 
-    // assign each land cell -> nearest country seed
-    const cellCountry = new Int16Array(W*H);
-    const cellState = new Int16Array(W*H);
-    cellCountry.fill(-1);
-    cellState.fill(-1);
-
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        const idx = y*W+x;
-        if(!land[idx]) continue;
-        let best=-1, bestD=1e18;
-        for(const s of countrySeeds){
-          const d = dist2(x,y,s.x,s.y);
-          if(d < bestD){ bestD=d; best=s.id; }
-        }
-        cellCountry[idx]=best;
-      }
-    }
-
-    // for each country: 3 state seeds inside its area
-    const stateSeeds = []; // per stateId {id,countryId,x,y}
-    let sid=0;
-    const perCountryCells = Array.from({length:20}, ()=>[]);
-    for(let i=0;i<cellCountry.length;i++){
-      const c = cellCountry[i];
-      if(c>=0) perCountryCells[c].push(i);
-    }
-
-    for(let cid=0;cid<20;cid++){
-      const cells = perCountryCells[cid];
-      // choose 3 seeds from random cells, try far apart
-      const seeds = [];
-      for(let k=0;k<3;k++){
-        let bestCell = cells[Math.floor(rng()*cells.length)];
-        for(let tries=0;tries<50;tries++){
-          const cand = cells[Math.floor(rng()*cells.length)];
-          let minD = 1e18;
-          const cx=cand%W, cy=Math.floor(cand/W);
-          for(const s of seeds){
-            minD = Math.min(minD, dist2(cx,cy,s.x,s.y));
-          }
-          if(seeds.length===0 || minD > (W*0.05)*(W*0.05)){
-            bestCell = cand;
-            break;
-          }
-        }
-        const sx = bestCell%W, sy = Math.floor(bestCell/W);
-        seeds.push({x:sx,y:sy,stateId:sid});
-        stateSeeds.push({id:sid, countryId:cid, x:sx, y:sy});
-        sid++;
-      }
-
-      // assign country cells to nearest of the 3 state seeds
-      for(const idx of cells){
-        const x = idx%W, y=Math.floor(idx/W);
-        let best = seeds[0].stateId, bestD=1e18;
-        for(const s of seeds){
-          const d = dist2(x,y,s.x,s.y);
-          if(d<bestD){ bestD=d; best=s.stateId; }
-        }
-        cellState[idx]=best;
-      }
-    }
-
-    state.map.cellCountry = cellCountry;
-    state.map.cellState = cellState;
-
-    // build country objects
+    // ülkeler
     state.countries = [];
     for(let i=0;i<20;i++){
       state.countries.push({
@@ -805,19 +622,7 @@
       });
     }
 
-    // build 60 state objects
-    state.states = [];
-    for(let i=0;i<60;i++){
-      const seed = stateSeeds[i];
-      state.states.push({
-        id:i,
-        countryId: seed.countryId,
-        name: `${COUNTRY_NAMES[seed.countryId]}-${(i%3)+1}`,
-      });
-      state.countries[seed.countryId].states.push(i);
-    }
-
-    // initial armies for everyone
+    // başlangıç ordu
     for(const c of state.countries){
       c.inventory.infantry += 6;
       c.inventory.archer += 4;
@@ -825,128 +630,68 @@
       c.inventory.scout += 2;
     }
 
-    // neighbors by border contacts
-    const neighbors = Array.from({length:20}, ()=>new Set());
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        const idx=y*W+x;
-        const a = cellCountry[idx];
-        if(a<0) continue;
-        if(x+1<W){
-          const b = cellCountry[idx+1];
-          if(b>=0 && b!==a){ neighbors[a].add(b); neighbors[b].add(a); }
+    // 20 seed seç (merkeze yakınlardan)
+    const rng = mulberry32(9001);
+    const ids = state.map.hexes.map(h=>h.id);
+    const byCenter = [...state.map.hexes].sort((a,b)=> (a.x*a.x+a.y*a.y)-(b.x*b.x+b.y*b.y));
+    const free = new Set(ids);
+
+    const seeds=[];
+    for(let cid=0; cid<20; cid++){
+      let s = byCenter[Math.floor(rng()*Math.min(18, byCenter.length))];
+      if(!free.has(s.id)) s = byCenter.find(h=>free.has(h.id));
+      seeds.push({cid, hid:s.id});
+      free.delete(s.id);
+      state.map.hexes[s.id].countryId = cid;
+      state.countries[cid].states.push(s.id);
+    }
+
+    // büyüt: her ülkeye 2 hex daha (toplam 3)
+    function neighborsOf(hid){
+      const h = state.map.hexes[hid];
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id = state.map.byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(id);
+      }
+      return out;
+    }
+
+    for(let round=0; round<2; round++){
+      for(let cid=0; cid<20; cid++){
+        const owned = state.countries[cid].states;
+        const frontier=[];
+        for(const hid of owned){
+          for(const nb of neighborsOf(hid)){
+            if(state.map.hexes[nb].countryId===-1) frontier.push(nb);
+          }
         }
-        if(y+1<H){
-          const b = cellCountry[idx+W];
-          if(b>=0 && b!==a){ neighbors[a].add(b); neighbors[b].add(a); }
+        let chosen = frontier.length ? frontier[Math.floor(rng()*frontier.length)]
+                                     : state.map.hexes.find(h=>h.countryId===-1)?.id;
+        if(chosen==null) continue;
+        state.map.hexes[chosen].countryId = cid;
+        state.countries[cid].states.push(chosen);
+      }
+    }
+
+    // state list (60 eyalet = 60 hex)
+    state.states = [];
+    for(let sid=0; sid<60; sid++){
+      const owner = state.map.hexes[sid].countryId;
+      state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.indexOf(sid)+1)}` });
+    }
+
+    // neighbors (ülke ülke)
+    const neighbors = Array.from({length:20}, ()=>new Set());
+    for(const h of state.map.hexes){
+      for(const nb of neighborsOf(h.id)){
+        const other = state.map.hexes[nb];
+        if(other.countryId !== h.countryId){
+          neighbors[h.countryId].add(other.countryId);
         }
       }
     }
     state.map.neighbors = neighbors;
-  }
-
-  /*************************
-   * MAP RENDER (OFFSCREEN)
-   *************************/
-  function countryColor(cid){
-    const hue = (cid * 23) % 360;
-    return {h:hue, s:70, l:52};
-  }
-  function hsl(h,s,l,a=1){ return `hsla(${h},${s}%,${l}%,${a})`; }
-
-  function renderMapOffscreen(){
-    const {W,H,cellCountry,cellState,land} = state.map;
-    const c = document.createElement("canvas");
-    c.width = W; c.height = H;
-    const ctx = c.getContext("2d");
-    const img = ctx.createImageData(W,H);
-    const d = img.data;
-
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        const i = (y*W+x);
-        const o = i*4;
-        if(!land[i]){
-          // sea gradient
-          const deep = 18 + Math.floor(22*(y/H));
-          d[o+0]=8; d[o+1]=deep; d[o+2]=38 + Math.floor(40*(x/W)); d[o+3]=255;
-          continue;
-        }
-        const cid = cellCountry[i];
-        const sid = cellState[i];
-        const base = countryColor(cid);
-        // state shade variations
-        const shade = (sid%3)*6 - 6; // -6,0,6
-        const l = clamp(base.l + shade + (state.map.baseNoise[i]-0.5)*8, 28, 62);
-
-        // land color
-        const col = hsl(base.h, base.s, l, 1);
-        // parse quick: convert HSL to RGB via canvas fillStyle? We'll approximate fast:
-        // We'll use a tiny conversion:
-        const rgb = hslToRgb(base.h/360, base.s/100, l/100);
-        d[o+0]=rgb[0]; d[o+1]=rgb[1]; d[o+2]=rgb[2]; d[o+3]=255;
-
-        // mountains / forests overlay based on noise
-        const n = state.map.baseNoise[i];
-        if(n>0.82){
-          d[o+0]=Math.floor(d[o+0]*0.72);
-          d[o+1]=Math.floor(d[o+1]*0.72);
-          d[o+2]=Math.floor(d[o+2]*0.72);
-        } else if(n<0.18){
-          d[o+0]=Math.floor(d[o+0]*0.88);
-          d[o+1]=Math.floor(d[o+1]*1.02);
-          d[o+2]=Math.floor(d[o+2]*0.86);
-        }
-      }
-    }
-
-    ctx.putImageData(img,0,0);
-
-    // coast outline
-    ctx.globalAlpha = 0.55;
-    ctx.strokeStyle = "rgba(0,0,0,.55)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let y=1;y<H-1;y++){
-      for(let x=1;x<W-1;x++){
-        const i=y*W+x;
-        if(!land[i]) continue;
-        const sea =
-          !land[i-1] || !land[i+1] || !land[i-W] || !land[i+W];
-        if(sea){
-          ctx.rect(x+0.0,y+0.0,1,1);
-        }
-      }
-    }
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    state.map.offscreen = c;
-    state.map.offctx = ctx;
-    state.map.imageData = img;
-  }
-
-  function hslToRgb(h, s, l){
-    // h,s,l in [0,1]
-    let r, g, b;
-    if(s === 0){
-      r = g = b = l;
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if(t < 0) t += 1;
-        if(t > 1) t -= 1;
-        if(t < 1/6) return p + (q - p) * 6 * t;
-        if(t < 1/2) return q;
-        if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-      };
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1/3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1/3);
-    }
-    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
   }
 
   /*************************
@@ -960,10 +705,9 @@
     lastX: 0,
     lastY: 0,
     reset(){
-      // fit map
       this.scale = 1.0;
-      this.ox = 40;
-      this.oy = 40;
+      this.ox = 0;
+      this.oy = 0;
     },
     screenToWorld(px,py){
       return { x:(px - this.ox)/this.scale, y:(py - this.oy)/this.scale };
@@ -990,15 +734,27 @@
   }
   window.addEventListener("resize", resizeCanvas);
 
+  function countryColor(cid){
+    const hue = (cid * 23) % 360;
+    return `hsl(${hue},70%,52%)`;
+  }
+
   function drawMap(){
     const rect = mapCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
     mapCtx.clearRect(0,0,w,h);
 
-    // background stars/dots
+    // deniz arkaplan
+    const g = mapCtx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,"rgba(8,16,40,.95)");
+    g.addColorStop(1,"rgba(6,10,28,.98)");
+    mapCtx.fillStyle = g;
+    mapCtx.fillRect(0,0,w,h);
+
+    // stars
     mapCtx.globalAlpha = 0.10;
     mapCtx.fillStyle = "#b9d0ff";
-    for(let i=0;i<180;i++){
+    for(let i=0;i<200;i++){
       const x = (i*73)%w;
       const y = (i*119)%h;
       mapCtx.fillRect(x,y,1,1);
@@ -1009,117 +765,78 @@
     mapCtx.translate(mapView.ox, mapView.oy);
     mapCtx.scale(mapView.scale, mapView.scale);
 
-    // draw offscreen map
-    const off = state.map.offscreen;
-    if(off){
-      mapCtx.imageSmoothingEnabled = false;
-      mapCtx.drawImage(off, 0, 0);
+    // ada ortalansın
+    const cx = (w/2)/mapView.scale;
+    const cy = (h/2)/mapView.scale;
+
+    // hex çiz
+    const size = state.map.hexSize;
+    for(const hx of state.map.hexes){
+      const pts = hexCorners(hx.x+cx, hx.y+cy, size);
+
+      mapCtx.beginPath();
+      mapCtx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<6;i++) mapCtx.lineTo(pts[i].x,pts[i].y);
+      mapCtx.closePath();
+
+      mapCtx.fillStyle = countryColor(hx.countryId);
+      mapCtx.fill();
+
+      mapCtx.lineWidth = 2;
+      mapCtx.strokeStyle = "rgba(0,0,0,.35)";
+      mapCtx.stroke();
+
+      // seçili eyalet
+      if(state.selectedStateId === hx.stateId){
+        mapCtx.lineWidth = 4;
+        mapCtx.strokeStyle = "rgba(255,255,255,.85)";
+        mapCtx.stroke();
+      }
     }
 
-    // state borders (subtle)
-    drawBorders("state", "rgba(0,0,0,.22)");
-    // country borders (stronger)
-    drawBorders("country", "rgba(255,255,255,.16)");
-
-    // selection highlight
-    if(state.selectedStateId != null){
-      highlightState(state.selectedStateId);
+    // ÜLKE İSİMLERİ (KÜÇÜK FIX)
+    mapCtx.font = "10px system-ui";
+    mapCtx.textAlign = "center";
+    mapCtx.globalAlpha = 0.75;
+    mapCtx.lineWidth = 2;
+    mapCtx.strokeStyle = "rgba(0,0,0,.65)";
+    mapCtx.fillStyle = "rgba(255,255,255,.86)";
+    for(let cid=0; cid<20; cid++){
+      const list = state.map.hexes.filter(hx=>hx.countryId===cid);
+      const mx = list.reduce((a,hx)=>a+hx.x,0)/list.length + cx;
+      const my = list.reduce((a,hx)=>a+hx.y,0)/list.length + cy;
+      const name = state.countries[cid].name;
+      mapCtx.strokeText(name, mx, my);
+      mapCtx.fillText(name, mx, my);
     }
-
-    // country labels
-    drawCountryLabels();
+    mapCtx.globalAlpha = 1;
 
     mapCtx.restore();
   }
 
-  function drawBorders(kind, stroke){
-    const {W,H,land,cellCountry,cellState} = state.map;
-    mapCtx.strokeStyle = stroke;
-    mapCtx.lineWidth = 1;
-    mapCtx.beginPath();
-    for(let y=1;y<H-1;y++){
-      for(let x=1;x<W-1;x++){
-        const i=y*W+x;
-        if(!land[i]) continue;
-        const a = (kind==="country") ? cellCountry[i] : cellState[i];
-        if(a<0) continue;
-        const right = (kind==="country") ? cellCountry[i+1] : cellState[i+1];
-        const down  = (kind==="country") ? cellCountry[i+W] : cellState[i+W];
-        if(right!==a) mapCtx.rect(x+0.5,y+0.5,1,1);
-        if(down!==a)  mapCtx.rect(x+0.5,y+0.5,1,1);
-      }
-    }
-    mapCtx.stroke();
-  }
-
-  function highlightState(stateId){
-    const {W,H,land,cellState} = state.map;
-    mapCtx.globalAlpha = 0.22;
-    mapCtx.fillStyle = "rgba(255,255,255,.85)";
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        const i=y*W+x;
-        if(!land[i]) continue;
-        if(cellState[i]===stateId){
-          mapCtx.fillRect(x,y,1,1);
-        }
-      }
-    }
-    mapCtx.globalAlpha = 1;
-
-    // outline
-    mapCtx.strokeStyle = "rgba(255,255,255,.85)";
-    mapCtx.lineWidth = 2;
-    mapCtx.beginPath();
-    for(let y=1;y<H-1;y++){
-      for(let x=1;x<W-1;x++){
-        const i=y*W+x;
-        if(cellState[i]!==stateId) continue;
-        const edge =
-          cellState[i-1]!==stateId || cellState[i+1]!==stateId ||
-          cellState[i-W]!==stateId || cellState[i+W]!==stateId;
-        if(edge) mapCtx.rect(x+0.5,y+0.5,1,1);
-      }
-    }
-    mapCtx.stroke();
-  }
-
-  function drawCountryLabels(){
-    const {W,H,land,cellCountry} = state.map;
-    // centroid approx by sampling
-    const accum = Array.from({length:20}, ()=>({sx:0,sy:0,n:0}));
-    for(let y=0;y<H;y+=2){
-      for(let x=0;x<W;x+=2){
-        const i=y*W+x;
-        if(!land[i]) continue;
-        const c = cellCountry[i];
-        if(c<0) continue;
-        accum[c].sx += x; accum[c].sy += y; accum[c].n++;
-      }
-    }
-    mapCtx.font = "11px system-ui";
-    mapCtx.fillStyle = "rgba(0,0,0,.55)";
-    mapCtx.strokeStyle = "rgba(255,255,255,.28)";
-    mapCtx.lineWidth = 3;
-    for(let cid=0;cid<20;cid++){
-      const a = accum[cid];
-      if(a.n<10) continue;
-      const x = a.sx/a.n, y=a.sy/a.n;
-      const name = state.countries[cid]?.name ?? "";
-      mapCtx.strokeText(name, x- name.length*2.8, y);
-      mapCtx.fillText(name, x- name.length*2.8, y);
-    }
-  }
-
+  // Hit: en yakın hex
   function hitTest(px,py){
+    const rect = mapCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
     const p = mapView.screenToWorld(px,py);
-    const x = Math.floor(p.x);
-    const y = Math.floor(p.y);
-    const {W,H,land,cellState,cellCountry} = state.map;
-    if(x<0||y<0||x>=W||y>=H) return null;
-    const i = y*W+x;
-    if(!land[i]) return {sea:true};
-    return {sea:false, stateId: cellState[i], countryId: cellCountry[i]};
+
+    const cx = (w/2)/mapView.scale;
+    const cy = (h/2)/mapView.scale;
+
+    const wx = p.x - cx;
+    const wy = p.y - cy;
+
+    let best=null, bestD=1e18;
+    for(const hx of state.map.hexes){
+      const dx = wx - hx.x, dy = wy - hx.y;
+      const d = dx*dx + dy*dy;
+      if(d<bestD){ bestD=d; best=hx; }
+    }
+    const maxD = (state.map.hexSize*state.map.hexSize*1.6);
+    if(best && bestD<=maxD){
+      return {sea:false, stateId: best.stateId, countryId: best.countryId};
+    }
+    return {sea:true};
   }
 
   /*************************
@@ -1136,6 +853,8 @@
         <div class="unitMeta">
           <div class="name">${u.name}</div>
           <div class="muted small">${u.cost} altın</div>
+          <div class="muted small">HP:${u.hp} DMG:${u.dmg}</div>
+          <div class="muted small">Range:${u.range} Speed:${u.speed}</div>
           <span class="pill ${pillClass(u.type)}">${unitTypeTR(u.type)}</span>
         </div>
         <button class="btn good" style="padding:7px 10px" ${state.playerCountryId==null ? "disabled":""}>Al</button>
@@ -1248,7 +967,6 @@
     state.selectedCountryId = cid;
     state.selectedStateId = state.countries[cid].states[0];
 
-    // IMPORTANT: start time now
     state.running = true;
     state.day = Math.max(1, state.day);
 
@@ -1303,7 +1021,6 @@
     if(you.allyId!=null){ pushNews("Zaten müttefikin var. Önce boz."); return; }
     if(target.allyId!=null){ pushNews("Hedef ülkenin zaten müttefiki var."); return; }
 
-    // AI: komşuysa daha çok kabul
     const p = areNeighbors(youId,targetId) ? 0.58 : 0.35;
     if(Math.random() < p){
       you.allyId = targetId;
@@ -1338,7 +1055,7 @@
   }
 
   /*************************
-   * AI TICK (light but real)
+   * AI TICK
    *************************/
   function aiDailyTick(){
     if(state.playerCountryId==null) return;
@@ -1346,7 +1063,6 @@
     for(const c of state.countries){
       if(c.id === state.playerCountryId) continue;
 
-      // buy
       if(Math.random() < 0.35){
         const u = pick(UNITS);
         if(c.gold >= u.cost){
@@ -1355,20 +1071,14 @@
         }
       }
 
-      // AI-AI wars (rare) -> instant resolution + map changes
       if(Math.random() < 0.018){
         const neigh = Array.from(state.map.neighbors[c.id]);
         if(neigh.length===0) continue;
         const t = pick(neigh);
-        const chk = (() => {
-          if(state.day - c.lastWarDay < WAR_COOLDOWN) return false;
-          const until = c.armistice.get(t) || 0;
-          if(state.day < until) return false;
-          return true;
-        })();
-        if(!chk) continue;
+        if(state.day - c.lastWarDay < WAR_COOLDOWN) continue;
+        const until = c.armistice.get(t) || 0;
+        if(state.day < until) continue;
 
-        // resolve
         const winner = (Math.random()<0.5) ? c.id : t;
         const loser = (winner===c.id) ? t : c.id;
         resolveAIAIWar(winner, loser);
@@ -1393,14 +1103,13 @@
     lose.lastWarDay = state.day;
 
     pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. 1 eyalet aldı +${reward} altın.`);
-    rebuildMapOwnershipFromStates(); // update cellCountry/cellState ownership visually
-    renderMapOffscreen();
+    rebuildNeighbors();
     drawMap();
     renderUI();
   }
 
   /*************************
-   * OWNERSHIP TRANSFER + MAP UPDATE
+   * OWNERSHIP
    *************************/
   function transferState(stateId, newCountryId){
     const st = getState(stateId);
@@ -1409,34 +1118,28 @@
 
     old.states = old.states.filter(x=>x!==stateId);
     neu.states.push(stateId);
+
     st.countryId = newCountryId;
+    state.map.hexes[stateId].countryId = newCountryId; // çünkü stateId==hexId
   }
 
-  function rebuildMapOwnershipFromStates(){
-    // When a state changes owner, we must update cellCountry for all cells of that state.
-    // States are defined by cellState mapping; ownership is read from state.states[*].countryId.
-    const {W,H,cellState,cellCountry,land} = state.map;
-    for(let i=0;i<W*H;i++){
-      if(!land[i]) continue;
-      const sid = cellState[i];
-      const owner = state.states[sid].countryId;
-      cellCountry[i] = owner;
+  function rebuildNeighbors(){
+    const neighbors = Array.from({length:20}, ()=>new Set());
+    const byQR = state.map.byQR;
+
+    function neighborsOfHex(h){
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id = byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(state.map.hexes[id]);
+      }
+      return out;
     }
 
-    // recompute neighbors quickly (ownership changes affect neighbor sets)
-    const neighbors = Array.from({length:20}, ()=>new Set());
-    for(let y=0;y<H;y++){
-      for(let x=0;x<W;x++){
-        const idx=y*W+x;
-        const a = cellCountry[idx];
-        if(a<0) continue;
-        if(x+1<W){
-          const b = cellCountry[idx+1];
-          if(b>=0 && b!==a){ neighbors[a].add(b); neighbors[b].add(a); }
-        }
-        if(y+1<H){
-          const b = cellCountry[idx+W];
-          if(b>=0 && b!==a){ neighbors[a].add(b); neighbors[b].add(a); }
+    for(const h of state.map.hexes){
+      for(const other of neighborsOfHex(h)){
+        if(other.countryId!==h.countryId){
+          neighbors[h.countryId].add(other.countryId);
         }
       }
     }
@@ -1493,7 +1196,6 @@
     const rect = mapCanvas.getBoundingClientRect();
     const hit = hitTest(e.clientX-rect.left, e.clientY-rect.top);
     if(!hit || hit.sea) return;
-
     state.selectedStateId = hit.stateId;
     state.selectedCountryId = hit.countryId;
     renderUI();
@@ -1509,7 +1211,6 @@
     const att = getCountry(attackerId);
     const def = getCountry(defenderId);
 
-    // allies may join (not guaranteed)
     const teams = {A:[attackerId], B:[defenderId]};
     if(att.allyId!=null && Math.random()<0.40){ teams.A.push(att.allyId); pushNews(`Müttefik: ${getCountry(att.allyId).name} savaşa katıldı!`); }
     if(def.allyId!=null && Math.random()<0.40){ teams.B.push(def.allyId); pushNews(`Müttefik: ${getCountry(def.allyId).name} savaşa katıldı!`); }
@@ -1570,7 +1271,6 @@
       bar.appendChild(mini);
     }
 
-    // drop handler (once per open)
     battleCanvas.addEventListener("dragover", (e)=> e.preventDefault());
     battleCanvas.addEventListener("drop", (e)=>{
       e.preventDefault();
@@ -1680,8 +1380,7 @@
     winner.lastWarDay = state.day;
     loser.lastWarDay = state.day;
 
-    rebuildMapOwnershipFromStates();
-    renderMapOffscreen();
+    rebuildNeighbors();
     drawMap();
 
     buildArmyList();
@@ -1720,8 +1419,14 @@
       }
 
       u.x = clamp(u.x, 18, w-18);
-      if(u.team==="A") u.y = clamp(u.y, centerY+10, h-18);
-      else u.y = clamp(u.y, 18, centerY-10);
+
+      // ✅ FIX: savaşta sınır Y kilidi yok!
+      if(b.phase === "deploy"){
+        if(u.team==="A") u.y = clamp(u.y, centerY+10, h-18);
+        else u.y = clamp(u.y, 18, centerY-10);
+      } else {
+        u.y = clamp(u.y, 18, h-18);
+      }
     }
 
     for(const u of b.youField) stepUnit(u, b.enemyField);
@@ -1750,24 +1455,26 @@
     battleCtx.fillStyle = "rgba(80, 180, 110, .22)";
     battleCtx.fillRect(0,0,w,h);
 
-    // center line
-    battleCtx.strokeStyle = "rgba(255,255,255,.25)";
-    battleCtx.lineWidth = 3;
-    battleCtx.beginPath();
-    battleCtx.moveTo(0,h/2);
-    battleCtx.lineTo(w,h/2);
-    battleCtx.stroke();
-
-    // deploy limit
-    battleCtx.strokeStyle = "rgba(255,209,102,.30)";
-    battleCtx.setLineDash([8,8]);
-    battleCtx.beginPath();
-    battleCtx.moveTo(0,h/2 + 70);
-    battleCtx.lineTo(w,h/2 + 70);
-    battleCtx.stroke();
-    battleCtx.setLineDash([]);
-
     const b = state.battle;
+
+    // ✅ FIX: çizgiler SADECE deploy'da
+    if(b && b.phase === "deploy"){
+      battleCtx.strokeStyle = "rgba(255,255,255,.25)";
+      battleCtx.lineWidth = 3;
+      battleCtx.beginPath();
+      battleCtx.moveTo(0,h/2);
+      battleCtx.lineTo(w,h/2);
+      battleCtx.stroke();
+
+      battleCtx.strokeStyle = "rgba(255,209,102,.30)";
+      battleCtx.setLineDash([8,8]);
+      battleCtx.beginPath();
+      battleCtx.moveTo(0,h/2 + 70);
+      battleCtx.lineTo(w,h/2 + 70);
+      battleCtx.stroke();
+      battleCtx.setLineDash([]);
+    }
+
     if(!b) return;
 
     function drawUnit(u){
@@ -1788,7 +1495,6 @@
     for(const u of b.youField) drawUnit(u);
     for(const e of b.enemyField) drawUnit(e);
 
-    // status
     battleCtx.fillStyle = "rgba(0,0,0,.40)";
     battleCtx.fillRect(12, h-52, 420, 40);
     battleCtx.fillStyle = "rgba(255,255,255,.88)";
@@ -1800,10 +1506,12 @@
   }
 
   /*************************
-   * SAVE / LOAD
+   * SAVE / LOAD (HEX)
    *************************/
   function exportSave(){
     const data = {
+      version: 2,
+      mapType: "hex",
       day: state.day,
       running: state.running,
       playerCountryId: state.playerCountryId,
@@ -1811,6 +1519,10 @@
       selectedStateId: state.selectedStateId,
       cardImages: state.cardImages,
       flags: state.flags,
+      map: {
+        hexSize: state.map.hexSize,
+        hexes: state.map.hexes.map(h=>({id:h.id,q:h.q,r:h.r,x:h.x,y:h.y,countryId:h.countryId,stateId:h.stateId})),
+      },
       countries: state.countries.map(c=>({
         id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
         inventory:c.inventory, states:c.states,
@@ -1819,14 +1531,8 @@
         passage: Array.from(c.passage.values()),
       })),
       states: state.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name})),
-      mapMeta: { W: state.map.W, H: state.map.H, cellSize: state.map.cellSize },
-      mapData: {
-        land: Array.from(state.map.land),
-        cellCountry: Array.from(state.map.cellCountry),
-        cellState: Array.from(state.map.cellState),
-        baseNoise: Array.from(state.map.baseNoise || []),
-      }
     };
+
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1845,18 +1551,13 @@
     state.cardImages = obj.cardImages || {};
     state.flags = obj.flags || {};
 
-    // restore map arrays
-    state.map.W = obj.mapMeta?.W || state.map.W;
-    state.map.H = obj.mapMeta?.H || state.map.H;
-    state.map.cellSize = obj.mapMeta?.cellSize || state.map.cellSize;
+    state.map.hexSize = obj.map?.hexSize ?? state.map.hexSize;
+    state.map.hexes = (obj.map?.hexes || []).map(h=>({ ...h }));
+    state.map.byQR = new Map();
+    for(const h of state.map.hexes){
+      state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    }
 
-    const W=state.map.W,H=state.map.H;
-    state.map.land = new Uint8Array(obj.mapData.land);
-    state.map.cellCountry = new Int16Array(obj.mapData.cellCountry);
-    state.map.cellState = new Int16Array(obj.mapData.cellState);
-    state.map.baseNoise = new Float32Array(obj.mapData.baseNoise);
-
-    // restore countries/states
     state.countries = obj.countries.map(c=>({
       id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
       inventory:c.inventory || Object.fromEntries(UNITS.map(u=>[u.id,0])),
@@ -1867,7 +1568,6 @@
     }));
     state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name}));
 
-    // ensure images exist
     for(const u of UNITS){
       if(!state.cardImages[u.id]) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
     }
@@ -1875,10 +1575,7 @@
       if(!state.flags[i]) state.flags[i] = genFlagDataURL(i);
     }
 
-    // recompute neighbors from restored ownership
-    rebuildMapOwnershipFromStates();
-    renderMapOffscreen();
-
+    rebuildNeighbors();
     pushNews("Save yüklendi.");
     buildCountryPicker();
     buildShop();
@@ -1983,7 +1680,6 @@
   function dayTick(){
     state.day += 1;
 
-    // flavor news
     if(Math.random()<0.10){
       const a = pick(state.countries);
       const b = pick(state.countries.filter(x=>x.id!==a.id));
@@ -1998,7 +1694,6 @@
     const dt = Math.min(0.05, (now-last)/1000);
     last = now;
 
-    // IMPORTANT: no country -> no time
     if(state.playerCountryId!=null && state.running){
       tickAcc += dt;
       while(tickAcc >= 1.0){
@@ -2017,7 +1712,6 @@
    * INIT
    *************************/
   function initAll(){
-    // reset
     state.day = 0;
     state.running = false;
     state.playerCountryId = null;
@@ -2026,35 +1720,28 @@
     state.news = [];
     state.battle = null;
 
-    // default card images
     state.cardImages = {};
     for(const u of UNITS) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
 
-    // flags
     state.flags = {};
     for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
 
-    // map
-    genLandMask();
-    genCountriesAndStates();
-    rebuildMapOwnershipFromStates();
-    renderMapOffscreen();
+    // ✅ HEX yuvarlak ada
+    genHexIsland60();
+    rebuildNeighbors();
 
-    // UI + map view
     mapView.reset();
-    pushNews("Fantazi dünya hazır. Ülke seçince oyun başlar.");
+    pushNews("Fantazi HEX ada hazır. Ülke seçince oyun başlar.");
     buildCountryPicker();
     buildShop();
     buildArmyList();
     renderUI();
     drawMap();
 
-    // reset pause button
     $("#btnPause").disabled = true;
     $("#btnPause").textContent = "Duraklat";
   }
 
-  // startup
   initAll();
   resizeCanvas();
   requestAnimationFrame(loop);
