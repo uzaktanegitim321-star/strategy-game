@@ -85,7 +85,16 @@
       font-size:12px; color:var(--muted);
     }
 
-    .shopGrid{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+    /* ✅ FIX: mağazada 10 kartın tamamı görünsün + tıklanabilsin */
+    .shopGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding-right: 6px;
+    }
+
     .unitCard{
       border-radius:14px; padding:10px; border:1px solid rgba(255,255,255,.12);
       background:rgba(0,0,0,.20);
@@ -95,6 +104,7 @@
       width:42px; height:42px; border-radius:12px; background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
       display:grid; place-items:center; overflow:hidden;
+      flex:0 0 auto;
     }
     .unitImg img{width:100%; height:100%; object-fit:cover}
     .unitMeta{flex:1}
@@ -110,6 +120,7 @@
     .overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.58);
       display:none; align-items:center; justify-content:center; padding:16px;
+      z-index: 50;
     }
     .modal{
       width:min(1020px, 96vw); max-height:92vh; overflow:auto;
@@ -299,6 +310,10 @@
       <div class="row">
         <button class="btn primary" id="btnApplyCards">Uygula</button>
         <button class="btn" id="btnClearCards">Kartları Temizle</button>
+      </div>
+      <div class="hr"></div>
+      <div class="muted small">
+        Not: Kart yüklemezsen oyun otomatik <b>canvas/paint</b> kartları kullanır.
       </div>
     </div>
   </div>
@@ -537,34 +552,128 @@
   }
 
   /*************************
-   * CARD PLACEHOLDER
+   * ✅ CANVAS/PAINT KART ÇİZİMİ (AUTO)
    *************************/
-  function makePlaceholderSVG(seedText){
-    const svg =
-`<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="rgba(77,212,255,.9)"/>
-      <stop offset="1" stop-color="rgba(255,92,122,.85)"/>
-    </linearGradient>
-  </defs>
-  <rect x="6" y="6" width="84" height="84" rx="18" fill="url(#g)"/>
-  <circle cx="48" cy="44" r="18" fill="rgba(0,0,0,.18)"/>
-  <path d="M28 72 L68 72" stroke="rgba(0,0,0,.28)" stroke-width="8" stroke-linecap="round"/>
-  <text x="48" y="50" text-anchor="middle" font-family="system-ui,Segoe UI,Arial" font-size="14" fill="rgba(255,255,255,.92)">${seedText}</text>
-</svg>`;
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  function unitAccent(type){
+    if(type==="melee") return {a:"#ff5c7a", b:"#ffd166"};
+    if(type==="mid")   return {a:"#ffd166", b:"#7cff8b"};
+    return {a:"#4dd4ff", b:"#b9d0ff"};
+  }
+
+  function drawUnitCardCanvas(unit){
+    const c = document.createElement("canvas");
+    c.width = 96; c.height = 96;
+    const ctx = c.getContext("2d");
+
+    // bg gradient
+    const ac = unitAccent(unit.type);
+    const g = ctx.createLinearGradient(0,0,96,96);
+    g.addColorStop(0, ac.a);
+    g.addColorStop(1, ac.b);
+    ctx.fillStyle = g;
+    ctx.fillRect(0,0,96,96);
+
+    // inner dark panel
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    roundRect(ctx, 8, 8, 80, 80, 18, true, false);
+
+    // icon base
+    ctx.fillStyle = "rgba(255,255,255,.14)";
+    roundRect(ctx, 16, 16, 64, 44, 14, true, false);
+
+    // simple "pixel" icon (asker/ok/top vs)
+    ctx.save();
+    ctx.translate(48, 38);
+
+    ctx.fillStyle = "rgba(0,0,0,.45)";
+    // head
+    ctx.beginPath();
+    ctx.arc(0,-14,7,0,Math.PI*2);
+    ctx.fill();
+    // body
+    ctx.fillRect(-5,-7,10,18);
+    // legs
+    ctx.fillRect(-10,10,20,6);
+
+    // weapon by type
+    if(unit.id==="archer" || unit.id==="crossbow"){
+      ctx.strokeStyle = "rgba(0,0,0,.55)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(10,-2,10, -Math.PI/2, Math.PI/2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(10,-12); ctx.lineTo(10,8);
+      ctx.stroke();
+    } else if(unit.id==="cannon"){
+      ctx.fillStyle = "rgba(0,0,0,.55)";
+      ctx.fillRect(10,0,18,8);
+      ctx.beginPath();
+      ctx.arc(6,8,7,0,Math.PI*2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(22,8,7,0,Math.PI*2);
+      ctx.fill();
+    } else if(unit.id==="rifleman" || unit.id==="musketeer"){
+      ctx.strokeStyle = "rgba(0,0,0,.55)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(6,-2); ctx.lineTo(26,6);
+      ctx.stroke();
+    } else if(unit.id==="cavalry"){
+      ctx.fillStyle = "rgba(0,0,0,.45)";
+      ctx.fillRect(-18,14,36,8);
+      ctx.fillRect(-10,6,20,10);
+    } else {
+      ctx.strokeStyle = "rgba(0,0,0,.55)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(6,0); ctx.lineTo(26,-10);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // initials badge
+    const initials = unit.name.split(" ").map(x=>x[0]).slice(0,2).join("").toUpperCase();
+    ctx.fillStyle = "rgba(255,255,255,.18)";
+    roundRect(ctx, 14, 62, 28, 20, 10, true, false);
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = "bold 12px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText(initials, 28, 76);
+
+    // border
+    ctx.strokeStyle = "rgba(255,255,255,.55)";
+    ctx.lineWidth = 3;
+    roundRect(ctx, 3, 3, 90, 90, 20, false, true);
+
+    return c.toDataURL("image/png");
+  }
+
+  function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+    if (typeof r === "number") r = {tl:r, tr:r, br:r, bl:r};
+    ctx.beginPath();
+    ctx.moveTo(x + r.tl, y);
+    ctx.lineTo(x + w - r.tr, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+    ctx.lineTo(x + w, y + h - r.br);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+    ctx.lineTo(x + r.bl, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+    ctx.lineTo(x, y + r.tl);
+    ctx.quadraticCurveTo(x, y, x + r.tl, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
   }
 
   /*************************
    * HEX MAP (Catan-style)
-   * - radius 4 -> 61 hex, remove 1 -> 60 eyalet
-   * - 20 ülke, her biri 3 hex (komşu büyütme)
    *************************/
   function keyQR(q,r){ return q + "," + r; }
 
   function axialToPixel(q,r,size){
-    // pointy-top hex
     return {
       x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r),
       y: size * (3/2 * r),
@@ -593,7 +702,6 @@
       const r2=Math.min(R, -q+R);
       for(let r=r1;r<=r2;r++) all.push({q,r});
     }
-    // 61 -> 60 (kenardan 1 sil)
     all.sort((a,b)=> (Math.abs(b.q)+Math.abs(b.r)) - (Math.abs(a.q)+Math.abs(a.r)));
     all.shift();
 
@@ -606,7 +714,6 @@
       state.map.byQR.set(keyQR(h.q,h.r), h.id);
     }
 
-    // ülkeler
     state.countries = [];
     for(let i=0;i<20;i++){
       state.countries.push({
@@ -622,7 +729,6 @@
       });
     }
 
-    // başlangıç ordu
     for(const c of state.countries){
       c.inventory.infantry += 6;
       c.inventory.archer += 4;
@@ -630,23 +736,18 @@
       c.inventory.scout += 2;
     }
 
-    // 20 seed seç (merkeze yakınlardan)
     const rng = mulberry32(9001);
-    const ids = state.map.hexes.map(h=>h.id);
     const byCenter = [...state.map.hexes].sort((a,b)=> (a.x*a.x+a.y*a.y)-(b.x*b.x+b.y*b.y));
-    const free = new Set(ids);
+    const free = new Set(state.map.hexes.map(h=>h.id));
 
-    const seeds=[];
     for(let cid=0; cid<20; cid++){
       let s = byCenter[Math.floor(rng()*Math.min(18, byCenter.length))];
       if(!free.has(s.id)) s = byCenter.find(h=>free.has(h.id));
-      seeds.push({cid, hid:s.id});
       free.delete(s.id);
       state.map.hexes[s.id].countryId = cid;
       state.countries[cid].states.push(s.id);
     }
 
-    // büyüt: her ülkeye 2 hex daha (toplam 3)
     function neighborsOf(hid){
       const h = state.map.hexes[hid];
       const out=[];
@@ -674,14 +775,13 @@
       }
     }
 
-    // state list (60 eyalet = 60 hex)
     state.states = [];
     for(let sid=0; sid<60; sid++){
       const owner = state.map.hexes[sid].countryId;
-      state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.indexOf(sid)+1)}` });
+      const idxInCountry = state.countries[owner].states.indexOf(sid);
+      state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(idxInCountry+1)}` });
     }
 
-    // neighbors (ülke ülke)
     const neighbors = Array.from({length:20}, ()=>new Set());
     for(const h of state.map.hexes){
       for(const nb of neighborsOf(h.id)){
@@ -744,14 +844,12 @@
     const w = rect.width, h = rect.height;
     mapCtx.clearRect(0,0,w,h);
 
-    // deniz arkaplan
     const g = mapCtx.createLinearGradient(0,0,w,h);
     g.addColorStop(0,"rgba(8,16,40,.95)");
     g.addColorStop(1,"rgba(6,10,28,.98)");
     mapCtx.fillStyle = g;
     mapCtx.fillRect(0,0,w,h);
 
-    // stars
     mapCtx.globalAlpha = 0.10;
     mapCtx.fillStyle = "#b9d0ff";
     for(let i=0;i<200;i++){
@@ -765,11 +863,9 @@
     mapCtx.translate(mapView.ox, mapView.oy);
     mapCtx.scale(mapView.scale, mapView.scale);
 
-    // ada ortalansın
     const cx = (w/2)/mapView.scale;
     const cy = (h/2)/mapView.scale;
 
-    // hex çiz
     const size = state.map.hexSize;
     for(const hx of state.map.hexes){
       const pts = hexCorners(hx.x+cx, hx.y+cy, size);
@@ -786,7 +882,6 @@
       mapCtx.strokeStyle = "rgba(0,0,0,.35)";
       mapCtx.stroke();
 
-      // seçili eyalet
       if(state.selectedStateId === hx.stateId){
         mapCtx.lineWidth = 4;
         mapCtx.strokeStyle = "rgba(255,255,255,.85)";
@@ -794,7 +889,6 @@
       }
     }
 
-    // ÜLKE İSİMLERİ (KÜÇÜK FIX)
     mapCtx.font = "10px system-ui";
     mapCtx.textAlign = "center";
     mapCtx.globalAlpha = 0.75;
@@ -814,7 +908,6 @@
     mapCtx.restore();
   }
 
-  // Hit: en yakın hex
   function hitTest(px,py){
     const rect = mapCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
@@ -1120,7 +1213,7 @@
     neu.states.push(stateId);
 
     st.countryId = newCountryId;
-    state.map.hexes[stateId].countryId = newCountryId; // çünkü stateId==hexId
+    state.map.hexes[stateId].countryId = newCountryId;
   }
 
   function rebuildNeighbors(){
@@ -1226,6 +1319,9 @@
       t: 0,
       ended:false,
     };
+
+    // ✅ savaşdayken zaman donacak (loop'ta)
+    pushNews("Savaş moduna geçildi: zaman DURDU.");
 
     $("#uiMode").textContent = "SAVAŞ";
     $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
@@ -1420,7 +1516,7 @@
 
       u.x = clamp(u.x, 18, w-18);
 
-      // ✅ FIX: savaşta sınır Y kilidi yok!
+      // ✅ FIX: savaş başladığında beyaz sınır kilidi kalkar
       if(b.phase === "deploy"){
         if(u.team==="A") u.y = clamp(u.y, centerY+10, h-18);
         else u.y = clamp(u.y, 18, centerY-10);
@@ -1451,13 +1547,12 @@
     const w = rect.width, h = rect.height;
     battleCtx.clearRect(0,0,w,h);
 
-    // grass
     battleCtx.fillStyle = "rgba(80, 180, 110, .22)";
     battleCtx.fillRect(0,0,w,h);
 
     const b = state.battle;
 
-    // ✅ FIX: çizgiler SADECE deploy'da
+    // ✅ FIX: çizgiler sadece DEPLOY'da
     if(b && b.phase === "deploy"){
       battleCtx.strokeStyle = "rgba(255,255,255,.25)";
       battleCtx.lineWidth = 3;
@@ -1568,8 +1663,9 @@
     }));
     state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name}));
 
+    // ✅ eksik kart görseli varsa canvas ile üret
     for(const u of UNITS){
-      if(!state.cardImages[u.id]) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
+      if(!state.cardImages[u.id]) state.cardImages[u.id] = drawUnitCardCanvas(u);
     }
     for(let i=0;i<20;i++){
       if(!state.flags[i]) state.flags[i] = genFlagDataURL(i);
@@ -1654,11 +1750,13 @@
   $("#btnUploadCards").onclick = ()=> $("#cardsOverlay").style.display="flex";
   $("#btnCloseCards").onclick = ()=> $("#cardsOverlay").style.display="none";
   $("#btnApplyCards").onclick = applyCardImages;
+
+  // ✅ kart temizle -> tekrar CANVAS/PAINT kartlarına dön
   $("#btnClearCards").onclick = ()=>{
-    for(const u of UNITS) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
+    for(const u of UNITS) state.cardImages[u.id] = drawUnitCardCanvas(u);
     buildShop();
     if(state.battle) buildDeployBar();
-    pushNews("Kart görselleri temizlendi.");
+    pushNews("Kartlar canvas/paint görsellerine döndürüldü.");
   };
 
   $("#btnReset").onclick = ()=> initAll();
@@ -1668,6 +1766,7 @@
     $("#battleOverlay").style.display="none";
     $("#uiMode").textContent = "HARİTA";
     state.battle = null;
+    pushNews("Savaştan çıkıldı: zaman devam edebilir.");
     drawMap();
   };
 
@@ -1694,7 +1793,8 @@
     const dt = Math.min(0.05, (now-last)/1000);
     last = now;
 
-    if(state.playerCountryId!=null && state.running){
+    // ✅ 1) FIX: savaşdayken zaman DURUR (gün akmaz)
+    if(state.playerCountryId!=null && state.running && !state.battle){
       tickAcc += dt;
       while(tickAcc >= 1.0){
         tickAcc -= 1.0;
@@ -1720,13 +1820,13 @@
     state.news = [];
     state.battle = null;
 
+    // ✅ 2) FIX: kartlar artık CANVAS/PAINT ile otomatik çiziliyor
     state.cardImages = {};
-    for(const u of UNITS) state.cardImages[u.id] = makePlaceholderSVG(u.name.slice(0,2).toUpperCase());
+    for(const u of UNITS) state.cardImages[u.id] = drawUnitCardCanvas(u);
 
     state.flags = {};
     for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
 
-    // ✅ HEX yuvarlak ada
     genHexIsland60();
     rebuildNeighbors();
 
