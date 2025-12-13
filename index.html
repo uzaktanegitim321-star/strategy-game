@@ -1156,15 +1156,21 @@
     for(const c of state.countries){
       if(c.id === state.playerCountryId) continue;
 
-      if(Math.random() < 0.35){
-        const u = pick(UNITS);
-        if(c.gold >= u.cost){
-          c.gold -= u.cost;
-          c.inventory[u.id] = (c.inventory[u.id]||0)+1;
-        }
-      }
+      // ✅ BOT ALIŞVERİŞİ: daha sık + paraya göre daha mantıklı kart seçsin
+if (Math.random() < 0.60) { // 0.35 -> 0.60
+  // önce satın alabileceği kartları filtrele
+  const affordable = UNITS.filter(u => u.cost <= c.gold);
+  if (affordable.length) {
+    // pahalıya biraz daha eğilim (daha güçlü olur)
+    affordable.sort((a,b)=> b.cost - a.cost);
+    const u = affordable[Math.floor(Math.random() * Math.min(3, affordable.length))];
+    c.gold -= u.cost;
+    c.inventory[u.id] = (c.inventory[u.id] || 0) + 1;
+  }
+}
 
-      if(Math.random() < 0.018){
+
+      if(Math.random() < 0.030){
         const neigh = Array.from(state.map.neighbors[c.id]);
         if(neigh.length===0) continue;
         const t = pick(neigh);
@@ -1187,9 +1193,9 @@
     const captured = pick(lose.states);
     transferState(captured, winnerId);
 
-    const reward = rand(700, 1400);
-    win.gold += reward;
-
+    win.gold += 1;
+lose.gold = Math.max(0, (lose.gold || 0) - 1000);
+    
     win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
     lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
     win.lastWarDay = state.day;
@@ -1460,8 +1466,12 @@
     returnSurvivors(b.attackerId, survA);
     returnSurvivors(b.defenderId, survB);
 
-    const reward = rand(900, 1700);
-    winner.gold += reward;
+    // ✅ ÖDÜL / CEZA (senin istediğin)
+winner.gold += 1; // kazanana +1 altın
+
+// kaybedenden -1000 altın (eksiye düşmesin)
+loser.gold = Math.max(0, (loser.gold || 0) - 1000);
+
 
     if(loser.states.length>0){
       const captured = pick(loser.states);
@@ -1850,3 +1860,4 @@
 </script>
 </body>
 </html>
+
