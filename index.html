@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fantazi Strateji — Avrupa HEX / 20 Ülke / 60 Eyalet (Tek Dosya)</title>
+  <title>Fantazi Strateji — Europe Hex / 20 Ülke / 60 Eyalet (Tek Dosya)</title>
   <style>
     :root{
       --bg:#07101f; --txt:#e8f0ff; --muted:#9fb1d2; --line:#203255;
@@ -14,8 +14,10 @@
     body{
       margin:0; color:var(--txt);
       font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-      background: radial-gradient(1100px 700px at 25% 15%, #142a5a 0%, #081227 55%, #040814 100%);
+      background:
+        radial-gradient(1100px 700px at 25% 15%, #142a5a 0%, #081227 55%, #040814 100%);
       user-select:none;
+      overflow-x:hidden;
     }
     .app{display:flex; gap:12px; padding:12px; min-height:100vh}
     .card{
@@ -27,6 +29,7 @@
     }
     .left,.right{width:320px; display:flex; flex-direction:column; gap:12px}
     .center{flex:1; min-width:680px; display:flex; flex-direction:column; gap:12px}
+
     .pad{padding:12px}
     .title{font-weight:800; letter-spacing:.2px}
     .muted{color:var(--muted)}
@@ -37,6 +40,7 @@
     .kv:last-child{border-bottom:none}
     .small{font-size:12px}
     .kbd{font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06)}
+
     .btn{
       cursor:pointer;
       border:1px solid rgba(255,255,255,.14);
@@ -82,17 +86,25 @@
       font-size:12px; color:var(--muted);
     }
 
-    /* ✅ shop scroll fix: 10 kart da görünür */
+    /* ✅ FIX: shop scroll so all 10 cards buyable */
     .shopGrid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:8px;
-      max-height: 520px;
+      max-height: 360px;
       overflow:auto;
       padding-right:6px;
     }
     .shopGrid::-webkit-scrollbar{width:8px}
-    .shopGrid::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18); border-radius:999px}
+    .shopGrid::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12); border-radius:10px}
+
+    #armyList{
+      max-height: 280px;
+      overflow:auto;
+      padding-right:6px;
+    }
+    #armyList::-webkit-scrollbar{width:8px}
+    #armyList::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12); border-radius:10px}
 
     .unitCard{
       border-radius:14px; padding:10px; border:1px solid rgba(255,255,255,.12);
@@ -103,10 +115,10 @@
       width:42px; height:42px; border-radius:12px; background:rgba(255,255,255,.06);
       border:1px solid rgba(255,255,255,.12);
       display:grid; place-items:center; overflow:hidden;
-      flex:0 0 auto;
+      flex: 0 0 auto;
     }
     .unitImg img{width:100%; height:100%; object-fit:cover}
-    .unitMeta{flex:1; min-width:0}
+    .unitMeta{flex:1}
     .unitMeta .name{font-weight:800}
     .pill{
       display:inline-block; font-size:11px; padding:2px 7px; border-radius:999px; margin-top:4px;
@@ -119,9 +131,10 @@
     .overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.58);
       display:none; align-items:center; justify-content:center; padding:16px;
+      z-index: 50;
     }
     .modal{
-      width:min(1020px, 96vw); max-height:92vh; overflow:auto;
+      width:min(1100px, 96vw); max-height:92vh; overflow:auto;
       border-radius:24px; padding:14px;
       background:linear-gradient(180deg, rgba(25,38,72,.95), rgba(12,18,36,.95));
       border:1px solid rgba(255,255,255,.14); box-shadow:var(--shadow);
@@ -161,19 +174,45 @@
       display:flex; gap:10px; flex-wrap:wrap;
       padding:10px; border-radius:18px;
       background: rgba(0,0,0,.40); border:1px solid rgba(255,255,255,.14);
-      max-height: 126px;
+      max-height: 140px;
       overflow:auto;
     }
+    .deployBar::-webkit-scrollbar{height:8px}
+    .deployBar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12); border-radius:10px}
+
     .miniCard{
       display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:14px;
       border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
       cursor:grab;
-      flex:0 0 auto;
+      flex: 0 0 auto;
     }
     .miniCard:active{cursor:grabbing}
-    .miniCard .muted{white-space:nowrap}
 
     input[type="file"]{width:100%}
+
+    /* ✅ NEWS PAPER */
+    .paper{
+      border-radius: 22px;
+      padding: 14px;
+      background:
+        radial-gradient(1200px 800px at 30% 10%, rgba(255,255,255,.15), rgba(255,255,255,.06)),
+        linear-gradient(180deg, rgba(245,233,190,.92), rgba(214,190,135,.90));
+      border: 1px solid rgba(0,0,0,.22);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      color: #1b1b1b;
+    }
+    .paper h2{margin:6px 0 6px; font-size:18px}
+    .paper .sub{color:#2c2c2c; opacity:.85; font-size:12px}
+    .paper .paperRow{display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start}
+    .paper .paperCanvas{
+      width: 360px; height: 240px;
+      border-radius: 16px;
+      border: 1px solid rgba(0,0,0,.22);
+      background: rgba(255,255,255,.25);
+      overflow:hidden;
+    }
+    .paper .paperText{flex:1; min-width:320px}
+    .paper .paperText p{margin:8px 0; line-height:1.35}
   </style>
 </head>
 <body>
@@ -209,7 +248,7 @@
         <span class="kbd">Sağ tık</span> iptal.
       </div>
       <div class="small muted" style="margin-top:6px">
-        Not: <b>Ülke seçmeden zaman akmaz.</b>
+        Not: <b>Ülke seçmeden zaman akmaz.</b> Savaş/Haber sırasında zaman durur.
       </div>
     </div>
 
@@ -228,6 +267,10 @@
         Yeni savaş için <b>10 gün bekleme</b>.
         1 gün = 1 saniye.
       </div>
+      <div class="hr"></div>
+      <div class="muted small">
+        Ödül/Ceza: Kazanan <b>+2000</b> altın, kaybeden <b>-1000</b> (0 altına düşmez).
+      </div>
     </div>
   </div>
 
@@ -236,7 +279,7 @@
     <div class="card topbar">
       <span class="badge" id="uiMode">HARİTA</span>
       <div class="news" title="Haberler / olaylar">
-        <span id="uiNews">Ülke seç: oyun başlayacak. Avrupa haritası hazır.</span>
+        <span id="uiNews">Ülke seç: oyun başlayacak. Europe HEX dünya hazır.</span>
       </div>
       <button class="btn" id="btnPause" disabled>Duraklat</button>
     </div>
@@ -245,10 +288,10 @@
       <canvas id="mapCanvas"></canvas>
       <div class="hint">
         <div class="row" style="align-items:center; gap:10px">
-          <span class="chip">Avrupa HEX</span>
+          <span class="chip">Europe HEX</span>
           <span class="chip">20 ülke</span>
           <span class="chip">60 eyalet</span>
-          <span class="chip">Savaşta zaman durur</span>
+          <span class="chip">Savaş/Haber: zaman durur</span>
         </div>
         <div class="muted small" style="margin-top:6px">
           Eyalete tıkla → ülke seçilir. Komşuysa savaş ilan edebilirsin.
@@ -313,10 +356,14 @@
         <button class="btn primary" id="btnApplyCards">Uygula</button>
         <button class="btn" id="btnClearCards">Kartları Temizle</button>
       </div>
+      <div class="muted small" style="margin-top:8px">
+        Not: Yüklemezsen kartlar otomatik “paint/canvas” çizilir.
+      </div>
     </div>
   </div>
 </div>
 
+<!-- LOAD SAVE -->
 <input type="file" id="saveFile" accept="application/json" style="display:none"/>
 
 <!-- BATTLE -->
@@ -359,11 +406,41 @@
     </div>
 
     <div class="muted small" style="margin-top:10px">
-      Savaş sonu: <b>sadece hayatta kalan</b> askerler envantere geri döner.
-      Kazanan: <b>+2000 altın + 1 eyalet</b>. Kaybeden: <b>-1000 altın</b> (0 altına düşmez)
+      Savaş: Birimler otomatik savaşır. <b>Savaş boyunca zaman durur.</b>
+      <br/>Savaş sonu: Hayatta kalanlar envantere geri döner. Kazanan: <b>+2000</b> altın + 1 eyalet.
+      Kaybeden: <b>-1000</b> altın (0 altına düşmez).
     </div>
   </div>
 </div>
+
+<!-- NEWS PAPER -->
+<div class="overlay" id="paperOverlay">
+  <div class="modal" style="background:transparent; border:none; box-shadow:none; padding:0; max-width:1100px">
+    <div class="paper">
+      <div class="modalHead" style="padding:0 0 10px 0">
+        <div>
+          <div class="title" style="font-size:18px; color:#1b1b1b" id="paperTitle">Haber</div>
+          <div class="sub" id="paperSub">—</div>
+        </div>
+        <button class="btn" id="btnClosePaper" style="background:rgba(0,0,0,.08); border-color:rgba(0,0,0,.18); color:#111">Kapat</button>
+      </div>
+
+      <div class="paperRow">
+        <div class="paperCanvas">
+          <canvas id="paperCanvas" width="360" height="240" style="width:360px;height:240px"></canvas>
+        </div>
+        <div class="paperText">
+          <h2 id="paperHeadline">—</h2>
+          <p id="paperBody">—</p>
+          <div class="hr" style="background:rgba(0,0,0,.15)"></div>
+          <div class="sub" id="paperHint">Kapatınca oyun devam eder.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER (reuse paper overlay content) -->
 
 <script>
 (() => {
@@ -375,8 +452,8 @@
   const ARMISTICE_DAYS = 20;
   const NEWS_QUEUE_MAX = 6;
 
-  const WIN_REWARD = 2000;
-  const LOSS_PENALTY = 1000;
+  const WIN_GOLD = 2000;
+  const LOSE_GOLD = 1000;
 
   const COUNTRY_NAMES = [
     "Alderyn","Varkûn","Solmara","Kryth",
@@ -387,16 +464,16 @@
   ];
 
   const UNITS = [
-    { id:"infantry",   name:"Piyade",        type:"melee", cost:220, hp:120, dmg:10, range:18,  speed:24 },
-    { id:"spearman",   name:"Mızrakçı",      type:"melee", cost:240, hp:140, dmg:11, range:18,  speed:22 },
-    { id:"cavalry",    name:"Süvari",        type:"mid",   cost:360, hp:160, dmg:13, range:42,  speed:36 },
-    { id:"archer",     name:"Okçu",          type:"range", cost:260, hp:90,  dmg:9,  range:120, speed:22 },
-    { id:"crossbow",   name:"Arbaletçi",     type:"range", cost:320, hp:95,  dmg:11, range:140, speed:20 },
-    { id:"musketeer",  name:"Tüfekçi",       type:"range", cost:420, hp:105, dmg:14, range:170, speed:20 },
-    { id:"grenadier",  name:"Bombacı",       type:"mid",   cost:460, hp:120, dmg:18, range:90,  speed:18 },
-    { id:"cannon",     name:"Topçu",         type:"range", cost:650, hp:160, dmg:26, range:220, speed:12 },
-    { id:"rifleman",   name:"Keskin Nişancı",type:"range", cost:520, hp:95,  dmg:20, range:240, speed:18 },
-    { id:"scout",      name:"İzci",          type:"mid",   cost:300, hp:85,  dmg:8,  range:70,  speed:40 },
+    { id:"infantry",   name:"Piyade",        type:"melee", cost:220, hp:120, dmg:10, range:26,  speed:26 },
+    { id:"spearman",   name:"Mızrakçı",      type:"melee", cost:240, hp:140, dmg:11, range:28,  speed:24 },
+    { id:"cavalry",    name:"Süvari",        type:"mid",   cost:360, hp:160, dmg:13, range:58,  speed:38 },
+    { id:"archer",     name:"Okçu",          type:"range", cost:260, hp:90,  dmg:9,  range:140, speed:24 },
+    { id:"crossbow",   name:"Arbaletçi",     type:"range", cost:320, hp:95,  dmg:11, range:160, speed:22 },
+    { id:"musketeer",  name:"Tüfekçi",       type:"range", cost:420, hp:105, dmg:14, range:190, speed:21 },
+    { id:"grenadier",  name:"Bombacı",       type:"mid",   cost:460, hp:120, dmg:18, range:110, speed:18 },
+    { id:"cannon",     name:"Topçu",         type:"range", cost:650, hp:160, dmg:26, range:240, speed:12 },
+    { id:"rifleman",   name:"Keskin Nişancı",type:"range", cost:520, hp:95,  dmg:20, range:260, speed:19 },
+    { id:"scout",      name:"İzci",          type:"mid",   cost:300, hp:85,  dmg:8,  range:90,  speed:42 },
   ];
 
   /*************************
@@ -404,23 +481,30 @@
    *************************/
   const state = {
     day: 0,
-    running: false,
+    running: false,          // time flow
     playerCountryId: null,
     selectedCountryId: null,
     selectedStateId: null,
+
     countries: [],
     states: [],
-    cardImages: {},
-    flags: {},
+
+    cardImages: {},          // unitId -> dataURL
+    flags: {},               // countryId -> dataURL
+
     news: [],
     battle: null,
-    pausedBeforeBattle: false,
 
+    // modal pause
+    pauseStack: [],          // stack of {reason, runningBefore}
+    pendingPaper: [],        // queue
+
+    // HEX MAP
     map: {
       hexSize: 22,
       hexes: [],       // 60: {id,q,r,x,y,countryId,stateId}
       byQR: new Map(), // "q,r" -> id
-      neighbors: null, // Array<Set> per country
+      neighbors: null, // Array<Set> per country adjacency
     }
   };
 
@@ -432,6 +516,8 @@
   const mapCtx = mapCanvas.getContext("2d");
   const battleCanvas = $("#battleCanvas");
   const battleCtx = battleCanvas.getContext("2d");
+  const paperCanvas = $("#paperCanvas");
+  const paperCtx = paperCanvas.getContext("2d");
 
   /*************************
    * UTIL
@@ -443,11 +529,32 @@
   function pillClass(t){ return t==="melee"?"melee":(t==="mid"?"mid":"range"); }
   function getCountry(id){ return state.countries.find(c=>c.id===id); }
   function getState(id){ return state.states.find(s=>s.id===id); }
+  function keyQR(q,r){ return q + "," + r; }
 
   function pushNews(text){
     state.news.unshift(`[Gün ${state.day}] ${text}`);
     if(state.news.length > NEWS_QUEUE_MAX) state.news.pop();
     $("#uiNews").textContent = state.news.join("  •  ");
+  }
+
+  function pauseGame(reason){
+    state.pauseStack.push({reason, runningBefore: state.running});
+    state.running = false;
+    renderUI();
+  }
+  function resumeGame(reason){
+    // pop last matching reason (or last)
+    if(state.pauseStack.length===0) return;
+    let idx = state.pauseStack.length-1;
+    for(let i=state.pauseStack.length-1;i>=0;i--){
+      if(state.pauseStack[i].reason===reason){ idx=i; break; }
+    }
+    const entry = state.pauseStack.splice(idx,1)[0];
+    // restore only if stack empty and no battle
+    if(state.pauseStack.length===0 && !state.battle){
+      state.running = entry.runningBefore;
+    }
+    renderUI();
   }
 
   /*************************
@@ -463,7 +570,7 @@
   }
 
   /*************************
-   * FLAG GENERATOR
+   * FLAG GENERATOR (paint-like)
    *************************/
   function genFlagDataURL(countryId){
     const r = mulberry32(1000 + countryId*97);
@@ -471,13 +578,17 @@
     const c = document.createElement("canvas");
     c.width=w; c.height=h;
     const ctx=c.getContext("2d");
+
     const pal = [
       `hsl(${Math.floor(r()*360)},80%,55%)`,
       `hsl(${Math.floor(r()*360)},85%,60%)`,
       `hsl(${Math.floor(r()*360)},70%,45%)`,
       "#0b1020", "#f2f6ff"
     ];
-    ctx.fillStyle = pal[0]; ctx.fillRect(0,0,w,h);
+
+    ctx.fillStyle = pal[0];
+    ctx.fillRect(0,0,w,h);
+
     const style = Math.floor(r()*4);
     ctx.globalAlpha = 0.95;
 
@@ -508,6 +619,7 @@
       ctx.fill();
     }
 
+    // emblem
     const em = Math.floor(r()*3);
     ctx.fillStyle = pal[4];
     const cx = Math.floor(w*(0.48 + (r()*0.10-0.05)));
@@ -551,181 +663,207 @@
   }
 
   /*************************
-   * ✅ ADIM 2: CARD IMAGES VIA CANVAS (paint-like)
+   * CARD ART (canvas paint)
    *************************/
-  function makeUnitCardCanvas(unitId, label){
+  function cardArtDataURL(unitId, label){
     const c = document.createElement("canvas");
     c.width = 96; c.height = 96;
     const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,96,96);
 
     // background
-    ctx.fillStyle = "rgba(0,0,0,.0)";
-    ctx.fillRect(0,0,96,96);
-    ctx.fillStyle = "rgba(255,255,255,.06)";
+    const g = ctx.createLinearGradient(0,0,96,96);
+    g.addColorStop(0, "rgba(77,212,255,.75)");
+    g.addColorStop(1, "rgba(255,92,122,.72)");
+    ctx.fillStyle = g;
     roundRect(ctx, 6, 6, 84, 84, 18);
     ctx.fill();
 
-    // accent gradient frame
-    const g = ctx.createLinearGradient(6,6,90,90);
-    g.addColorStop(0, "rgba(77,212,255,.85)");
-    g.addColorStop(1, "rgba(255,92,122,.80)");
-    ctx.strokeStyle = g;
-    ctx.lineWidth = 4;
-    roundRect(ctx, 8, 8, 80, 80, 18);
-    ctx.stroke();
+    // inner panel
+    ctx.fillStyle = "rgba(0,0,0,.18)";
+    roundRect(ctx, 14, 14, 68, 56, 16);
+    ctx.fill();
 
-    // draw icon in center (mini soldier style)
-    drawUnitIcon(ctx, unitId, 48, 50, 1.0);
+    // icon
+    ctx.save();
+    ctx.translate(48, 40);
+    drawUnitIcon(ctx, unitId);
+    ctx.restore();
 
     // label
-    ctx.fillStyle = "rgba(255,255,255,.90)";
-    ctx.font = "bold 13px system-ui";
-    ctx.textAlign="center";
-    ctx.fillText(label, 48, 86);
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    roundRect(ctx, 14, 72, 68, 14, 9);
+    ctx.fill();
+    ctx.fillStyle = "rgba(255,255,255,.95)";
+    ctx.font = "bold 12px system-ui";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, 48, 79);
+
+    // border
+    ctx.strokeStyle = "rgba(255,255,255,.35)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 6, 6, 84, 84, 18);
+    ctx.stroke();
+
+    // paint noise
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = "#000";
+    const r = mulberry32(hash32(unitId));
+    for(let i=0;i<160;i++){
+      ctx.fillRect(Math.floor(r()*96), Math.floor(r()*96), 1, 1);
+    }
+    ctx.globalAlpha = 1;
 
     return c.toDataURL("image/png");
   }
 
-  function roundRect(ctx, x,y,w,h,r){
+  function roundRect(ctx,x,y,w,h,r){
+    const rr = Math.min(r, w/2, h/2);
     ctx.beginPath();
-    ctx.moveTo(x+r,y);
-    ctx.arcTo(x+w,y,x+w,y+h,r);
-    ctx.arcTo(x+w,y+h,x,y+h,r);
-    ctx.arcTo(x,y+h,x,y,r);
-    ctx.arcTo(x,y,x+w,y,r);
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
     ctx.closePath();
   }
 
-  function drawUnitIcon(ctx, unitId, cx, cy, s){
-    // base body
-    ctx.save();
-    ctx.translate(cx, cy);
+  function hash32(str){
+    let h = 2166136261 >>> 0;
+    for(let i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
 
-    // shadow
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.ellipse(0, 20*s, 18*s, 6*s, 0, 0, Math.PI*2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // colors
-    const cloth = "rgba(230,240,255,.92)";
-    const metal = "rgba(180,200,220,.95)";
-    const wood  = "rgba(210,170,110,.95)";
-    const dark  = "rgba(15,20,32,.95)";
-
-    // head
-    ctx.fillStyle = cloth;
-    ctx.beginPath();
-    ctx.arc(0, -14*s, 9*s, 0, Math.PI*2);
-    ctx.fill();
-    // helmet
-    ctx.fillStyle = metal;
-    ctx.beginPath();
-    ctx.arc(0, -16*s, 9*s, Math.PI, 0);
-    ctx.fill();
-
-    // body
-    ctx.fillStyle = cloth;
-    roundRect(ctx, -10*s, -6*s, 20*s, 26*s, 8*s);
-    ctx.fill();
-
-    // unit-specific weapon
-    ctx.lineCap = "round";
+  function drawUnitIcon(ctx, unitId){
+    ctx.lineWidth = 4;
     ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    // base colors
+    const fillA = "rgba(255,255,255,.90)";
+    const fillB = "rgba(0,0,0,.28)";
 
     if(unitId==="infantry"){
-      // sword + shield
-      ctx.strokeStyle = metal; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(10*s, -4*s); ctx.lineTo(18*s, -14*s); ctx.stroke();
-      ctx.fillStyle = metal;
-      ctx.beginPath(); ctx.arc(-18*s, 2*s, 10*s, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = dark;
-      ctx.beginPath(); ctx.arc(-18*s, 2*s, 4*s, 0, Math.PI*2); ctx.fill();
-    } else if(unitId==="spearman"){
-      ctx.strokeStyle = wood; ctx.lineWidth = 4*s;
-      ctx.beginPath(); ctx.moveTo(14*s, 18*s); ctx.lineTo(22*s, -26*s); ctx.stroke();
-      ctx.strokeStyle = metal; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(22*s, -26*s); ctx.lineTo(28*s, -20*s); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(22*s, -26*s); ctx.lineTo(16*s, -20*s); ctx.stroke();
-    } else if(unitId==="cavalry"){
-      // horse head + lance
-      ctx.fillStyle = "rgba(120,90,60,.95)";
-      ctx.beginPath();
-      ctx.ellipse(-14*s, 10*s, 12*s, 9*s, 0.2, 0, Math.PI*2);
-      ctx.fill();
-      ctx.strokeStyle = wood; ctx.lineWidth = 4*s;
-      ctx.beginPath(); ctx.moveTo(10*s, 18*s); ctx.lineTo(26*s, -26*s); ctx.stroke();
+      // helmet
+      ctx.fillStyle = fillA;
+      ctx.beginPath(); ctx.arc(0,-2,16,Math.PI,0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.fillRect(-16,-2,32,16);
+      ctx.fillStyle = fillA;
+      ctx.fillRect(-10,8,20,6);
+      ctx.strokeStyle = fillB;
+      ctx.strokeRect(-16,-2,32,16);
     } else if(unitId==="archer"){
       // bow
-      ctx.strokeStyle = wood; ctx.lineWidth = 4*s;
+      ctx.strokeStyle = fillA;
       ctx.beginPath();
-      ctx.arc(18*s, 2*s, 14*s, -Math.PI/2, Math.PI/2);
+      ctx.arc(-6, 0, 18, -Math.PI/2, Math.PI/2);
       ctx.stroke();
-      ctx.strokeStyle = "rgba(255,255,255,.85)"; ctx.lineWidth = 2*s;
-      ctx.beginPath(); ctx.moveTo(18*s, -12*s); ctx.lineTo(18*s, 16*s); ctx.stroke();
-      // arrow
-      ctx.strokeStyle = metal; ctx.lineWidth = 2*s;
-      ctx.beginPath(); ctx.moveTo(-8*s, 0); ctx.lineTo(10*s, 0); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(10,-18); ctx.lineTo(10,18);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.beginPath();
+      ctx.moveTo(10,-18); ctx.lineTo(-6,0); ctx.lineTo(10,18);
+      ctx.stroke();
+    } else if(unitId==="spearman"){
+      // spear + shield
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.beginPath(); ctx.moveTo(-18,16); ctx.lineTo(18,-16); ctx.stroke();
+      ctx.fillStyle = fillA;
+      ctx.beginPath(); ctx.arc(-8,4,10,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = fillB;
+      ctx.beginPath(); ctx.arc(-8,4,10,0,Math.PI*2); ctx.stroke();
+    } else if(unitId==="cavalry"){
+      // horse head stylized
+      ctx.fillStyle = fillA;
+      ctx.beginPath();
+      ctx.moveTo(-10,14);
+      ctx.quadraticCurveTo(-14,0,-4,-12);
+      ctx.quadraticCurveTo(6,-18,14,-6);
+      ctx.quadraticCurveTo(6,-6,6,2);
+      ctx.quadraticCurveTo(4,10,-10,14);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.22)";
+      ctx.fillRect(6,-2,6,4);
     } else if(unitId==="crossbow"){
-      ctx.strokeStyle = wood; ctx.lineWidth = 4*s;
-      ctx.beginPath(); ctx.moveTo(-6*s, 6*s); ctx.lineTo(18*s, 6*s); ctx.stroke();
-      ctx.strokeStyle = metal; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(6*s, -4*s); ctx.lineTo(6*s, 18*s); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(18*s, 6*s); ctx.lineTo(26*s, 0*s); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(18*s, 6*s); ctx.lineTo(26*s, 12*s); ctx.stroke();
+      // crossbow
+      ctx.strokeStyle = fillA;
+      ctx.beginPath(); ctx.moveTo(-18,6); ctx.lineTo(18,6); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.beginPath(); ctx.moveTo(0,-18); ctx.lineTo(0,18); ctx.stroke();
+      ctx.strokeStyle = fillA;
+      ctx.beginPath(); ctx.arc(0,6,14,Math.PI,0); ctx.stroke();
     } else if(unitId==="musketeer"){
       // musket
-      ctx.strokeStyle = wood; ctx.lineWidth = 5*s;
-      ctx.beginPath(); ctx.moveTo(-10*s, 10*s); ctx.lineTo(26*s, -2*s); ctx.stroke();
-      ctx.strokeStyle = metal; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(14*s, -6*s); ctx.lineTo(30*s, -10*s); ctx.stroke();
+      ctx.strokeStyle = fillA;
+      ctx.beginPath(); ctx.moveTo(-18,10); ctx.lineTo(18,-6); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.beginPath(); ctx.moveTo(-6,14); ctx.lineTo(2,6); ctx.stroke();
+      ctx.fillStyle = "rgba(0,0,0,.22)";
+      ctx.fillRect(12,-10,6,6);
     } else if(unitId==="grenadier"){
       // bomb
-      ctx.fillStyle = dark;
-      ctx.beginPath(); ctx.arc(18*s, 4*s, 8*s, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = "rgba(255,209,102,.95)"; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(20*s, -6*s); ctx.lineTo(26*s, -12*s); ctx.stroke();
+      ctx.fillStyle = fillA;
+      ctx.beginPath(); ctx.arc(0,4,14,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = fillB;
+      ctx.beginPath(); ctx.arc(0,4,14,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.beginPath(); ctx.moveTo(6,-10); ctx.quadraticCurveTo(14,-16,6,-22); ctx.stroke();
+      ctx.fillStyle = "rgba(0,0,0,.25)";
+      ctx.fillRect(-6,-10,12,6);
     } else if(unitId==="cannon"){
-      // cannon + wheel
-      ctx.fillStyle = dark;
-      roundRect(ctx, -4*s, 6*s, 30*s, 12*s, 5*s);
-      ctx.fill();
-      ctx.strokeStyle = metal; ctx.lineWidth = 6*s;
-      ctx.beginPath(); ctx.moveTo(-2*s, 0*s); ctx.lineTo(26*s, 0*s); ctx.stroke();
-      ctx.fillStyle = "rgba(90,70,45,.95)";
-      ctx.beginPath(); ctx.arc(-10*s, 16*s, 8*s, 0, Math.PI*2); ctx.fill();
+      // cannon
+      ctx.fillStyle = fillA;
+      roundRect(ctx,-20,-4,40,16,8); ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,.24)";
+      roundRect(ctx,-10,-14,28,12,6); ctx.fill();
+      ctx.fillStyle = fillA;
+      ctx.beginPath(); ctx.arc(-14,16,7,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(14,16,7,0,Math.PI*2); ctx.fill();
     } else if(unitId==="rifleman"){
-      // long rifle + scope
-      ctx.strokeStyle = wood; ctx.lineWidth = 4*s;
-      ctx.beginPath(); ctx.moveTo(-12*s, 10*s); ctx.lineTo(30*s, -10*s); ctx.stroke();
-      ctx.strokeStyle = metal; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(10*s, -10*s); ctx.lineTo(18*s, -14*s); ctx.stroke();
-      ctx.beginPath(); ctx.arc(16*s, -16*s, 4*s, 0, Math.PI*2); ctx.stroke();
+      // scope / rifle
+      ctx.strokeStyle = fillA;
+      ctx.beginPath(); ctx.moveTo(-18,10); ctx.lineTo(18,-8); ctx.stroke();
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.beginPath(); ctx.arc(8,-10,7,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(1,-10); ctx.lineTo(15,-10); ctx.stroke();
     } else if(unitId==="scout"){
-      // dagger + cloak
-      ctx.fillStyle = "rgba(77,212,255,.25)";
+      // compass
+      ctx.fillStyle = fillA;
+      ctx.beginPath(); ctx.arc(0,4,16,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle = fillB;
+      ctx.beginPath(); ctx.arc(0,4,16,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle = "rgba(255,92,122,.85)";
       ctx.beginPath();
-      ctx.ellipse(0, 8*s, 18*s, 14*s, 0.2, 0, Math.PI*2);
+      ctx.moveTo(0,-8); ctx.lineTo(6,6); ctx.lineTo(0,4); ctx.lineTo(-6,6);
+      ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = metal; ctx.lineWidth = 3*s;
-      ctx.beginPath(); ctx.moveTo(10*s, 6*s); ctx.lineTo(20*s, -6*s); ctx.stroke();
+    } else {
+      // fallback
+      ctx.fillStyle = fillA;
+      ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
     }
-
-    ctx.restore();
   }
 
   /*************************
-   * ✅ EUROPE HEX MAP (60, connected) + 20 contiguous countries
+   * HEX GEOMETRY
    *************************/
-  function keyQR(q,r){ return q + "," + r; }
   function axialToPixel(q,r,size){
-    return { x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r), y: size * (3/2 * r) };
+    // pointy top
+    return {
+      x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r),
+      y: size * (3/2 * r),
+    };
   }
   function axialNeighbors(q,r){
-    return [{q:q+1,r:r},{q:q-1,r:r},{q:q,r:r+1},{q:q,r:r-1},{q:q+1,r:r-1},{q:q-1,r:r+1}];
+    return [
+      {q:q+1,r:r},{q:q-1,r:r},{q:q,r:r+1},{q:q,r:r-1},{q:q+1,r:r-1},{q:q-1,r:r+1}
+    ];
   }
   function hexCorners(x,y,size){
     const pts=[];
@@ -736,168 +874,211 @@
     return pts;
   }
 
-  function genEuropeHexPool(){
-    const R = 7;
-    const pool=[];
+  /*************************
+   * ✅ EUROPE-LIKE 60 HEX GENERATION (connected)
+   *************************/
+  function genEuropeHex60(){
+    const size = state.map.hexSize;
+    const R = 7; // pool radius
+
+    // build pool
+    const pool = [];
+    for(let q=-R;q<=R;q++){
+      const r1 = Math.max(-R, -q-R);
+      const r2 = Math.min(R, -q+R);
+      for(let r=r1;r<=r2;r++){
+        const p = axialToPixel(q,r,size);
+        pool.push({q,r,x:p.x,y:p.y});
+      }
+    }
+
+    // normalize + rotate to look like Europe
+    const rot = -22 * Math.PI/180;
+    function rotPt(x,y){
+      return {x: x*Math.cos(rot) - y*Math.sin(rot), y: x*Math.sin(rot) + y*Math.cos(rot)};
+    }
+
+    const pts = pool.map(h=>{
+      const t = rotPt(h.x, h.y);
+      return {...h, rx:t.x, ry:t.y};
+    });
+
+    // bounds
+    let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+    for(const p of pts){
+      minX = Math.min(minX, p.rx); maxX = Math.max(maxX, p.rx);
+      minY = Math.min(minY, p.ry); maxY = Math.max(maxY, p.ry);
+    }
+    const W = maxX-minX, H = maxY-minY;
+
+    // mask function union of blobs (Europe-ish)
+    function inMask(p){
+      const nx = (p.rx - minX)/W;  // 0..1
+      const ny = (p.ry - minY)/H;  // 0..1
+
+      // main europe blob
+      const main = ellipse(nx,ny, 0.52,0.46, 0.32,0.22);
+      // iberia
+      const ib = ellipse(nx,ny, 0.38,0.60, 0.16,0.12);
+      // italy
+      const it = ellipse(nx,ny, 0.53,0.68, 0.10,0.14);
+      // balkans
+      const ba = ellipse(nx,ny, 0.62,0.62, 0.18,0.14);
+      // scandinavia
+      const sc = ellipse(nx,ny, 0.57,0.24, 0.18,0.20);
+      // uk
+      const uk = ellipse(nx,ny, 0.33,0.40, 0.09,0.10);
+
+      // cut: atlantic + east
+      const cutA = (nx < 0.18 && ny > 0.50);
+      const cutE = (nx > 0.88 && ny < 0.40);
+
+      let ok = (main || ib || it || ba || sc || uk) && !cutA && !cutE;
+
+      // cut mediterranean sea strip
+      if(ny > 0.83 && nx < 0.70) ok = false;
+
+      return ok;
+    }
+    function ellipse(x,y,cx,cy,rx,ry){
+      const dx=(x-cx)/rx, dy=(y-cy)/ry;
+      return (dx*dx + dy*dy) <= 1;
+    }
+
+    // keep masked
+    const kept = pts.filter(inMask);
+
+    // adjacency using axial coords
+    const keptSet = new Set(kept.map(h=>keyQR(h.q,h.r)));
+
+    // pick largest connected component
+    const visited = new Set();
+    const comps = [];
+    function bfs(startKey){
+      const q = [startKey];
+      const out = [];
+      visited.add(startKey);
+      while(q.length){
+        const k = q.shift();
+        out.push(k);
+        const [sq,sr] = k.split(",").map(Number);
+        for(const nb of axialNeighbors(sq,sr)){
+          const kk = keyQR(nb.q, nb.r);
+          if(keptSet.has(kk) && !visited.has(kk)){
+            visited.add(kk);
+            q.push(kk);
+          }
+        }
+      }
+      return out;
+    }
+    for(const h of kept){
+      const k = keyQR(h.q,h.r);
+      if(visited.has(k)) continue;
+      comps.push(bfs(k));
+    }
+    comps.sort((a,b)=>b.length-a.length);
+    const largest = comps[0] || [];
+
+    // build component list of cells
+    const compCells = largest.map(k=>{
+      const [q,r] = k.split(",").map(Number);
+      const base = pool.find(p=>p.q===q && p.r===r);
+      const pix = axialToPixel(q,r,size);
+      return {q,r,x:pix.x,y:pix.y};
+    });
+
+    // if component too small, fallback to simple radius 4 island
+    if(compCells.length < 60){
+      console.warn("Europe mask too small, fallback island.");
+      genHexIsland60Fallback();
+      return;
+    }
+
+    // choose 60 connected by BFS from center-most
+    const center = compCells.reduce((best,h)=>{
+      const d = h.x*h.x + h.y*h.y;
+      return (!best || d < best.d) ? {d, h} : best;
+    }, null).h;
+
+    const compSet = new Set(compCells.map(h=>keyQR(h.q,h.r)));
+    const chosenKeys = new Set();
+    const q = [keyQR(center.q, center.r)];
+    chosenKeys.add(q[0]);
+
+    while(q.length && chosenKeys.size < 60){
+      const k = q.shift();
+      const [sq,sr] = k.split(",").map(Number);
+      // shuffle neighbors for organic
+      const nbs = axialNeighbors(sq,sr).sort(()=>Math.random()-0.5);
+      for(const nb of nbs){
+        const kk = keyQR(nb.q, nb.r);
+        if(compSet.has(kk) && !chosenKeys.has(kk)){
+          chosenKeys.add(kk);
+          q.push(kk);
+          if(chosenKeys.size >= 60) break;
+        }
+      }
+    }
+
+    // if BFS didn't reach 60, fill by nearest to center in component
+    if(chosenKeys.size < 60){
+      const arr = compCells
+        .filter(h=>!chosenKeys.has(keyQR(h.q,h.r)))
+        .map(h=>({h, d: (h.x-center.x)**2 + (h.y-center.y)**2}))
+        .sort((a,b)=>a.d-b.d);
+      for(const it of arr){
+        chosenKeys.add(keyQR(it.h.q,it.h.r));
+        if(chosenKeys.size>=60) break;
+      }
+    }
+
+    // finalize 60 hexes
+    const chosen = [...chosenKeys].map(k=>{
+      const [q,r] = k.split(",").map(Number);
+      const p = axialToPixel(q,r,size);
+      // rotate/scale for visual only
+      const t = rotPt(p.x*1.02, p.y*1.02);
+      return {q,r,x:t.x,y:t.y};
+    });
+
+    // reindex
+    state.map.hexes = chosen.map((h,i)=>({
+      id:i, q:h.q, r:h.r, x:h.x, y:h.y, countryId:-1, stateId:i
+    }));
+    state.map.byQR = new Map();
+    for(const h of state.map.hexes){
+      state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    }
+  }
+
+  function genHexIsland60Fallback(){
+    const R = 4;
+    const size = state.map.hexSize;
+    const all=[];
     for(let q=-R;q<=R;q++){
       const r1=Math.max(-R, -q-R);
       const r2=Math.min(R, -q+R);
-      for(let r=r1;r<=r2;r++){
-        const dist = (Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2;
-        if(dist > 7) continue;
-
-        let keep = true;
-
-        // West Atlantic cut
-        if(q < -5 && r > -2) keep = false;
-
-        // Scandinavia extension
-        if(r < -4 && q > -2) keep = true;
-
-        // Mediterranean thinning
-        if(r > 4 && Math.abs(q) > 2) keep = false;
-
-        // Iberia bump
-        if(q < -3 && r > 2) keep = true;
-
-        // East Europe extension
-        if(q > 4 && r < 2) keep = true;
-
-        // Italy tail
-        if(q > 1 && q < 4 && r > 3) keep = keep && (Math.abs(q-2) + Math.abs(r-5) < 3);
-
-        if(keep) pool.push({q,r});
-      }
+      for(let r=r1;r<=r2;r++) all.push({q,r});
     }
-    return pool;
-  }
+    all.sort((a,b)=> (Math.abs(b.q)+Math.abs(b.r)) - (Math.abs(a.q)+Math.abs(a.r)));
+    all.shift(); // 61 -> 60
 
-  function pickConnected60(pool){
-    const set = new Set(pool.map(h=>keyQR(h.q,h.r)));
-    let start = pool.find(h=>h.q===0 && h.r===0);
-    if(!start){
-      let best=pool[0], bestD=1e18;
-      for(const h of pool){
-        const d = h.q*h.q + h.r*h.r;
-        if(d<bestD){ bestD=d; best=h; }
-      }
-      start = best;
-    }
-    const out=[];
-    const seen=new Set();
-    const q=[start];
-    seen.add(keyQR(start.q,start.r));
-    while(q.length && out.length<60){
-      const cur = q.shift();
-      out.push(cur);
-      for(const nb of axialNeighbors(cur.q,cur.r)){
-        const k = keyQR(nb.q,nb.r);
-        if(seen.has(k)) continue;
-        if(!set.has(k)) continue;
-        seen.add(k);
-        q.push(nb);
-      }
-    }
-    if(out.length<60){
-      const remain = pool.filter(h=>!seen.has(keyQR(h.q,h.r)));
-      remain.sort((a,b)=> (a.q*a.q+a.r*a.r) - (b.q*b.q+b.r*b.r));
-      while(out.length<60 && remain.length) out.push(remain.shift());
-    }
-    return out.slice(0,60);
-  }
-
-  function assignCountriesContiguous(hexes, countryCount=20, perCountry=3){
-    // build byQR
-    const byQR = new Map(hexes.map(h=>[keyQR(h.q,h.r), h.id]));
-    const neighIds = (hid)=>{
-      const h = hexes[hid];
-      const out=[];
-      for(const nb of axialNeighbors(h.q,h.r)){
-        const id = byQR.get(keyQR(nb.q,nb.r));
-        if(id!=null) out.push(id);
-      }
-      return out;
-    };
-
-    // reset owners
-    for(const h of hexes) h.countryId = -1;
-
-    // seeds far apart
-    const free = new Set(hexes.map(h=>h.id));
-    const seeds=[];
-    let first = hexes.reduce((best,h)=>{
-      const d=h.q*h.q+h.r*h.r;
-      return d < (best.d??1e18) ? {h, d} : best;
-    }, {}).h;
-    seeds.push(first.id);
-    free.delete(first.id);
-
-    while(seeds.length < countryCount){
-      let bestId=null, bestScore=-1;
-      for(const hid of free){
-        let minD=1e18;
-        const a = hexes[hid];
-        for(const sid of seeds){
-          const b=hexes[sid];
-          const d=(a.q-b.q)*(a.q-b.q)+(a.r-b.r)*(a.r-b.r);
-          if(d<minD) minD=d;
-        }
-        if(minD>bestScore){ bestScore=minD; bestId=hid; }
-      }
-      seeds.push(bestId);
-      free.delete(bestId);
-    }
-
-    // place seeds
-    for(let cid=0; cid<countryCount; cid++){
-      const hid = seeds[cid];
-      hexes[hid].countryId = cid;
-    }
-
-    // grow perCountry-1 times (frontier => contiguity guaranteed)
-    for(let step=1; step<perCountry; step++){
-      for(let cid=0; cid<countryCount; cid++){
-        const owned = hexes.filter(h=>h.countryId===cid).map(h=>h.id);
-        const frontier=[];
-        for(const hid of owned){
-          for(const nb of neighIds(hid)){
-            if(hexes[nb].countryId===-1) frontier.push(nb);
-          }
-        }
-
-        let chosen=null;
-        if(frontier.length){
-          const seedH = hexes[seeds[cid]];
-          frontier.sort((a,b)=>{
-            const A=hexes[a], B=hexes[b];
-            const da=(A.q-seedH.q)*(A.q-seedH.q)+(A.r-seedH.r)*(A.r-seedH.r);
-            const db=(B.q-seedH.q)*(B.q-seedH.q)+(B.r-seedH.r)*(B.r-seedH.r);
-            return da-db;
-          });
-          chosen = frontier[0];
-        } else {
-          chosen = hexes.find(h=>h.countryId===-1)?.id ?? null;
-        }
-        if(chosen!=null) hexes[chosen].countryId = cid;
-      }
-    }
-  }
-
-  function genHexIsland60(){ // name kept for compatibility
-    const size = state.map.hexSize;
-
-    const pool = genEuropeHexPool();
-    const land60 = pickConnected60(pool);
-
-    state.map.hexes = land60.map((h,i)=>{
+    state.map.hexes = all.map((h,i)=>{
       const p = axialToPixel(h.q,h.r,size);
       return { id:i, q:h.q, r:h.r, x:p.x, y:p.y, countryId:-1, stateId:i };
     });
-
     state.map.byQR = new Map();
-    for(const h of state.map.hexes) state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    for(const h of state.map.hexes){
+      state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    }
+  }
 
-    // countries
+  /*************************
+   * ✅ COUNTRY ASSIGN: 20 country, 3 contiguous each
+   *************************/
+  function buildCountriesStatesAndAssign(){
+    // init countries
     state.countries = [];
     for(let i=0;i<20;i++){
       state.countries.push({
@@ -913,7 +1094,7 @@
       });
     }
 
-    // starting inventory for all
+    // initial armies for everyone
     for(const c of state.countries){
       c.inventory.infantry += 6;
       c.inventory.archer += 4;
@@ -921,17 +1102,117 @@
       c.inventory.scout += 2;
     }
 
-    // assign owners contiguous
-    assignCountriesContiguous(state.map.hexes, 20, 3);
+    // helper neighbors of hexId
+    const byQR = state.map.byQR;
+    function neighborsOfHexId(hid){
+      const h = state.map.hexes[hid];
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id = byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(id);
+      }
+      return out;
+    }
 
-    // states list & country states
+    // assign with retries so all contiguous
+    const rng = mulberry32(9001);
+    for(let attempt=0; attempt<40; attempt++){
+      // reset
+      for(const h of state.map.hexes) h.countryId = -1;
+      for(const c of state.countries) c.states = [];
+
+      // pick 20 seeds spread-ish
+      const ids = state.map.hexes.map(h=>h.id);
+      const sorted = [...state.map.hexes].sort((a,b)=> (a.x*a.x+a.y*a.y)-(b.x*b.x+b.y*b.y));
+      const free = new Set(ids);
+
+      const seeds = [];
+      for(let cid=0; cid<20; cid++){
+        let candidate = sorted[Math.floor(rng()*Math.min(22, sorted.length))];
+        if(!free.has(candidate.id)) candidate = sorted.find(h=>free.has(h.id));
+        if(!candidate) break;
+        seeds.push({cid, hid:candidate.id});
+        free.delete(candidate.id);
+        state.map.hexes[candidate.id].countryId = cid;
+        state.countries[cid].states.push(candidate.id);
+      }
+      if(seeds.length < 20) continue;
+
+      // grow each country to size 3 using frontier BFS
+      let ok=true;
+      for(let pass=0; pass<2; pass++){
+        for(let cid=0; cid<20; cid++){
+          const owned = state.countries[cid].states;
+          // build frontier (unowned neighbors)
+          const frontier=[];
+          for(const hid of owned){
+            for(const nb of neighborsOfHexId(hid)){
+              if(state.map.hexes[nb].countryId === -1) frontier.push(nb);
+            }
+          }
+          if(frontier.length===0){ ok=false; break; }
+          const chosen = frontier[Math.floor(rng()*frontier.length)];
+          state.map.hexes[chosen].countryId = cid;
+          state.countries[cid].states.push(chosen);
+        }
+        if(!ok) break;
+      }
+      if(!ok) continue;
+
+      // verify all countries size 3
+      if(state.countries.some(c=>c.states.length!==3)) continue;
+
+      // build state list (60)
+      state.states = [];
+      for(let sid=0; sid<60; sid++){
+        const owner = state.map.hexes[sid].countryId;
+        state.states.push({
+          id:sid,
+          countryId: owner,
+          name: `${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.indexOf(sid)+1)}`
+        });
+      }
+
+      rebuildNeighbors();
+      return true;
+    }
+
+    // fallback if somehow fails
+    console.warn("Country assign retry failed, fallback random.");
+    for(const h of state.map.hexes){
+      const cid = Math.floor(Math.random()*20);
+      h.countryId = cid;
+      state.countries[cid].states.push(h.id);
+    }
     state.states = [];
-    for(const c of state.countries) c.states = [];
     for(let sid=0; sid<60; sid++){
       const owner = state.map.hexes[sid].countryId;
-      state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.length+1)}` });
-      state.countries[owner].states.push(sid);
+      state.states.push({ id:sid, countryId: owner, name:`${COUNTRY_NAMES[owner]}-${sid%3+1}` });
     }
+    rebuildNeighbors();
+  }
+
+  function rebuildNeighbors(){
+    const neighbors = Array.from({length:20}, ()=>new Set());
+    const byQR = state.map.byQR;
+
+    function neighborsOfHex(h){
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id = byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(state.map.hexes[id]);
+      }
+      return out;
+    }
+
+    for(const h of state.map.hexes){
+      for(const other of neighborsOfHex(h)){
+        if(other.countryId!==h.countryId){
+          neighbors[h.countryId].add(other.countryId);
+        }
+      }
+    }
+    state.map.neighbors = neighbors;
   }
 
   /*************************
@@ -944,8 +1225,14 @@
     dragging: false,
     lastX: 0,
     lastY: 0,
-    reset(){ this.scale = 1.0; this.ox = 0; this.oy = 0; },
-    screenToWorld(px,py){ return { x:(px - this.ox)/this.scale, y:(py - this.oy)/this.scale }; }
+    reset(){
+      this.scale = 1.0;
+      this.ox = 0;
+      this.oy = 0;
+    },
+    screenToWorld(px,py){
+      return { x:(px - this.ox)/this.scale, y:(py - this.oy)/this.scale };
+    }
   };
 
   function resizeCanvas(){
@@ -978,10 +1265,10 @@
     const w = rect.width, h = rect.height;
     mapCtx.clearRect(0,0,w,h);
 
-    // sea gradient
+    // sea background
     const g = mapCtx.createLinearGradient(0,0,w,h);
-    g.addColorStop(0,"rgba(8,16,40,.95)");
-    g.addColorStop(1,"rgba(6,10,28,.98)");
+    g.addColorStop(0,"rgba(8,16,40,.96)");
+    g.addColorStop(1,"rgba(6,10,28,.99)");
     mapCtx.fillStyle = g;
     mapCtx.fillRect(0,0,w,h);
 
@@ -999,7 +1286,7 @@
     mapCtx.translate(mapView.ox, mapView.oy);
     mapCtx.scale(mapView.scale, mapView.scale);
 
-    // center map
+    // center the map
     const cx = (w/2)/mapView.scale;
     const cy = (h/2)/mapView.scale;
 
@@ -1021,35 +1308,38 @@
       mapCtx.strokeStyle = "rgba(0,0,0,.35)";
       mapCtx.stroke();
 
+      // selected state highlight
       if(state.selectedStateId === hx.stateId){
         mapCtx.lineWidth = 4;
-        mapCtx.strokeStyle = "rgba(255,255,255,.90)";
+        mapCtx.strokeStyle = "rgba(255,255,255,.85)";
         mapCtx.stroke();
       }
     }
 
-    // smaller labels
-    mapCtx.font = "9px system-ui";
-    mapCtx.textAlign = "center";
-    mapCtx.globalAlpha = 0.78;
-    mapCtx.lineWidth = 2;
-    mapCtx.strokeStyle = "rgba(0,0,0,.70)";
-    mapCtx.fillStyle = "rgba(255,255,255,.88)";
-
-    for(let cid=0; cid<20; cid++){
-      const list = state.map.hexes.filter(hx=>hx.countryId===cid);
-      if(!list.length) continue;
-      const mx = list.reduce((a,hx)=>a+hx.x,0)/list.length + cx;
-      const my = list.reduce((a,hx)=>a+hx.y,0)/list.length + cy;
-      const name = state.countries[cid].name;
-      mapCtx.strokeText(name, mx, my);
-      mapCtx.fillText(name, mx, my);
+    // labels (only if zoom high so they don't look ugly)
+    if(mapView.scale >= 1.25){
+      mapCtx.font = "10px system-ui";
+      mapCtx.textAlign = "center";
+      mapCtx.globalAlpha = 0.82;
+      mapCtx.lineWidth = 3;
+      mapCtx.strokeStyle = "rgba(0,0,0,.65)";
+      mapCtx.fillStyle = "rgba(255,255,255,.88)";
+      for(let cid=0; cid<20; cid++){
+        const list = state.map.hexes.filter(hx=>hx.countryId===cid);
+        if(list.length===0) continue;
+        const mx = list.reduce((a,hx)=>a+hx.x,0)/list.length + cx;
+        const my = list.reduce((a,hx)=>a+hx.y,0)/list.length + cy;
+        const name = state.countries[cid]?.name ?? "";
+        mapCtx.strokeText(name, mx, my);
+        mapCtx.fillText(name, mx, my);
+      }
+      mapCtx.globalAlpha = 1;
     }
-    mapCtx.globalAlpha = 1;
 
     mapCtx.restore();
   }
 
+  // Hit test: nearest hex
   function hitTest(px,py){
     const rect = mapCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
@@ -1067,8 +1357,10 @@
       const d = dx*dx + dy*dy;
       if(d<bestD){ bestD=d; best=hx; }
     }
-    const maxD = (state.map.hexSize*state.map.hexSize*1.65);
-    if(best && bestD<=maxD) return {sea:false, stateId: best.stateId, countryId: best.countryId};
+    const maxD = (state.map.hexSize*state.map.hexSize*1.7);
+    if(best && bestD<=maxD){
+      return {sea:false, stateId: best.stateId, countryId: best.countryId};
+    }
     return {sea:true};
   }
 
@@ -1145,11 +1437,11 @@
     $("#uiSelectedState").textContent = state.selectedStateId!=null ? getState(state.selectedStateId).name : "—";
 
     const enabled = (state.playerCountryId!=null);
-    $("#btnPause").disabled = !enabled;
-    $("#btnDeclareWar").disabled = !enabled;
-    $("#btnOfferAlliance").disabled = !enabled;
-    $("#btnBreakAlliance").disabled = !enabled;
-    $("#btnRequestPassage").disabled = !enabled;
+    $("#btnPause").disabled = !enabled || !!state.battle || ($("#paperOverlay").style.display==="flex");
+    $("#btnDeclareWar").disabled = !enabled || !!state.battle;
+    $("#btnOfferAlliance").disabled = !enabled || !!state.battle;
+    $("#btnBreakAlliance").disabled = !enabled || !!state.battle;
+    $("#btnRequestPassage").disabled = !enabled || !!state.battle;
 
     $("#btnPause").textContent = state.running ? "Duraklat" : "Devam";
   }
@@ -1157,29 +1449,6 @@
   /*************************
    * RULES
    *************************/
-  function rebuildNeighbors(){
-    const neighbors = Array.from({length:20}, ()=>new Set());
-    const byQR = state.map.byQR;
-
-    function neighborsOfHex(h){
-      const out=[];
-      for(const nb of axialNeighbors(h.q,h.r)){
-        const id = byQR.get(keyQR(nb.q,nb.r));
-        if(id!=null) out.push(state.map.hexes[id]);
-      }
-      return out;
-    }
-
-    for(const h of state.map.hexes){
-      for(const other of neighborsOfHex(h)){
-        if(other.countryId!==h.countryId){
-          neighbors[h.countryId].add(other.countryId);
-        }
-      }
-    }
-    state.map.neighbors = neighbors;
-  }
-
   function areNeighbors(a,b){
     if(a==null||b==null) return false;
     return state.map.neighbors[a].has(b);
@@ -1211,6 +1480,171 @@
     return sum;
   }
 
+  function clampGold(c){
+    c.gold = Math.max(0, Math.floor(c.gold));
+  }
+
+  /*************************
+   * GAME OVER (60 states owned)
+   *************************/
+  function checkGameOver(){
+    for(const c of state.countries){
+      if(c.states.length >= 60){
+        const youId = state.playerCountryId;
+        const youWon = (youId != null && c.id === youId);
+        showPaper({
+          title: "OYUN BİTTİ",
+          sub: `Gün ${state.day}`,
+          headline: youWon ? "Tebrikler! Tüm eyaletleri aldın." : `${c.name} tüm eyaletleri ele geçirdi!`,
+          body: youWon
+            ? "Bu dünyada artık tek güç sensin. Oyun sıfırlanacak."
+            : "Toprakların tamamen düştü. Oyun sıfırlanacak.",
+          stateId: null,
+          attackerId: c.id,
+          defenderId: null,
+          mode: "gameover"
+        });
+        return true;
+      }
+    }
+    // player loses if 0 states
+    const youId = state.playerCountryId;
+    if(youId != null && getCountry(youId).states.length === 0){
+      showPaper({
+        title: "OYUN BİTTİ",
+        sub: `Gün ${state.day}`,
+        headline: "Tüm eyaletlerini kaybettin!",
+        body: "Bu savaş burada bitti. Oyun sıfırlanacak.",
+        stateId: null,
+        attackerId: null,
+        defenderId: youId,
+        mode: "gameover"
+      });
+      return true;
+    }
+    return false;
+  }
+
+  /*************************
+   * PAPER NEWS (pauses game)
+   *************************/
+  function showPaper({title, sub, headline, body, stateId, attackerId, defenderId, mode="news"}){
+    // if another modal/battle open, queue
+    if(state.battle || $("#paperOverlay").style.display==="flex"){
+      state.pendingPaper.push({title, sub, headline, body, stateId, attackerId, defenderId, mode});
+      return;
+    }
+
+    pauseGame("paper");
+    $("#paperTitle").textContent = title;
+    $("#paperSub").textContent = sub || "";
+    $("#paperHeadline").textContent = headline;
+    $("#paperBody").textContent = body;
+
+    if(mode==="gameover"){
+      $("#paperHint").textContent = "Kapatınca oyun sıfırlanacak.";
+    } else {
+      $("#paperHint").textContent = "Kapatınca oyun devam eder.";
+    }
+
+    drawPaperMiniMap(stateId, attackerId, defenderId);
+
+    $("#paperOverlay").style.display="flex";
+    renderUI();
+
+    // remember mode for close
+    $("#paperOverlay").dataset.mode = mode;
+  }
+
+  function closePaper(){
+    const mode = $("#paperOverlay").dataset.mode || "news";
+    $("#paperOverlay").style.display="none";
+    resumeGame("paper");
+
+    if(mode==="gameover"){
+      initAll(); // reset game
+      return;
+    }
+
+    // show next queued paper if any and no battle
+    if(!state.battle && state.pendingPaper.length){
+      const next = state.pendingPaper.shift();
+      showPaper(next);
+    }
+  }
+
+  $("#btnClosePaper").onclick = closePaper;
+
+  function drawPaperMiniMap(highlightStateId, attackerId, defenderId){
+    // draw simplified map
+    paperCtx.clearRect(0,0,360,240);
+
+    // paper background
+    const bg = paperCtx.createLinearGradient(0,0,360,240);
+    bg.addColorStop(0, "rgba(0,0,0,.10)");
+    bg.addColorStop(1, "rgba(0,0,0,.18)");
+    paperCtx.fillStyle = bg;
+    paperCtx.fillRect(0,0,360,240);
+
+    const size = 10;
+    const cx = 180;
+    const cy = 120;
+
+    // compute bounds to scale nicely
+    let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+    for(const h of state.map.hexes){
+      minX = Math.min(minX, h.x); maxX = Math.max(maxX, h.x);
+      minY = Math.min(minY, h.y); maxY = Math.max(maxY, h.y);
+    }
+    const scale = Math.min(300/(maxX-minX+1), 190/(maxY-minY+1));
+
+    function drawHex(ctx, x,y, s){
+      const pts = hexCorners(x,y,s);
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(let i=1;i<6;i++) ctx.lineTo(pts[i].x,pts[i].y);
+      ctx.closePath();
+    }
+
+    for(const h of state.map.hexes){
+      const x = cx + (h.x - (minX+maxX)/2)*scale;
+      const y = cy + (h.y - (minY+maxY)/2)*scale;
+
+      drawHex(paperCtx, x,y, size);
+      paperCtx.fillStyle = countryColor(h.countryId);
+      paperCtx.globalAlpha = 0.95;
+      paperCtx.fill();
+
+      paperCtx.globalAlpha = 1;
+      paperCtx.lineWidth = 1;
+      paperCtx.strokeStyle = "rgba(0,0,0,.35)";
+      paperCtx.stroke();
+
+      if(highlightStateId != null && h.stateId === highlightStateId){
+        paperCtx.lineWidth = 3;
+        paperCtx.strokeStyle = "rgba(255,255,255,.92)";
+        drawHex(paperCtx, x,y, size);
+        paperCtx.stroke();
+
+        // marker
+        paperCtx.fillStyle = "rgba(255,255,255,.92)";
+        paperCtx.beginPath();
+        paperCtx.arc(x, y, 4, 0, Math.PI*2);
+        paperCtx.fill();
+      }
+    }
+
+    // small legend
+    paperCtx.globalAlpha = 1;
+    paperCtx.fillStyle = "rgba(0,0,0,.35)";
+    paperCtx.fillRect(10, 10, 340, 34);
+    paperCtx.fillStyle = "rgba(255,255,255,.92)";
+    paperCtx.font = "12px system-ui";
+    const aName = attackerId!=null ? (state.countries[attackerId]?.name || "—") : "—";
+    const dName = defenderId!=null ? (state.countries[defenderId]?.name || "—") : "—";
+    paperCtx.fillText(`Saldıran: ${aName}    Savunan: ${dName}`, 18, 31);
+  }
+
   /*************************
    * PLAYER ACTIONS
    *************************/
@@ -1237,6 +1671,7 @@
     const unit = UNITS.find(u=>u.id===unitId);
     if(you.gold < unit.cost){ pushNews("Yetersiz altın."); return; }
     you.gold -= unit.cost;
+    clampGold(you);
     you.inventory[unitId] = (you.inventory[unitId]||0) + 1;
     pushNews(`${unit.name} satın alındı (+1).`);
     renderUI();
@@ -1252,7 +1687,7 @@
 
     const you = getCountry(youId);
     const until = you.armistice.get(targetId) || 0;
-    const accept = (state.day>=until) && Math.random() < (areNeighbors(youId,targetId)?0.62:0.48);
+    const accept = (state.day>=until) && Math.random() < 0.55;
     if(accept){
       you.passage.add(targetId);
       pushNews(`${getCountry(targetId).name} geçiş izni verdi.`);
@@ -1278,6 +1713,16 @@
       you.allyId = targetId;
       target.allyId = youId;
       pushNews(`${target.name} müttefik teklifini kabul etti.`);
+      showPaper({
+        title:"DIPLOMASİ HABERİ",
+        sub:`Gün ${state.day}`,
+        headline:"Yeni Müttefik!",
+        body:`${you.name} ile ${target.name} arasında ittifak kuruldu.`,
+        stateId: null,
+        attackerId: youId,
+        defenderId: targetId,
+        mode:"news"
+      });
     } else {
       pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
     }
@@ -1303,70 +1748,24 @@
 
     const chk = canDeclareWar(youId, targetId);
     if(!chk.ok){ pushNews(chk.reason); return; }
-    startBattle(youId, targetId);
+
+    const borderState = pickBorderState(targetId, youId) ?? pick(getCountry(targetId).states);
+    showPaper({
+      title:"SAVAŞ HABERİ",
+      sub:`Gün ${state.day}`,
+      headline:"Savaş İlan Edildi!",
+      body:`${getCountry(youId).name}, ${getCountry(targetId).name} ülkesine savaş ilan etti. Hedef: ${getState(borderState).name}`,
+      stateId: borderState,
+      attackerId: youId,
+      defenderId: targetId,
+      mode:"news"
+    });
+
+    startBattle({attackerId: youId, defenderId: targetId, contestedStateId: borderState});
   }
 
   /*************************
-   * AI DAILY TICK (slightly smarter)
-   *************************/
-  function aiDailyTick(){
-    if(state.playerCountryId==null) return;
-
-    for(const c of state.countries){
-      if(c.id === state.playerCountryId) continue;
-
-      // AI buys: prefer ranged when gold allows
-      if(Math.random() < 0.40){
-        const pref = Math.random()<0.55
-          ? UNITS.filter(u=>u.type==="range")
-          : UNITS;
-        const u = pick(pref);
-        if(c.gold >= u.cost){
-          c.gold -= u.cost;
-          c.inventory[u.id] = (c.inventory[u.id]||0)+1;
-        }
-      }
-
-      // rare AI-AI wars
-      if(Math.random() < 0.016){
-        const neigh = Array.from(state.map.neighbors[c.id]);
-        if(neigh.length===0) continue;
-        const t = pick(neigh);
-        if(state.day - c.lastWarDay < WAR_COOLDOWN) continue;
-        const until = c.armistice.get(t) || 0;
-        if(state.day < until) continue;
-
-        const winner = (Math.random()<0.5) ? c.id : t;
-        const loser = (winner===c.id) ? t : c.id;
-        resolveAIAIWar(winner, loser);
-      }
-    }
-  }
-
-  function resolveAIAIWar(winnerId, loserId){
-    const win = getCountry(winnerId);
-    const lose = getCountry(loserId);
-    if(lose.states.length<=0) return;
-
-    const captured = pick(lose.states);
-    transferState(captured, winnerId);
-
-    const reward = rand(900, 1500);
-    win.gold += reward;
-
-    win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
-    lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
-    win.lastWarDay = state.day;
-    lose.lastWarDay = state.day;
-
-    pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. 1 eyalet aldı +${reward} altın.`);
-    rebuildNeighbors();
-    drawMap();
-    renderUI();
-  }
-
-  /*************************
-   * OWNERSHIP
+   * OWNERSHIP + BORDER PICK
    *************************/
   function transferState(stateId, newCountryId){
     const st = getState(stateId);
@@ -1377,7 +1776,150 @@
     neu.states.push(stateId);
 
     st.countryId = newCountryId;
-    state.map.hexes[stateId].countryId = newCountryId; // stateId==hexId
+    state.map.hexes[stateId].countryId = newCountryId;
+  }
+
+  function pickBorderState(loserId, winnerId){
+    // pick a state of loser that touches winner
+    const byQR = state.map.byQR;
+    const loser = getCountry(loserId);
+    if(!loser || loser.states.length===0) return null;
+
+    const border = [];
+    for(const sid of loser.states){
+      const h = state.map.hexes[sid];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const nid = byQR.get(keyQR(nb.q,nb.r));
+        if(nid==null) continue;
+        if(state.map.hexes[nid].countryId === winnerId){
+          border.push(sid);
+          break;
+        }
+      }
+    }
+    if(border.length) return pick(border);
+    return null;
+  }
+
+  /*************************
+   * AI TICK (better + can attack player)
+   *************************/
+  function aiDailyTick(){
+    const youId = state.playerCountryId;
+    if(youId==null) return;
+
+    const you = getCountry(youId);
+
+    for(const c of state.countries){
+      if(c.id === youId) continue;
+
+      // buy smarter
+      if(Math.random() < 0.55){
+        // if low army, buy cheap, else buy stronger
+        const inv = totalInventory(c.id);
+        const choices = inv < 10
+          ? UNITS.filter(u=>u.cost<=320)
+          : UNITS.filter(u=>u.cost<=520);
+        const u = pick(choices.length?choices:UNITS);
+        if(c.gold >= u.cost){
+          c.gold -= u.cost;
+          clampGold(c);
+          c.inventory[u.id] = (c.inventory[u.id]||0)+1;
+        }
+      }
+
+      // AI may attack player if neighbor and player looks weak
+      const neigh = Array.from(state.map.neighbors[c.id]);
+      const canHitPlayer = neigh.includes(youId);
+      if(canHitPlayer && !state.battle && $("#paperOverlay").style.display!=="flex"){
+        // cooldown checks
+        const until = c.armistice.get(youId) || 0;
+        const cdOk = (state.day - c.lastWarDay >= WAR_COOLDOWN) && (state.day >= until);
+        if(cdOk){
+          const aiArmy = totalInventory(c.id);
+          const youArmy = totalInventory(youId);
+          const youStates = you.states.length;
+          const aiStates = c.states.length;
+
+          // attack probability depends on advantage
+          let p = 0.02;
+          if(aiArmy > youArmy) p += 0.03;
+          if(aiStates >= youStates) p += 0.02;
+          if(you.gold < 1200) p += 0.02;
+
+          if(Math.random() < p){
+            const contested = pickBorderState(youId, c.id) ?? pick(you.states);
+            pushNews(`Acil Haber: ${c.name}, sana saldırdı! (${getState(contested).name})`);
+            showPaper({
+              title:"ACİL HABER",
+              sub:`Gün ${state.day}`,
+              headline:"Saldırı Altındasın!",
+              body:`${c.name}, ${you.name} ülkesine saldırdı. Savunulan eyalet: ${getState(contested).name}`,
+              stateId: contested,
+              attackerId: c.id,
+              defenderId: youId,
+              mode:"news"
+            });
+            startBattle({attackerId: c.id, defenderId: youId, contestedStateId: contested});
+            return; // stop further AI this tick
+          }
+        }
+      }
+
+      // AI-AI wars (rare, but now with ticker only)
+      if(Math.random() < 0.012){
+        if(neigh.length===0) continue;
+        const t = pick(neigh);
+        if(t===youId) continue;
+
+        const until = c.armistice.get(t) || 0;
+        if(state.day - c.lastWarDay < WAR_COOLDOWN) continue;
+        if(state.day < until) continue;
+
+        const winner = (Math.random()<0.5) ? c.id : t;
+        const loser = (winner===c.id) ? t : c.id;
+
+        resolveAIAIWar(winner, loser);
+      }
+    }
+  }
+
+  function resolveAIAIWar(winnerId, loserId){
+    const win = getCountry(winnerId);
+    const lose = getCountry(loserId);
+    if(lose.states.length<=0) return;
+
+    const captured = pickBorderState(loserId, winnerId) ?? pick(lose.states);
+    transferState(captured, winnerId);
+
+    win.gold += WIN_GOLD;
+    lose.gold = Math.max(0, lose.gold - LOSE_GOLD);
+
+    win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
+    lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
+    win.lastWarDay = state.day;
+    lose.lastWarDay = state.day;
+
+    rebuildNeighbors();
+    pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. ${getState(captured).name} alındı (+${WIN_GOLD}).`);
+    drawMap();
+    renderUI();
+
+    // occasional paper for wars (not too spam)
+    if(state.playerCountryId!=null && Math.random()<0.18 && !state.battle){
+      showPaper({
+        title:"DÜNYA HABERİ",
+        sub:`Gün ${state.day}`,
+        headline:"Sınırlar Değişiyor!",
+        body:`${win.name}, ${lose.name} karşısında kazandı ve ${getState(captured).name} eyaletini ele geçirdi.`,
+        stateId: captured,
+        attackerId: winnerId,
+        defenderId: loserId,
+        mode:"news"
+      });
+    }
+
+    checkGameOver();
   }
 
   /*************************
@@ -1437,57 +1979,57 @@
   });
 
   /*************************
-   * BATTLE SYSTEM (ADIM 2: canvas sprites)
+   * BATTLE SYSTEM (time paused, animations, survivor returns)
    *************************/
-  const battleView = { draggingUnit:null };
+  const battleView = { draggingUnit:null, fx:[] };
 
-  function startBattle(attackerId, defenderId){
-    const att = getCountry(attackerId);
-    const def = getCountry(defenderId);
+  function startBattle({attackerId, defenderId, contestedStateId}){
+    const playerId = state.playerCountryId;
+    if(playerId==null) return;
+
+    const attacker = getCountry(attackerId);
+    const defender = getCountry(defenderId);
 
     // pause time during battle
-    state.pausedBeforeBattle = !state.running ? true : false;
-    state.running = false;
-    renderUI();
-
-    const teams = {A:[attackerId], B:[defenderId]};
-    if(att.allyId!=null && Math.random()<0.40){ teams.A.push(att.allyId); pushNews(`Müttefik: ${getCountry(att.allyId).name} savaşa katıldı!`); }
-    if(def.allyId!=null && Math.random()<0.40){ teams.B.push(def.allyId); pushNews(`Müttefik: ${getCountry(def.allyId).name} savaşa katıldı!`); }
-
+    pauseGame("battle");
     state.battle = {
-      attackerId, defenderId,
-      youId: attackerId,
-      enemyId: defenderId,
-      teams,
+      attackerId,
+      defenderId,
+      playerId,
+      enemyId: (attackerId===playerId ? defenderId : attackerId),
+      playerIsAttacker: attackerId===playerId,
+      contestedStateId,
       phase:"deploy",
-      youField: [],
-      enemyField: [],
-      ended:false,
+      youField: [],    // player's deployed units (objects)
+      enemyField: [],  // enemy deployed units
       t: 0,
-      // survivors tracking
-      youSurvivors: [],
-      enemySurvivors: []
+      ended:false,
+      introT: 0,
+      intro: true,
     };
 
     $("#uiMode").textContent = "SAVAŞ";
-    $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
-    $("#uiBattleYou").textContent = att.name;
-    $("#uiBattleEnemy").textContent = def.name;
-    $("#uiFlagYou").src = state.flags[attackerId];
-    $("#uiFlagEnemy").src = state.flags[defenderId];
+    $("#battleTitle").textContent = `Savaş: ${attacker.name} → ${defender.name}`;
+    $("#uiBattleYou").textContent = getCountry(playerId).name;
+    $("#uiBattleEnemy").textContent = getCountry(state.battle.enemyId).name;
+    $("#uiFlagYou").src = state.flags[playerId];
+    $("#uiFlagEnemy").src = state.flags[state.battle.enemyId];
 
     $("#uiYouUnits").textContent = "0";
     $("#uiEnemyUnits").textContent = "0";
 
     buildDeployBar();
     $("#battleOverlay").style.display="flex";
+    renderUI();
     drawBattle();
   }
 
   function buildDeployBar(){
+    const b = state.battle;
+    if(!b) return;
     const bar = $("#deployBar");
     bar.innerHTML = "";
-    const you = getCountry(state.battle.youId);
+    const you = getCountry(b.playerId);
 
     for(const u of UNITS){
       const count = you.inventory[u.id] || 0;
@@ -1513,7 +2055,8 @@
       bar.appendChild(mini);
     }
 
-    battleCanvas.addEventListener("dragover", (e)=> e.preventDefault());
+    // drop handler (refresh each open)
+    battleCanvas.addEventListener("dragover", (e)=> e.preventDefault(), {once:true});
     battleCanvas.addEventListener("drop", (e)=>{
       e.preventDefault();
       const id = e.dataTransfer.getData("text/plain");
@@ -1525,23 +2068,52 @@
     const b = state.battle;
     if(!b || b.phase!=="deploy") return;
 
-    const you = getCountry(b.youId);
+    const you = getCountry(b.playerId);
     if((you.inventory[unitId]||0) <= 0){ pushNews("Bu kart sende yok."); return; }
 
     const rect = battleCanvas.getBoundingClientRect();
     const h = rect.height;
     const centerY = h/2;
     const maxY = centerY + 70;
+
+    // allow deploy only on your side (bottom)
     if(sy < centerY){ pushNews("Kendi tarafına koymalısın."); return; }
     if(sy < maxY){ pushNews("Sınır çizgisine çok yakın, biraz aşağı koy."); return; }
 
     const def = UNITS.find(x=>x.id===unitId);
+
+    // remove from inventory when deployed
     you.inventory[unitId] -= 1;
-    b.youField.push({unitId, hp:def.hp, maxHp:def.hp, x:sx, y:sy, team:"A", cd:0, vx:0, vy:0});
+
+    b.youField.push(makeBattleUnit({
+      unitId,
+      hp:def.hp,
+      x:sx,
+      y:sy,
+      side:"you"
+    }));
+
+    spawnFx("deploy", sx, sy, "you");
+
     buildDeployBar();
     buildArmyList();
     renderUI();
     drawBattle();
+  }
+
+  function makeBattleUnit({unitId,hp,x,y,side}){
+    const def = UNITS.find(u=>u.id===unitId);
+    return {
+      unitId,
+      hp,
+      maxHp: def.hp,
+      x, y,
+      side, // "you" | "enemy"
+      cd: 0,
+      vx: 0, vy: 0,
+      wobble: Math.random()*10,
+      alive:true
+    };
   }
 
   function aiDeploy(){
@@ -1550,27 +2122,26 @@
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
 
-    let want = clamp(Math.floor(totalInventory(b.enemyId)*0.62), 7, 16);
+    let want = clamp(Math.floor(totalInventory(b.enemyId)*0.65), 6, 16);
     const ids = UNITS.map(u=>u.id);
 
-    // Prefer ranged/mid a bit
-    const weighted = [];
-    for(const u of UNITS){
-      const k = (u.type==="range") ? 3 : (u.type==="mid" ? 2 : 1);
-      for(let i=0;i<k;i++) weighted.push(u.id);
-    }
+    // AI prefers stronger if rich
+    const prefer = enemy.gold > 2500
+      ? ids.filter(id=>UNITS.find(u=>u.id===id).cost>=360)
+      : ids;
 
     let tries=0;
     while(want>0 && tries<900){
       tries++;
-      const uid = pick(weighted);
+      const uid = pick(prefer);
       if((enemy.inventory[uid]||0) <= 0) continue;
       const def = UNITS.find(x=>x.id===uid);
 
       const x = rand(60, Math.floor(w-60));
-      const y = rand(60, Math.floor(h/2 - 90));
+      const y = rand(60, Math.floor(h/2 - 110));
+
       enemy.inventory[uid] -= 1;
-      b.enemyField.push({unitId:uid, hp:def.hp, maxHp:def.hp, x, y, team:"B", cd:0, vx:0, vy:0});
+      b.enemyField.push(makeBattleUnit({unitId:uid, hp:def.hp, x, y, side:"enemy"}));
       want--;
     }
   }
@@ -1578,54 +2149,61 @@
   function battleStart(){
     const b = state.battle;
     if(!b || b.phase!=="deploy") return;
+
     aiDeploy();
+
     b.phase="fight";
-    b.t = 0;
+    b.t=0;
+    b.intro = false;
+
     pushNews(`Savaş başladı: ${getCountry(b.attackerId).name} vs ${getCountry(b.defenderId).name}`);
     drawBattle();
   }
 
-  function applyGoldChange(country, delta){
-    country.gold = Math.max(0, country.gold + delta);
-  }
-
-  function battleEnd(winnerSide){
+  function battleEnd(winnerSide){ // "you" or "enemy"
     const b = state.battle;
     if(!b || b.ended) return;
-    b.ended = true;
-    b.phase = "done";
+    b.ended=true;
+    b.phase="done";
 
-    const winnerId = (winnerSide==="A") ? b.attackerId : b.defenderId;
-    const loserId  = (winnerSide==="A") ? b.defenderId : b.attackerId;
+    const winnerId = (winnerSide==="you") ? b.playerId : b.enemyId;
+    const loserId  = (winnerSide==="you") ? b.enemyId : b.playerId;
 
     const winner = getCountry(winnerId);
     const loser  = getCountry(loserId);
 
-    // ✅ survivors only: units remaining on field return to inventory as same unit types
-    const survivorsA = b.youField.map(u=>u.unitId);
-    const survivorsB = b.enemyField.map(u=>u.unitId);
-
-    for(const uid of survivorsA){
-      getCountry(b.attackerId).inventory[uid] = (getCountry(b.attackerId).inventory[uid]||0)+1;
+    // ✅ survivors return (not 15%)
+    function returnSurvivorsTo(countryId, units){
+      const c = getCountry(countryId);
+      for(const u of units){
+        if(u.alive && u.hp>0){
+          c.inventory[u.unitId] = (c.inventory[u.unitId]||0) + 1;
+        }
+      }
     }
-    for(const uid of survivorsB){
-      getCountry(b.defenderId).inventory[uid] = (getCountry(b.defenderId).inventory[uid]||0)+1;
-    }
+    // player survivors
+    returnSurvivorsTo(b.playerId, b.youField);
+    // enemy survivors
+    returnSurvivorsTo(b.enemyId, b.enemyField);
 
-    // gold changes
-    applyGoldChange(winner, +WIN_REWARD);
-    applyGoldChange(loser, -LOSS_PENALTY);
+    // economy
+    winner.gold += WIN_GOLD;
+    loser.gold = Math.max(0, loser.gold - LOSE_GOLD);
+    clampGold(winner); clampGold(loser);
 
-    // capture
+    // state transfer: winner takes 1 border state of loser (prefer contested)
+    let captured = null;
     if(loser.states.length>0){
-      const captured = pick(loser.states);
-      transferState(captured, winnerId);
-      pushNews(`${winner.name} kazandı! +${WIN_REWARD} altın ve 1 eyalet aldı (${getState(captured).name}).`);
-    } else {
-      pushNews(`${winner.name} kazandı! +${WIN_REWARD} altın aldı.`);
+      // if contested belongs to loser, take it first
+      if(b.contestedStateId!=null && getState(b.contestedStateId).countryId === loserId){
+        captured = b.contestedStateId;
+      } else {
+        captured = pickBorderState(loserId, winnerId) ?? pick(loser.states);
+      }
+      if(captured!=null) transferState(captured, winnerId);
     }
-    pushNews(`${loser.name} kaybetti! -${LOSS_PENALTY} altın (0 altına düşmez).`);
 
+    // cooldowns
     winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
     loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
     winner.lastWarDay = state.day;
@@ -1634,23 +2212,78 @@
     rebuildNeighbors();
     drawMap();
 
+    // news paper
+    const winName = winner.name;
+    const loseName = loser.name;
+
+    if(captured!=null){
+      showPaper({
+        title:"SAVAŞ RAPORU",
+        sub:`Gün ${state.day}`,
+        headline: `${winName} kazandı!`,
+        body: `${winName}, ${loseName} karşısında zafer aldı. +${WIN_GOLD} altın. ${loseName}: -${LOSE_GOLD} altın. Ele geçirilen eyalet: ${getState(captured).name}`,
+        stateId: captured,
+        attackerId: winnerId,
+        defenderId: loserId,
+        mode:"news"
+      });
+      pushNews(`${winName} kazandı. +${WIN_GOLD} altın, ${getState(captured).name} alındı.`);
+    } else {
+      showPaper({
+        title:"SAVAŞ RAPORU",
+        sub:`Gün ${state.day}`,
+        headline: `${winName} kazandı!`,
+        body: `${winName} zafer kazandı. +${WIN_GOLD} altın. ${loseName}: -${LOSE_GOLD} altın.`,
+        stateId: null,
+        attackerId: winnerId,
+        defenderId: loserId,
+        mode:"news"
+      });
+      pushNews(`${winName} kazandı. +${WIN_GOLD} altın.`);
+    }
+
     buildArmyList();
     buildShop();
     renderUI();
+
+    // check game over after transfer
+    checkGameOver();
+  }
+
+  // FX helpers (simple animations)
+  function spawnFx(type, x,y, side){
+    battleView.fx.push({type, x, y, side, t:0});
+  }
+
+  function updateFx(dt){
+    const fx = battleView.fx;
+    for(const f of fx) f.t += dt;
+    battleView.fx = fx.filter(f=>f.t < 0.9);
   }
 
   function updateBattle(dt){
     const b = state.battle;
-    if(!b || b.phase!=="fight" || b.ended) return;
+    if(!b) return;
+
+    // intro animation timer
+    if(b.intro){
+      b.introT += dt;
+      if(b.introT > 1.0) b.intro = false;
+      return;
+    }
+
+    if(b.phase!=="fight" || b.ended) return;
 
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
+    const centerY = h/2;
 
     function stepUnit(u, enemies){
       const def = UNITS.find(x=>x.id===u.unitId);
       u.cd = Math.max(0, u.cd - dt);
+      u.wobble += dt*6;
 
-      // find closest
+      // find closest enemy
       let best=null, bestD=1e18;
       for(const e of enemies){
         const dx=e.x-u.x, dy=e.y-u.y;
@@ -1659,33 +2292,40 @@
       }
       if(!best) return;
 
-      // movement with slight steering (animation feel)
+      // movement
       if(bestD > def.range){
         const dx=best.x-u.x, dy=best.y-u.y;
         const d=Math.max(0.001, Math.hypot(dx,dy));
-        const tx = (dx/d)*def.speed;
-        const ty = (dy/d)*def.speed;
-        u.vx = u.vx*0.75 + tx*0.25;
-        u.vy = u.vy*0.75 + ty*0.25;
-        u.x += u.vx*dt;
-        u.y += u.vy*dt;
+        const sp = def.speed * (0.92 + 0.16*Math.sin(u.wobble));
+        u.x += (dx/d)*sp*dt;
+        u.y += (dy/d)*sp*dt;
       } else if(u.cd<=0){
+        // attack
         best.hp -= def.dmg;
-        // small knockback for animation
-        const dx=best.x-u.x, dy=best.y-u.y;
-        const d=Math.max(0.001, Math.hypot(dx,dy));
-        best.x += (dx/d)*2.5;
-        best.y += (dy/d)*2.5;
-        u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.60 : 0.75));
+        u.cd = (def.type==="melee" ? 0.45 : (def.type==="mid" ? 0.62 : 0.78));
+
+        spawnFx(def.type==="range" ? "shot" : "hit", best.x, best.y, u.side);
+
+        if(best.hp <= 0 && best.alive){
+          best.alive = false;
+          spawnFx("death", best.x, best.y, best.side);
+        }
       }
 
-      u.x = clamp(u.x, 20, w-20);
-      u.y = clamp(u.y, 20, h-20);
+      // clamp
+      u.x = clamp(u.x, 18, w-18);
+      // ✅ in fight, units can cross center line
+      u.y = clamp(u.y, 18, h-18);
+
+      // small formation bias: keep your units bottom-ish, enemy top-ish
+      if(u.side==="you") u.y = clamp(u.y, centerY-40, h-18);
+      else u.y = clamp(u.y, 18, centerY+40);
     }
 
     for(const u of b.youField) stepUnit(u, b.enemyField);
     for(const e of b.enemyField) stepUnit(e, b.youField);
 
+    // remove dead
     b.youField = b.youField.filter(u=>u.hp>0);
     b.enemyField = b.enemyField.filter(u=>u.hp>0);
 
@@ -1694,10 +2334,11 @@
 
     b.t += dt;
 
-    if(b.youField.length===0 && b.enemyField.length===0) battleEnd("B");
-    else if(b.enemyField.length===0) battleEnd("A");
-    else if(b.youField.length===0) battleEnd("B");
-    else if(b.t>70) battleEnd(b.youField.length>=b.enemyField.length ? "A":"B");
+    // win conditions
+    if(b.youField.length===0 && b.enemyField.length===0) battleEnd("enemy");
+    else if(b.enemyField.length===0) battleEnd("you");
+    else if(b.youField.length===0) battleEnd("enemy");
+    else if(b.t>75) battleEnd(b.youField.length>=b.enemyField.length ? "you":"enemy");
   }
 
   function drawBattle(){
@@ -1705,11 +2346,11 @@
     const w = rect.width, h = rect.height;
     battleCtx.clearRect(0,0,w,h);
 
-    // grass
-    const gg = battleCtx.createLinearGradient(0,0,w,h);
-    gg.addColorStop(0,"rgba(60,160,95,.28)");
-    gg.addColorStop(1,"rgba(50,120,75,.20)");
-    battleCtx.fillStyle = gg;
+    // background grass
+    const g = battleCtx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0, "rgba(80, 190, 120, .20)");
+    g.addColorStop(1, "rgba(40, 120, 80, .22)");
+    battleCtx.fillStyle = g;
     battleCtx.fillRect(0,0,w,h);
 
     const b = state.battle;
@@ -1732,50 +2373,203 @@
       battleCtx.setLineDash([]);
     }
 
+    // intro animation overlay
+    if(b && b.intro){
+      const t = clamp(b.introT, 0, 1);
+      const a = getCountry(b.attackerId).name;
+      const d = getCountry(b.defenderId).name;
+
+      battleCtx.fillStyle = "rgba(0,0,0,.35)";
+      battleCtx.fillRect(0,0,w,h);
+
+      battleCtx.fillStyle = "rgba(255,255,255,.92)";
+      battleCtx.font = "bold 26px system-ui";
+      battleCtx.textAlign = "center";
+      battleCtx.fillText("SAVAŞ!", w/2, h/2 - 20);
+
+      battleCtx.font = "14px system-ui";
+      battleCtx.globalAlpha = 0.92;
+      battleCtx.fillText(`${a}  vs  ${d}`, w/2, h/2 + 14);
+      battleCtx.globalAlpha = 1;
+
+      // little slide effect bars
+      battleCtx.fillStyle = "rgba(255,255,255,.12)";
+      battleCtx.fillRect(-w + w*t, 0, w, h);
+      battleCtx.fillRect(w - w*t, 0, w, h);
+
+      return;
+    }
+
     if(!b) return;
 
-    function drawHPBar(u){
-      const pct = clamp(u.hp/u.maxHp, 0, 1);
-      battleCtx.globalAlpha = 0.9;
-      battleCtx.fillStyle = "rgba(0,0,0,.35)";
-      battleCtx.fillRect(u.x-14, u.y-26, 28, 5);
-      battleCtx.fillStyle = "rgba(255,255,255,.75)";
-      battleCtx.fillRect(u.x-14, u.y-26, 28*pct, 5);
-      battleCtx.globalAlpha = 1;
-    }
+    // draw units as little “characters”
+    function drawUnit(u){
+      const def = UNITS.find(x=>x.id===u.unitId);
 
-    function drawSprite(u){
-      // team tint ring
-      battleCtx.globalAlpha = 0.22;
-      battleCtx.fillStyle = (u.team==="A") ? "rgba(77,212,255,.9)" : "rgba(255,92,122,.9)";
+      const baseR = 10 + Math.min(6, def.hp/28);
+      const bob = Math.sin(u.wobble)*1.5;
+
+      // shadow
+      battleCtx.fillStyle = "rgba(0,0,0,.22)";
       battleCtx.beginPath();
-      battleCtx.arc(u.x, u.y, 15, 0, Math.PI*2);
+      battleCtx.ellipse(u.x, u.y + baseR + 8 + bob, baseR*0.9, baseR*0.45, 0, 0, Math.PI*2);
       battleCtx.fill();
-      battleCtx.globalAlpha = 1;
 
-      // actual sprite
-      battleCtx.save();
-      battleCtx.translate(u.x, u.y);
-      battleCtx.scale(0.65, 0.65);
-      drawUnitIcon(battleCtx, u.unitId, 0, 0, 1.0);
-      battleCtx.restore();
+      // body
+      const col = (u.side==="you") ? "rgba(77,212,255,.92)" : "rgba(255,92,122,.90)";
+      battleCtx.fillStyle = col;
+      battleCtx.beginPath();
+      battleCtx.arc(u.x, u.y + bob, baseR, 0, Math.PI*2);
+      battleCtx.fill();
 
-      drawHPBar(u);
+      // head
+      battleCtx.fillStyle = "rgba(255,255,255,.88)";
+      battleCtx.beginPath();
+      battleCtx.arc(u.x, u.y - baseR*0.75 + bob, baseR*0.55, 0, Math.PI*2);
+      battleCtx.fill();
+
+      // weapon hint
+      battleCtx.strokeStyle = "rgba(255,255,255,.75)";
+      battleCtx.lineWidth = 3;
+      if(def.type==="range"){
+        battleCtx.beginPath();
+        battleCtx.moveTo(u.x - baseR*0.8, u.y + bob);
+        battleCtx.lineTo(u.x + baseR*1.2, u.y - baseR*0.6 + bob);
+        battleCtx.stroke();
+      } else if(def.type==="mid"){
+        battleCtx.beginPath();
+        battleCtx.moveTo(u.x - baseR*1.0, u.y + baseR*0.6 + bob);
+        battleCtx.lineTo(u.x + baseR*1.0, u.y - baseR*0.2 + bob);
+        battleCtx.stroke();
+      } else {
+        battleCtx.beginPath();
+        battleCtx.moveTo(u.x - baseR*0.4, u.y + baseR*0.9 + bob);
+        battleCtx.lineTo(u.x + baseR*0.9, u.y + baseR*0.1 + bob);
+        battleCtx.stroke();
+      }
+
+      // HP bar
+      const pct = clamp(u.hp/u.maxHp, 0, 1);
+      battleCtx.fillStyle = "rgba(0,0,0,.35)";
+      battleCtx.fillRect(u.x - baseR, u.y - baseR*1.6 + bob, baseR*2, 5);
+      battleCtx.fillStyle = "rgba(255,255,255,.78)";
+      battleCtx.fillRect(u.x - baseR, u.y - baseR*1.6 + bob, baseR*2*pct, 5);
     }
 
-    for(const u of b.youField) drawSprite(u);
-    for(const e of b.enemyField) drawSprite(e);
+    for(const u of b.youField) drawUnit(u);
+    for(const e of b.enemyField) drawUnit(e);
 
-    // status
+    // FX draw
+    drawFx();
+
+    // status bar
     battleCtx.fillStyle = "rgba(0,0,0,.40)";
     battleCtx.fillRect(12, h-52, 520, 40);
-    battleCtx.fillStyle = "rgba(255,255,255,.88)";
+    battleCtx.fillStyle = "rgba(255,255,255,.90)";
     battleCtx.font = "12px system-ui";
     const txt = b.phase==="deploy"
-      ? "DEPLOY: Kartı sürükle-bırak. Sonra 'Savaşı Başlat'. (Savaşta zaman durur)"
-      : (b.phase==="fight" ? "FIGHT: Birimler otomatik savaşıyor. (Hayatta kalanlar geri döner)" : "BİTTİ: Çıkabilirsin.");
+      ? "DEPLOY: Kartı sürükle-bırak. Sonra 'Savaşı Başlat'. (Zaman duruyor)"
+      : (b.phase==="fight" ? "FIGHT: Birimler otomatik savaşıyor. (Zaman duruyor)" : "BİTTİ: Çıkabilirsin.");
     battleCtx.fillText(txt, 22, h-28);
   }
+
+  function drawFx(){
+    const rect = battleCanvas.getBoundingClientRect();
+    const w = rect.width, h = rect.height;
+
+    for(const f of battleView.fx){
+      const t = f.t;
+      if(f.type==="deploy"){
+        battleCtx.globalAlpha = 1 - t*1.2;
+        battleCtx.strokeStyle = "rgba(255,255,255,.75)";
+        battleCtx.lineWidth = 3;
+        battleCtx.beginPath();
+        battleCtx.arc(f.x, f.y, 8 + 30*t, 0, Math.PI*2);
+        battleCtx.stroke();
+        battleCtx.globalAlpha = 1;
+      } else if(f.type==="shot"){
+        battleCtx.globalAlpha = 0.9 - t;
+        battleCtx.fillStyle = "rgba(255,209,102,.90)";
+        battleCtx.beginPath();
+        battleCtx.arc(f.x + (Math.random()-0.5)*6, f.y + (Math.random()-0.5)*6, 2 + 4*(1-t), 0, Math.PI*2);
+        battleCtx.fill();
+        battleCtx.globalAlpha = 1;
+      } else if(f.type==="hit"){
+        battleCtx.globalAlpha = 1 - t*1.1;
+        battleCtx.strokeStyle = "rgba(255,255,255,.85)";
+        battleCtx.lineWidth = 3;
+        battleCtx.beginPath();
+        battleCtx.moveTo(f.x-10, f.y); battleCtx.lineTo(f.x+10, f.y);
+        battleCtx.moveTo(f.x, f.y-10); battleCtx.lineTo(f.x, f.y+10);
+        battleCtx.stroke();
+        battleCtx.globalAlpha = 1;
+      } else if(f.type==="death"){
+        battleCtx.globalAlpha = 0.8 - t*0.9;
+        battleCtx.fillStyle = "rgba(0,0,0,.28)";
+        for(let i=0;i<8;i++){
+          battleCtx.fillRect(f.x + (i-4)*3, f.y + (Math.sin(i*1.2+t*8))*6, 2, 2);
+        }
+        battleCtx.globalAlpha = 1;
+      }
+    }
+  }
+
+  /*************************
+   * BUTTONS
+   *************************/
+  $("#btnChooseCountry").onclick = ()=> $("#countryOverlay").style.display="flex";
+  $("#btnCloseCountry").onclick = ()=> $("#countryOverlay").style.display="none";
+
+  $("#btnDeclareWar").onclick = declareWar;
+  $("#btnOfferAlliance").onclick = offerAlliance;
+  $("#btnBreakAlliance").onclick = breakAlliance;
+  $("#btnRequestPassage").onclick = requestPassage;
+
+  $("#btnPause").onclick = ()=>{
+    if(state.playerCountryId==null) return;
+    if(state.battle || $("#paperOverlay").style.display==="flex") return;
+    state.running = !state.running;
+    pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
+    renderUI();
+  };
+
+  $("#btnSave").onclick = exportSave;
+  $("#btnLoad").onclick = ()=> $("#saveFile").click();
+  $("#saveFile").addEventListener("change", async (e)=>{
+    const file = e.target.files && e.target.files[0];
+    if(!file) return;
+    const text = await file.text();
+    try{ importSave(JSON.parse(text)); }
+    catch(err){ pushNews("Save okunamadı (JSON hatası)."); console.error(err); }
+    e.target.value = "";
+  });
+
+  $("#btnUploadCards").onclick = ()=> $("#cardsOverlay").style.display="flex";
+  $("#btnCloseCards").onclick = ()=> $("#cardsOverlay").style.display="none";
+  $("#btnApplyCards").onclick = applyCardImages;
+  $("#btnClearCards").onclick = ()=>{
+    for(const u of UNITS) state.cardImages[u.id] = cardArtDataURL(u.id, u.name.slice(0,3).toUpperCase());
+    buildShop();
+    if(state.battle) buildDeployBar();
+    pushNews("Kart görselleri temizlendi (otomatik çizim).");
+  };
+
+  $("#btnReset").onclick = ()=> initAll();
+
+  $("#btnStartBattle").onclick = battleStart;
+  $("#btnCloseBattle").onclick = ()=>{
+    $("#battleOverlay").style.display="none";
+    $("#uiMode").textContent = "HARİTA";
+    state.battle = null;
+    resumeGame("battle");
+    drawMap();
+    renderUI();
+    // show queued paper if exists
+    if(state.pendingPaper.length){
+      const next = state.pendingPaper.shift();
+      showPaper(next);
+    }
+  };
 
   /*************************
    * SAVE / LOAD
@@ -1793,7 +2587,7 @@
       flags: state.flags,
       map: {
         hexSize: state.map.hexSize,
-        hexes: state.map.hexes.map(h=>({id:h.id,q:h.q,r:h.r,x:h.x,y:h.y,countryId:h.countryId,stateId:h.stateId}))
+        hexes: state.map.hexes.map(h=>({id:h.id,q:h.q,r:h.r,x:h.x,y:h.y,countryId:h.countryId,stateId:h.stateId})),
       },
       countries: state.countries.map(c=>({
         id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
@@ -1804,6 +2598,7 @@
       })),
       states: state.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name})),
     };
+
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1825,7 +2620,9 @@
     state.map.hexSize = obj.map?.hexSize ?? state.map.hexSize;
     state.map.hexes = (obj.map?.hexes || []).map(h=>({ ...h }));
     state.map.byQR = new Map();
-    for(const h of state.map.hexes) state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    for(const h of state.map.hexes){
+      state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    }
 
     state.countries = obj.countries.map(c=>({
       id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
@@ -1837,11 +2634,8 @@
     }));
     state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name}));
 
-    // ensure images exist
     for(const u of UNITS){
-      if(!state.cardImages[u.id]){
-        state.cardImages[u.id] = makeUnitCardCanvas(u.id, u.name);
-      }
+      if(!state.cardImages[u.id]) state.cardImages[u.id] = cardArtDataURL(u.id, u.name.slice(0,3).toUpperCase());
     }
     for(let i=0;i<20;i++){
       if(!state.flags[i]) state.flags[i] = genFlagDataURL(i);
@@ -1895,63 +2689,6 @@
   }
 
   /*************************
-   * BUTTONS
-   *************************/
-  $("#btnChooseCountry").onclick = ()=> $("#countryOverlay").style.display="flex";
-  $("#btnCloseCountry").onclick = ()=> $("#countryOverlay").style.display="none";
-
-  $("#btnDeclareWar").onclick = declareWar;
-  $("#btnOfferAlliance").onclick = offerAlliance;
-  $("#btnBreakAlliance").onclick = breakAlliance;
-  $("#btnRequestPassage").onclick = requestPassage;
-
-  $("#btnPause").onclick = ()=>{
-    if(state.playerCountryId==null) return;
-    // can't manually unpause during battle overlay
-    if(state.battle){ pushNews("Savaş açıkken zaman durur."); return; }
-    state.running = !state.running;
-    pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
-    renderUI();
-  };
-
-  $("#btnSave").onclick = exportSave;
-  $("#btnLoad").onclick = ()=> $("#saveFile").click();
-  $("#saveFile").addEventListener("change", async (e)=>{
-    const file = e.target.files && e.target.files[0];
-    if(!file) return;
-    const text = await file.text();
-    try{ importSave(JSON.parse(text)); }
-    catch(err){ pushNews("Save okunamadı (JSON hatası)."); console.error(err); }
-    e.target.value = "";
-  });
-
-  $("#btnUploadCards").onclick = ()=> $("#cardsOverlay").style.display="flex";
-  $("#btnCloseCards").onclick = ()=> $("#cardsOverlay").style.display="none";
-  $("#btnApplyCards").onclick = applyCardImages;
-  $("#btnClearCards").onclick = ()=>{
-    for(const u of UNITS) state.cardImages[u.id] = makeUnitCardCanvas(u.id, u.name);
-    buildShop();
-    if(state.battle) buildDeployBar();
-    pushNews("Kart görselleri resetlendi (canvas).");
-  };
-
-  $("#btnReset").onclick = ()=> initAll();
-
-  $("#btnStartBattle").onclick = battleStart;
-  $("#btnCloseBattle").onclick = ()=>{
-    $("#battleOverlay").style.display="none";
-    $("#uiMode").textContent = "HARİTA";
-    state.battle = null;
-
-    // restore time state (resume if it was running before battle)
-    state.running = !state.pausedBeforeBattle;
-    state.pausedBeforeBattle = false;
-
-    renderUI();
-    drawMap();
-  };
-
-  /*************************
    * GAME LOOP (1 day = 1 sec)
    *************************/
   let tickAcc = 0;
@@ -1960,7 +2697,8 @@
   function dayTick(){
     state.day += 1;
 
-    if(Math.random()<0.10){
+    // flavor news
+    if(Math.random()<0.08){
       const a = pick(state.countries);
       const b = pick(state.countries.filter(x=>x.id!==a.id));
       pushNews(`Haber: ${a.name}, ${b.name} sınırında devriye arttırdı.`);
@@ -1968,13 +2706,18 @@
 
     aiDailyTick();
     renderUI();
+    drawMap();
+
+    checkGameOver();
   }
 
   function loop(now){
     const dt = Math.min(0.05, (now-last)/1000);
     last = now;
 
-    if(state.playerCountryId!=null && state.running && !state.battle){
+    // time tick only if running and no battle/paper
+    const paperOpen = ($("#paperOverlay").style.display === "flex");
+    if(state.playerCountryId!=null && state.running && !state.battle && !paperOpen){
       tickAcc += dt;
       while(tickAcc >= 1.0){
         tickAcc -= 1.0;
@@ -1982,8 +2725,12 @@
       }
     }
 
-    updateBattle(dt);
-    drawBattle();
+    // battle updates
+    if(state.battle){
+      updateBattle(dt);
+      updateFx(dt);
+      drawBattle();
+    }
 
     requestAnimationFrame(loop);
   }
@@ -1999,24 +2746,25 @@
     state.selectedStateId = null;
     state.news = [];
     state.battle = null;
-    state.pausedBeforeBattle = false;
+    state.pauseStack = [];
+    state.pendingPaper = [];
+
+    // default card images (paint/canvas)
+    state.cardImages = {};
+    for(const u of UNITS) state.cardImages[u.id] = cardArtDataURL(u.id, u.name.slice(0,3).toUpperCase());
 
     // flags
     state.flags = {};
     for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
 
-    // map
-    genHexIsland60();
-    rebuildNeighbors();
+    // ✅ Europe-like connected hex map
+    genEuropeHex60();
 
-    // cards: canvas drawings
-    state.cardImages = {};
-    for(const u of UNITS){
-      state.cardImages[u.id] = makeUnitCardCanvas(u.id, u.name);
-    }
+    // countries + contiguous assignment
+    buildCountriesStatesAndAssign();
 
     mapView.reset();
-    pushNews("Avrupa HEX harita hazır. Ülke seçince oyun başlar.");
+    pushNews("Europe HEX dünya hazır. Ülke seçince oyun başlar.");
     buildCountryPicker();
     buildShop();
     buildArmyList();
@@ -2025,8 +2773,15 @@
 
     $("#btnPause").disabled = true;
     $("#btnPause").textContent = "Duraklat";
+
+    // close overlays
+    $("#battleOverlay").style.display="none";
+    $("#paperOverlay").style.display="none";
+    $("#countryOverlay").style.display="none";
+    $("#cardsOverlay").style.display="none";
   }
 
+  // startup
   initAll();
   resizeCanvas();
   requestAnimationFrame(loop);
