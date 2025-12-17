@@ -170,6 +170,25 @@
     }
     .miniCard:active{cursor:grabbing}
     input[type="file"]{width:100%}
+
+    .netRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+    .netInp{
+      width:100%;
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.22);
+      color:var(--txt);
+      outline:none;
+    }
+    .tag{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.18);
+      color:var(--muted);
+      font-size:12px;
+    }
   </style>
 </head>
 <body>
@@ -223,6 +242,34 @@
         Kurallar: Savaş ilanı sonrası <b>20 gün ateşkes</b>.
         Yeni savaş için <b>10 gün bekleme</b>.
         1 gün = 1 saniye.
+      </div>
+    </div>
+
+    <!-- SERVER READY (şimdilik kapalı) -->
+    <div class="card pad">
+      <div class="title">Online (Server Hazır)</div>
+      <div class="muted small">
+        Şu an tek kişi oynuyorsun. İleride WebSocket sunucu bağlayınca online olacak.
+      </div>
+      <div class="hr"></div>
+
+      <div class="tag">Durum: <b id="uiNetStatus" style="color:#e8f0ff; margin-left:6px">OFF</b></div>
+
+      <div style="margin-top:8px" class="muted small">Server URL (sonra):</div>
+      <input class="netInp" id="netUrl" value="ws://localhost:8787" />
+
+      <div style="margin-top:8px" class="muted small">Oda Kodu (room):</div>
+      <input class="netInp" id="netRoom" value="room1" />
+
+      <div class="netRow">
+        <button class="btn" id="btnNetToggle">Online Aç/Kapat</button>
+        <button class="btn primary" id="btnNetHost">Host (oda kur)</button>
+        <button class="btn good" id="btnNetJoin">Join (katıl)</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="muted small">
+        Not: Sunucu yoksa “online” çalışmaz. Ama kod altyapısı hazır.
       </div>
     </div>
   </div>
@@ -368,14 +415,104 @@
 </div>
 
 <script>
-// GAME MODE
-const GAME_MODE = "SINGLE";
+/***************************************
+ * ONLINE / SERVER-READY LAYER
+ * - Şu an NET.enabled=false => hiçbir şeyi bozmaz.
+ * - Sonra WebSocket server ekleyince:
+ *   - Host: oyunu simüle eder, STATE snapshot yollar
+ *   - Client: snapshot alır, sadece render eder
+ ***************************************/
+const NET = {
+  enabled: false,
+  role: "OFF",          // OFF | HOST | CLIENT
+  url: "ws://localhost:8787",
+  room: "room1",
+  ws: null,
+  lastSeq: 0,
+};
 
-// NETWORK PLACEHOLDER
-const SERVER_ENABLED = false;
+function netSetStatus(txt){
+  const el = document.getElementById("uiNetStatus");
+  if(el) el.textContent = txt;
+}
+
+function netDisconnect(){
+  try{ NET.ws && NET.ws.close(); }catch(_){}
+  NET.ws = null;
+  NET.role = NET.enabled ? "OFF" : "OFF";
+  netSetStatus(NET.enabled ? "ON (not connected)" : "OFF");
+}
+
+function netConnect(role){
+  if(!NET.enabled){ netSetStatus("OFF"); return; }
+  netDisconnect();
+  NET.role = role;
+  netSetStatus(role + " (connecting...)");
+
+  const ws = new WebSocket(NET.url);
+  NET.ws = ws;
+
+  ws.onopen = () => {
+    netSetStatus(role + " (connected)");
+    // Basit protokol: HELLO + JOIN
+    ws.send(JSON.stringify({t:"HELLO", v:1, room:NET.room, role}));
+  };
+
+  ws.onmessage = (ev) => {
+    let msg=null;
+    try{ msg = JSON.parse(ev.data); }catch(_){ return; }
+    if(!msg || !msg.t) return;
+
+    // Host'tan state snapshot gelirse client uygular
+    if(msg.t==="STATE" && NET.role==="CLIENT" && msg.payload){
+      try{
+        // payload bizim exportSave() formatında
+        importSave(msg.payload, /*silent*/ true);
+        // client tarafında zaman akışı kapalı: host karar verir
+        state.running = false;
+        renderUI();
+        drawMap();
+      }catch(err){
+        console.warn("STATE apply failed", err);
+      }
+    }
+    // Host: client action alır (ileride genişletirsin)
+    if(msg.t==="ACTION" && NET.role==="HOST"){
+      // Şimdilik sadece “log” (kırmamak için)
+      // İleride: action'ları burada uygula (declareWar, buyUnit vs.)
+      console.log("ACTION from client:", msg);
+    }
+  };
+
+  ws.onerror = () => netSetStatus(role + " (error)");
+  ws.onclose = () => {
+    netSetStatus(role + " (closed)");
+    NET.ws = null;
+  };
+}
+
+function netSend(obj){
+  if(!NET.enabled || !NET.ws || NET.ws.readyState!==1) return;
+  NET.ws.send(JSON.stringify(obj));
+}
+
+/* Host: önemli değişimlerde snapshot yayınla */
+function netBroadcastState(){
+  if(!NET.enabled || NET.role!=="HOST") return;
+  const payload = exportSaveObject(); // dosya indirmeyen versiyon
+  netSend({t:"STATE", room:NET.room, seq:(++NET.lastSeq), payload});
+}
+
+/* Client: “action” gönder (şimdilik altyapı) */
+function netSendAction(action, payload){
+  if(!NET.enabled || NET.role!=="CLIENT") return;
+  netSend({t:"ACTION", room:NET.room, action, payload});
+}
 
 (() => {
-
+  /*************************
+   * CONFIG
+   *************************/
   const START_GOLD = 5000;
   const WAR_COOLDOWN = 10;
   const ARMISTICE_DAYS = 20;
@@ -393,16 +530,16 @@ const SERVER_ENABLED = false;
   ];
 
   const UNITS = [
-    { id:"infantry",   name:"Piyade",        type:"melee", cost:220, hp:120, dmg:10, range:22,  speed:30 },
-    { id:"spearman",   name:"Mızrakçı",      type:"melee", cost:240, hp:140, dmg:11, range:22,  speed:26 },
-    { id:"cavalry",    name:"Süvari",        type:"mid",   cost:360, hp:170, dmg:13, range:55,  speed:46 },
-    { id:"archer",     name:"Okçu",          type:"range", cost:260, hp:95,  dmg:9,  range:160, speed:26 },
-    { id:"crossbow",   name:"Arbaletçi",     type:"range", cost:320, hp:100, dmg:11, range:185, speed:24 },
-    { id:"musketeer",  name:"Tüfekçi",       type:"range", cost:420, hp:115, dmg:14, range:210, speed:22 },
-    { id:"grenadier",  name:"Bombacı",       type:"mid",   cost:460, hp:125, dmg:18, range:110, speed:20 },
-    { id:"cannon",     name:"Topçu",         type:"range", cost:650, hp:170, dmg:26, range:260, speed:14 },
-    { id:"rifleman",   name:"Keskin Nişancı",type:"range", cost:520, hp:100, dmg:20, range:300, speed:20 },
-    { id:"scout",      name:"İzci",          type:"mid",   cost:300, hp:90,  dmg:8,  range:90,  speed:55 },
+    { id:"infantry",   name:"Piyade",         type:"melee", cost:220, hp:120, dmg:10, range:22,  speed:30 },
+    { id:"spearman",   name:"Mızrakçı",       type:"melee", cost:240, hp:140, dmg:11, range:22,  speed:26 },
+    { id:"cavalry",    name:"Süvari",         type:"mid",   cost:360, hp:170, dmg:13, range:55,  speed:46 },
+    { id:"archer",     name:"Okçu",           type:"range", cost:260, hp:95,  dmg:9,  range:160, speed:26 },
+    { id:"crossbow",   name:"Arbaletçi",      type:"range", cost:320, hp:100, dmg:11, range:185, speed:24 },
+    { id:"musketeer",  name:"Tüfekçi",        type:"range", cost:420, hp:115, dmg:14, range:210, speed:22 },
+    { id:"grenadier",  name:"Bombacı",        type:"mid",   cost:460, hp:125, dmg:18, range:110, speed:20 },
+    { id:"cannon",     name:"Topçu",          type:"range", cost:650, hp:170, dmg:26, range:260, speed:14 },
+    { id:"rifleman",   name:"Keskin Nişancı", type:"range", cost:520, hp:100, dmg:20, range:300, speed:20 },
+    { id:"scout",      name:"İzci",           type:"mid",   cost:300, hp:90,  dmg:8,  range:90,  speed:55 },
   ];
 
   /*************************
@@ -555,53 +692,8 @@ const SERVER_ENABLED = false;
   }
 
   /*************************
-   * ADIM 2: CANVAS CARD ART (paint-like)
+   * CANVAS CARD ART
    *************************/
-  function genCardArt(unitId){
-    const u = UNITS.find(x=>x.id===unitId);
-    const c = document.createElement("canvas");
-    c.width = 96; c.height = 96;
-    const ctx = c.getContext("2d");
-
-    // background gradient
-    const g = ctx.createLinearGradient(0,0,96,96);
-    g.addColorStop(0,"rgba(77,212,255,.95)");
-    g.addColorStop(1,"rgba(255,92,122,.90)");
-    ctx.fillStyle = g;
-    roundRect(ctx, 6,6,84,84,18, true, false);
-
-    // frame
-    ctx.strokeStyle = "rgba(255,255,255,.22)";
-    ctx.lineWidth = 2;
-    roundRect(ctx, 6,6,84,84,18, false, true);
-
-    // inner panel
-    ctx.fillStyle = "rgba(0,0,0,.18)";
-    roundRect(ctx, 14,14,68,52,14, true, false);
-
-    // draw mini soldier icon in panel
-    drawUnitIcon(ctx, unitId, 48, 40, 1.0);
-
-    // label bar
-    ctx.fillStyle = "rgba(0,0,0,.25)";
-    roundRect(ctx, 14,70,68,14,9, true, false);
-
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = "bold 12px system-ui";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText((u.name.length>10?u.name.slice(0,10)+"…":u.name), 48, 77);
-
-    // tiny stats dots (paint effect)
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = "#000";
-    for(let i=0;i<140;i++){
-      ctx.fillRect(Math.floor(Math.random()*96), Math.floor(Math.random()*96), 1, 1);
-    }
-    ctx.globalAlpha = 1;
-
-    return c.toDataURL("image/png");
-  }
-
   function roundRect(ctx, x, y, w, h, r, fill, stroke){
     const rr = Math.min(r, w/2, h/2);
     ctx.beginPath();
@@ -615,16 +707,11 @@ const SERVER_ENABLED = false;
     if(stroke) ctx.stroke();
   }
 
-  /*************************
-   * ADIM 2: CANVAS UNIT (NOT SQUARE)
-   *************************/
   function drawUnitIcon(ctx, unitId, cx, cy, scale=1){
-    // simple silhouette style per unit
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(scale, scale);
 
-    // body base
     ctx.fillStyle = "rgba(255,255,255,.90)";
     ctx.strokeStyle = "rgba(0,0,0,.35)";
     ctx.lineWidth = 2;
@@ -638,7 +725,6 @@ const SERVER_ENABLED = false;
     const drawTorso = () => {
       roundRect(ctx, -10, -6, 20, 22, 6, true, true);
     };
-
     const drawShield = () => {
       ctx.fillStyle = "rgba(255,209,102,.90)";
       ctx.beginPath();
@@ -650,7 +736,6 @@ const SERVER_ENABLED = false;
       ctx.stroke();
       ctx.fillStyle = "rgba(255,255,255,.90)";
     };
-
     const drawSpear = () => {
       ctx.strokeStyle = "rgba(255,255,255,.90)";
       ctx.lineWidth = 3;
@@ -666,7 +751,6 @@ const SERVER_ENABLED = false;
       ctx.strokeStyle = "rgba(0,0,0,.35)";
       ctx.lineWidth = 2;
     };
-
     const drawBow = () => {
       ctx.strokeStyle = "rgba(255,209,102,.95)";
       ctx.lineWidth = 3;
@@ -682,34 +766,28 @@ const SERVER_ENABLED = false;
       ctx.strokeStyle = "rgba(0,0,0,.35)";
       ctx.lineWidth = 2;
     };
-
     const drawGun = () => {
       ctx.fillStyle = "rgba(255,255,255,.85)";
       roundRect(ctx, -28, 2, 28, 6, 3, true, true);
       roundRect(ctx, -12, 8, 10, 10, 3, true, true);
       ctx.fillStyle = "rgba(255,255,255,.90)";
     };
-
     const drawCannon = () => {
       ctx.fillStyle = "rgba(255,255,255,.85)";
       roundRect(ctx, -28, 2, 34, 10, 5, true, true);
-      // wheels
       ctx.beginPath(); ctx.arc(-18, 18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.beginPath(); ctx.arc(0, 18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.fillStyle = "rgba(255,255,255,.90)";
     };
-
     const drawGrenade = () => {
       ctx.fillStyle = "rgba(255,92,122,.85)";
       ctx.beginPath(); ctx.arc(-18, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
       ctx.fillStyle = "rgba(255,255,255,.90)";
     };
 
-    // base person
     drawHead();
     drawTorso();
 
-    // weapon by type
     if(unitId==="infantry"){
       drawShield();
     } else if(unitId==="spearman"){
@@ -727,13 +805,11 @@ const SERVER_ENABLED = false;
     } else if(unitId==="cannon"){
       drawCannon();
     } else if(unitId==="cavalry"){
-      // horse hint
       ctx.fillStyle = "rgba(255,255,255,.25)";
       roundRect(ctx, -18, 18, 36, 10, 6, true, false);
       ctx.fillStyle = "rgba(255,255,255,.90)";
       drawSpear();
     } else if(unitId==="scout"){
-      // cloak
       ctx.fillStyle = "rgba(77,212,255,.35)";
       ctx.beginPath();
       ctx.moveTo(-12, -2); ctx.lineTo(0, 24); ctx.lineTo(12, -2); ctx.closePath();
@@ -743,6 +819,45 @@ const SERVER_ENABLED = false;
     }
 
     ctx.restore();
+  }
+
+  function genCardArt(unitId){
+    const u = UNITS.find(x=>x.id===unitId);
+    const c = document.createElement("canvas");
+    c.width = 96; c.height = 96;
+    const ctx = c.getContext("2d");
+
+    const g = ctx.createLinearGradient(0,0,96,96);
+    g.addColorStop(0,"rgba(77,212,255,.95)");
+    g.addColorStop(1,"rgba(255,92,122,.90)");
+    ctx.fillStyle = g;
+    roundRect(ctx, 6,6,84,84,18, true, false);
+
+    ctx.strokeStyle = "rgba(255,255,255,.22)";
+    ctx.lineWidth = 2;
+    roundRect(ctx, 6,6,84,84,18, false, true);
+
+    ctx.fillStyle = "rgba(0,0,0,.18)";
+    roundRect(ctx, 14,14,68,52,14, true, false);
+
+    drawUnitIcon(ctx, unitId, 48, 40, 1.0);
+
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    roundRect(ctx, 14,70,68,14,9, true, false);
+
+    ctx.fillStyle = "rgba(255,255,255,.92)";
+    ctx.font = "bold 12px system-ui";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText((u.name.length>10?u.name.slice(0,10)+"…":u.name), 48, 77);
+
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = "#000";
+    for(let i=0;i<140;i++){
+      ctx.fillRect(Math.floor(Math.random()*96), Math.floor(Math.random()*96), 1, 1);
+    }
+    ctx.globalAlpha = 1;
+
+    return c.toDataURL("image/png");
   }
 
   /*************************
@@ -782,25 +897,12 @@ const SERVER_ENABLED = false;
 
         let keep = true;
 
-        // Atlantic west cut
         if(q < -5 && r > -2) keep = false;
-
-        // North sea / Baltic carve
         if(q < -1 && q > -5 && r < -1 && r > -4) keep = keep && (Math.random() > 0.15);
-
-        // Scandinavia extension
         if(r < -4 && q > -2) keep = true;
-
-        // Mediterranean thinning
         if(r > 4 && Math.abs(q) > 2) keep = false;
-
-        // Iberia bump
         if(q < -3 && r > 2) keep = true;
-
-        // East extension
         if(q > 4 && r < 2) keep = true;
-
-        // Italy tail
         if(q > 1 && q < 4 && r > 3) keep = keep && (Math.abs(q-2) + Math.abs(r-5) < 3);
 
         if(keep) pool.push({q,r});
@@ -858,7 +960,6 @@ const SERVER_ENABLED = false;
       return out;
     };
 
-    // seeds spaced out
     const free = new Set(hexes.map(h=>h.id));
     const seeds=[];
     let first = hexes.reduce((best,h)=>{
@@ -910,7 +1011,6 @@ const SERVER_ENABLED = false;
           });
           chosen = frontier[0];
         } else {
-          // fallback
           const anyFree = hexes.find(h=>h.countryId===-1);
           if(anyFree) chosen = anyFree.id;
         }
@@ -918,6 +1018,29 @@ const SERVER_ENABLED = false;
         if(chosen!=null) hexes[chosen].countryId = cid;
       }
     }
+  }
+
+  function rebuildNeighbors(){
+    const neighbors = Array.from({length:20}, ()=>new Set());
+    const byQR = state.map.byQR;
+
+    function neighborsOfHex(h){
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id = byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(state.map.hexes[id]);
+      }
+      return out;
+    }
+
+    for(const h of state.map.hexes){
+      for(const other of neighborsOfHex(h)){
+        if(other.countryId!==h.countryId){
+          neighbors[h.countryId].add(other.countryId);
+        }
+      }
+    }
+    state.map.neighbors = neighbors;
   }
 
   function genHexEurope60(){
@@ -933,7 +1056,6 @@ const SERVER_ENABLED = false;
     state.map.byQR = new Map();
     for(const h of state.map.hexes) state.map.byQR.set(keyQR(h.q,h.r), h.id);
 
-    // countries init
     state.countries = [];
     for(let i=0;i<20;i++){
       state.countries.push({
@@ -949,7 +1071,6 @@ const SERVER_ENABLED = false;
       });
     }
 
-    // starting army
     for(const c of state.countries){
       c.inventory.infantry += 6;
       c.inventory.archer += 4;
@@ -957,10 +1078,8 @@ const SERVER_ENABLED = false;
       c.inventory.scout += 2;
     }
 
-    // assign contiguous 3 hex per country
     assignCountriesContiguous(state.map.hexes, 20, 3);
 
-    // states + country state lists
     state.states = [];
     for(const c of state.countries) c.states = [];
 
@@ -974,7 +1093,7 @@ const SERVER_ENABLED = false;
   }
 
   /*************************
-   * MAP VIEW (zoom/pan)
+   * MAP VIEW
    *************************/
   const mapView = {
     scale: 1.0,
@@ -1023,14 +1142,12 @@ const SERVER_ENABLED = false;
     const w = rect.width, h = rect.height;
     mapCtx.clearRect(0,0,w,h);
 
-    // sea background
     const g = mapCtx.createLinearGradient(0,0,w,h);
     g.addColorStop(0,"rgba(8,16,40,.95)");
     g.addColorStop(1,"rgba(6,10,28,.98)");
     mapCtx.fillStyle = g;
     mapCtx.fillRect(0,0,w,h);
 
-    // stars
     mapCtx.globalAlpha = 0.10;
     mapCtx.fillStyle = "#b9d0ff";
     for(let i=0;i<200;i++){
@@ -1046,10 +1163,8 @@ const SERVER_ENABLED = false;
 
     const cx = (w/2)/mapView.scale;
     const cy = (h/2)/mapView.scale;
-
     const size = state.map.hexSize;
 
-    // hex draw
     for(const hx of state.map.hexes){
       const pts = hexCorners(hx.x+cx, hx.y+cy, size);
       mapCtx.beginPath();
@@ -1071,7 +1186,6 @@ const SERVER_ENABLED = false;
       }
     }
 
-    // labels smaller + centered
     mapCtx.font = "10px system-ui";
     mapCtx.textAlign = "center";
     mapCtx.textBaseline = "middle";
@@ -1202,29 +1316,6 @@ const SERVER_ENABLED = false;
   /*************************
    * RULES
    *************************/
-  function rebuildNeighbors(){
-    const neighbors = Array.from({length:20}, ()=>new Set());
-    const byQR = state.map.byQR;
-
-    function neighborsOfHex(h){
-      const out=[];
-      for(const nb of axialNeighbors(h.q,h.r)){
-        const id = byQR.get(keyQR(nb.q,nb.r));
-        if(id!=null) out.push(state.map.hexes[id]);
-      }
-      return out;
-    }
-
-    for(const h of state.map.hexes){
-      for(const other of neighborsOfHex(h)){
-        if(other.countryId!==h.countryId){
-          neighbors[h.countryId].add(other.countryId);
-        }
-      }
-    }
-    state.map.neighbors = neighbors;
-  }
-
   function areNeighbors(a,b){
     if(a==null||b==null) return false;
     return state.map.neighbors[a].has(b);
@@ -1260,6 +1351,13 @@ const SERVER_ENABLED = false;
    * PLAYER ACTIONS
    *************************/
   function choosePlayerCountry(cid){
+    // Client modunda (ileride) seçim host'a action gönderir
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("chooseCountry", {cid});
+      pushNews("Client mod: ülke seçimi host tarafından onaylanacak.");
+      return;
+    }
+
     state.playerCountryId = cid;
     state.selectedCountryId = cid;
     state.selectedStateId = state.countries[cid].states[0];
@@ -1273,9 +1371,18 @@ const SERVER_ENABLED = false;
     buildArmyList();
     renderUI();
     drawMap();
+
+    // Host ise yayınla
+    netBroadcastState();
   }
 
   function buyUnit(unitId){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("buyUnit", {unitId});
+      pushNews("Client mod: satın alma host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     if(youId==null){ pushNews("Önce ülke seç."); return; }
     const you = getCountry(youId);
@@ -1287,9 +1394,17 @@ const SERVER_ENABLED = false;
     renderUI();
     buildArmyList();
     buildShop();
+
+    netBroadcastState();
   }
 
   function requestPassage(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("requestPassage", {targetId: state.selectedCountryId});
+      pushNews("Client mod: geçiş izni host tarafından hesaplanacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     const targetId = state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
@@ -1305,9 +1420,17 @@ const SERVER_ENABLED = false;
       pushNews(`${getCountry(targetId).name} geçiş iznini reddetti.`);
     }
     renderUI();
+
+    netBroadcastState();
   }
 
   function offerAlliance(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("offerAlliance", {targetId: state.selectedCountryId});
+      pushNews("Client mod: müttefik host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     const targetId = state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
@@ -1327,9 +1450,17 @@ const SERVER_ENABLED = false;
       pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
     }
     renderUI();
+
+    netBroadcastState();
   }
 
   function breakAlliance(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("breakAlliance", {});
+      pushNews("Client mod: müttefik bozma host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     if(youId==null){ pushNews("Önce ülke seç."); return; }
     const you = getCountry(youId);
@@ -1339,9 +1470,17 @@ const SERVER_ENABLED = false;
     you.allyId = null;
     pushNews("Müttefik bozuldu.");
     renderUI();
+
+    netBroadcastState();
   }
 
   function declareWar(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("declareWar", {targetId: state.selectedCountryId});
+      pushNews("Client mod: savaş başlatma host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     const targetId = state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
@@ -1349,10 +1488,12 @@ const SERVER_ENABLED = false;
     const chk = canDeclareWar(youId, targetId);
     if(!chk.ok){ pushNews(chk.reason); return; }
     startBattle(youId, targetId);
+
+    netBroadcastState();
   }
 
   /*************************
-   * AI TICK (improved)
+   * AI TICK
    *************************/
   function aiDailyTick(){
     if(state.playerCountryId==null) return;
@@ -1360,7 +1501,6 @@ const SERVER_ENABLED = false;
     for(const c of state.countries){
       if(c.id === state.playerCountryId) continue;
 
-      // smarter buying: prefer affordable best dmg
       if(Math.random() < 0.55){
         const affordable = UNITS.filter(u=>c.gold>=u.cost);
         if(affordable.length){
@@ -1371,7 +1511,6 @@ const SERVER_ENABLED = false;
         }
       }
 
-      // rare AI-AI war
       if(Math.random() < 0.018){
         const neigh = Array.from(state.map.neighbors[c.id]);
         if(neigh.length===0) continue;
@@ -1385,6 +1524,18 @@ const SERVER_ENABLED = false;
         resolveAIAIWar(winner, loser);
       }
     }
+  }
+
+  function transferState(stateId, newCountryId){
+    const st = getState(stateId);
+    const old = getCountry(st.countryId);
+    const neu = getCountry(newCountryId);
+
+    old.states = old.states.filter(x=>x!==stateId);
+    neu.states.push(stateId);
+
+    st.countryId = newCountryId;
+    state.map.hexes[stateId].countryId = newCountryId;
   }
 
   function resolveAIAIWar(winnerId, loserId){
@@ -1406,21 +1557,8 @@ const SERVER_ENABLED = false;
     rebuildNeighbors();
     drawMap();
     renderUI();
-  }
 
-  /*************************
-   * OWNERSHIP
-   *************************/
-  function transferState(stateId, newCountryId){
-    const st = getState(stateId);
-    const old = getCountry(st.countryId);
-    const neu = getCountry(newCountryId);
-
-    old.states = old.states.filter(x=>x!==stateId);
-    neu.states.push(stateId);
-
-    st.countryId = newCountryId;
-    state.map.hexes[stateId].countryId = newCountryId;
+    netBroadcastState();
   }
 
   /*************************
@@ -1485,7 +1623,6 @@ const SERVER_ENABLED = false;
   const battleView = { draggingUnit:null };
 
   function pauseForBattle(){
-    // savaş açılınca zaman dursun
     state._wasRunningBeforeBattle = state.running;
     state.running = false;
     $("#btnPause").textContent = "Devam";
@@ -1511,7 +1648,6 @@ const SERVER_ENABLED = false;
       enemyField: [],
       t: 0,
       ended:false,
-      // pool counts for end-of-battle "only survivors return"
       youDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
       enemyDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
     };
@@ -1592,7 +1728,6 @@ const SERVER_ENABLED = false;
       unitId, maxHp:def.hp, hp:def.hp,
       x:sx, y:sy,
       team:"A", cd:0,
-      // animation
       bob: Math.random()*10,
       hitFlash: 0
     });
@@ -1602,6 +1737,8 @@ const SERVER_ENABLED = false;
     buildArmyList();
     renderUI();
     drawBattle();
+
+    netBroadcastState();
   }
 
   function aiDeploy(){
@@ -1610,11 +1747,9 @@ const SERVER_ENABLED = false;
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
 
-    // improved: deploy based on strength
     const power = totalInventory(b.enemyId);
     let want = clamp(Math.floor(power*0.75), 8, 18);
 
-    // choose better units first
     const ids = [...UNITS].sort((a,b)=>{
       const sa = (a.dmg*1.2 + a.hp*0.05 + a.range*0.03) / a.cost;
       const sb = (b.dmg*1.2 + b.hp*0.05 + b.range*0.03) / b.cost;
@@ -1652,6 +1787,8 @@ const SERVER_ENABLED = false;
     b.t=0;
     pushNews(`Savaş başladı: ${getCountry(b.attackerId).name} vs ${getCountry(b.defenderId).name}`);
     drawBattle();
+
+    netBroadcastState();
   }
 
   function applyGoldChange(country, delta){
@@ -1670,12 +1807,9 @@ const SERVER_ENABLED = false;
     const winner = getCountry(winnerId);
     const loser  = getCountry(loserId);
 
-    // ONLY SURVIVORS RETURN:
-    // survivors are literally the units still alive on each side
     const aliveA = b.youField.filter(x=>x.team==="A");
     const aliveB = b.enemyField.filter(x=>x.team==="B");
 
-    // return to inventories exactly by type
     for(const unit of aliveA){
       const c = getCountry(b.attackerId);
       c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
@@ -1685,16 +1819,9 @@ const SERVER_ENABLED = false;
       c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
     }
 
-    // gold rules
-    if(winnerId===b.attackerId){
-      applyGoldChange(winner, +WIN_GOLD);
-      applyGoldChange(loser, -LOSE_GOLD);
-    } else {
-      applyGoldChange(winner, +WIN_GOLD);
-      applyGoldChange(loser, -LOSE_GOLD);
-    }
+    applyGoldChange(winner, +WIN_GOLD);
+    applyGoldChange(loser, -LOSE_GOLD);
 
-    // capture state
     if(loser.states.length>0){
       const captured = pick(loser.states);
       transferState(captured, winnerId);
@@ -1717,6 +1844,8 @@ const SERVER_ENABLED = false;
     buildArmyList();
     buildShop();
     renderUI();
+
+    netBroadcastState();
   }
 
   function updateBattle(dt){
@@ -1725,7 +1854,6 @@ const SERVER_ENABLED = false;
 
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
-    const centerY = h/2;
 
     function pickTarget(u, enemies){
       let best=null, bestD=1e18;
@@ -1745,22 +1873,18 @@ const SERVER_ENABLED = false;
       const {best, bestD} = pickTarget(u, enemies);
       if(!best) return;
 
-      // movement
       if(bestD > def.range){
         const dx=best.x-u.x, dy=best.y-u.y;
         const d=Math.max(0.001, Math.hypot(dx,dy));
-        // slight formation noise
         const jitter = 1 + (Math.sin((u.bob+=dt*6))*0.03);
         u.x += (dx/d)*def.speed*dt*jitter;
         u.y += (dy/d)*def.speed*dt*jitter;
       } else if(u.cd<=0){
-        // attack
         best.hp -= def.dmg;
         best.hitFlash = 0.18;
         u.cd = (def.type==="melee" ? 0.42 : (def.type==="mid" ? 0.60 : 0.78));
       }
 
-      // bounds: fight mode no border lock
       u.x = clamp(u.x, 18, w-18);
       u.y = clamp(u.y, 18, h-18);
     }
@@ -1787,7 +1911,6 @@ const SERVER_ENABLED = false;
     const w = rect.width, h = rect.height;
     battleCtx.clearRect(0,0,w,h);
 
-    // grass
     const bg = battleCtx.createLinearGradient(0,0,w,h);
     bg.addColorStop(0,"rgba(80, 180, 110, .26)");
     bg.addColorStop(1,"rgba(40, 120, 80, .22)");
@@ -1796,7 +1919,6 @@ const SERVER_ENABLED = false;
 
     const b = state.battle;
 
-    // deploy lines only in deploy phase
     if(b && b.phase === "deploy"){
       battleCtx.strokeStyle = "rgba(255,255,255,.25)";
       battleCtx.lineWidth = 3;
@@ -1816,11 +1938,108 @@ const SERVER_ENABLED = false;
 
     if(!b) return;
 
-    function drawFighter(u){
-      const def = UNITS.find(x=>x.id===u.unitId);
+    function drawBattleUnit(ctx, unitId, x, y, team, scale=1){
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
 
-      // team tint glow
+      const main = team==="A" ? "rgba(77,212,255,.90)" : "rgba(255,92,122,.88)";
+      const dark = "rgba(0,0,0,.35)";
+      const light = "rgba(255,255,255,.92)";
+
+      ctx.fillStyle = main;
+      ctx.strokeStyle = dark;
+      ctx.lineWidth = 2;
+      roundRect(ctx, -11, -6, 22, 26, 7, true, true);
+
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.arc(0, -14, 7, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = light;
+      ctx.fillStyle = light;
+
+      if(unitId==="infantry"){
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(22, -12); ctx.stroke();
+        ctx.lineWidth=2;
+
+        ctx.fillStyle = "rgba(255,209,102,.92)";
+        ctx.strokeStyle = dark;
+        ctx.beginPath();
+        ctx.moveTo(-18, -2);
+        ctx.quadraticCurveTo(-28, 6, -18, 18);
+        ctx.quadraticCurveTo(-10, 8, -18, -2);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      } else if(unitId==="spearman"){
+        ctx.strokeStyle = "rgba(255,255,255,.92)";
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(-22, 20); ctx.lineTo(24, -18); ctx.stroke();
+        ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(24,-18); ctx.lineTo(30,-22); ctx.stroke();
+      } else if(unitId==="archer"){
+        ctx.strokeStyle="rgba(255,209,102,.95)";
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(18, 6, 14, Math.PI/2, -Math.PI/2, true); ctx.stroke();
+        ctx.strokeStyle="rgba(255,255,255,.85)";
+        ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(18,20); ctx.stroke();
+      } else if(unitId==="crossbow"){
+        ctx.fillStyle="rgba(255,255,255,.90)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, 6, 2, 26, 8, 4, true, true);
+        ctx.strokeStyle="rgba(255,209,102,.95)";
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(-10,6); ctx.stroke();
+      } else if(unitId==="musketeer" || unitId==="rifleman"){
+        ctx.fillStyle="rgba(255,255,255,.88)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, -2, 2, 34, 7, 3, true, true);
+        roundRect(ctx, 6, 9, 10, 10, 3, true, true);
+      } else if(unitId==="grenadier"){
+        ctx.fillStyle="rgba(255,92,122,.85)";
+        ctx.strokeStyle=dark;
+        ctx.beginPath(); ctx.arc(20, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="rgba(255,255,255,.88)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, -2, 2, 28, 7, 3, true, true);
+      } else if(unitId==="cannon"){
+        ctx.fillStyle="rgba(255,255,255,.85)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, -28, 6, 38, 11, 5, true, true);
+        ctx.beginPath(); ctx.arc(-18, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      } else if(unitId==="cavalry"){
+        ctx.globalAlpha=0.25;
+        ctx.fillStyle=light;
+        roundRect(ctx, -20, 16, 40, 12, 6, true, false);
+        ctx.globalAlpha=1;
+        ctx.strokeStyle=light;
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(-22, 18); ctx.lineTo(24, -18); ctx.stroke();
+        ctx.lineWidth=2;
+      } else if(unitId==="scout"){
+        ctx.globalAlpha=0.35;
+        ctx.fillStyle=main;
+        ctx.beginPath();
+        ctx.moveTo(-16,-4); ctx.lineTo(0,28); ctx.lineTo(16,-4); ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha=1;
+        ctx.strokeStyle=light;
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(10, 8); ctx.lineTo(22, 0); ctx.stroke();
+        ctx.lineWidth=2;
+      }
+
+      ctx.restore();
+    }
+
+    function drawFighter(u){
       battleCtx.save();
+
       if(u.hitFlash>0){
         battleCtx.globalAlpha = 0.9;
         battleCtx.fillStyle = "rgba(255,255,255,.55)";
@@ -1830,7 +2049,6 @@ const SERVER_ENABLED = false;
         battleCtx.globalAlpha = 1;
       }
 
-      // tiny shadow
       battleCtx.globalAlpha = 0.25;
       battleCtx.fillStyle = "#000";
       battleCtx.beginPath();
@@ -1838,13 +2056,8 @@ const SERVER_ENABLED = false;
       battleCtx.fill();
       battleCtx.globalAlpha = 1;
 
-      // draw "character"
-      const scale = (u.team==="A") ? 0.95 : 0.95;
-      const icon = document.createElement("canvas");
-      icon.width=1; icon.height=1; // dummy (not used)
-      drawBattleUnit(battleCtx, u.unitId, u.x, u.y, u.team, scale);
+      drawBattleUnit(battleCtx, u.unitId, u.x, u.y, u.team, 0.95);
 
-      // hp bar
       const pct = clamp(u.hp/u.maxHp, 0, 1);
       battleCtx.fillStyle = "rgba(0,0,0,.35)";
       battleCtx.fillRect(u.x-16, u.y-26, 32, 6);
@@ -1857,7 +2070,6 @@ const SERVER_ENABLED = false;
     for(const u of b.youField) drawFighter(u);
     for(const e of b.enemyField) drawFighter(e);
 
-    // status
     battleCtx.fillStyle = "rgba(0,0,0,.40)";
     battleCtx.fillRect(12, h-52, 460, 40);
     battleCtx.fillStyle = "rgba(255,255,255,.88)";
@@ -1868,120 +2080,12 @@ const SERVER_ENABLED = false;
     battleCtx.fillText(txt, 22, h-28);
   }
 
-  // draw battle unit character (not square)
-  function drawBattleUnit(ctx, unitId, x, y, team, scale=1){
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-
-    // team colors
-    const main = team==="A" ? "rgba(77,212,255,.90)" : "rgba(255,92,122,.88)";
-    const dark = "rgba(0,0,0,.35)";
-    const light = "rgba(255,255,255,.92)";
-
-    // cape/armor base
-    ctx.fillStyle = main;
-    ctx.strokeStyle = dark;
-    ctx.lineWidth = 2;
-    roundRect(ctx, -11, -6, 22, 26, 7, true, true);
-
-    // head
-    ctx.fillStyle = light;
-    ctx.beginPath();
-    ctx.arc(0, -14, 7, 0, Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
-
-    // weapon based on unitId
-    ctx.strokeStyle = light;
-    ctx.fillStyle = light;
-
-    if(unitId==="infantry"){
-      // sword
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(22, -12); ctx.stroke();
-      ctx.lineWidth=2;
-      // shield
-      ctx.fillStyle = "rgba(255,209,102,.92)";
-      ctx.strokeStyle = dark;
-      ctx.beginPath();
-      ctx.moveTo(-18, -2);
-      ctx.quadraticCurveTo(-28, 6, -18, 18);
-      ctx.quadraticCurveTo(-10, 8, -18, -2);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
-    } else if(unitId==="spearman"){
-      ctx.strokeStyle = "rgba(255,255,255,.92)";
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(-22, 20); ctx.lineTo(24, -18); ctx.stroke();
-      ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(24,-18); ctx.lineTo(30,-22); ctx.stroke();
-    } else if(unitId==="archer"){
-      ctx.strokeStyle="rgba(255,209,102,.95)";
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.arc(18, 6, 14, Math.PI/2, -Math.PI/2, true); ctx.stroke();
-      ctx.strokeStyle="rgba(255,255,255,.85)";
-      ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(18,20); ctx.stroke();
-    } else if(unitId==="crossbow"){
-      ctx.fillStyle="rgba(255,255,255,.90)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, 6, 2, 26, 8, 4, true, true);
-      ctx.strokeStyle="rgba(255,209,102,.95)";
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(-10,6); ctx.stroke();
-    } else if(unitId==="musketeer" || unitId==="rifleman"){
-      ctx.fillStyle="rgba(255,255,255,.88)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, -2, 2, 34, 7, 3, true, true);
-      roundRect(ctx, 6, 9, 10, 10, 3, true, true);
-    } else if(unitId==="grenadier"){
-      ctx.fillStyle="rgba(255,92,122,.85)";
-      ctx.strokeStyle=dark;
-      ctx.beginPath(); ctx.arc(20, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle="rgba(255,255,255,.88)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, -2, 2, 28, 7, 3, true, true);
-    } else if(unitId==="cannon"){
-      ctx.fillStyle="rgba(255,255,255,.85)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, -28, 6, 38, 11, 5, true, true);
-      ctx.beginPath(); ctx.arc(-18, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    } else if(unitId==="cavalry"){
-      // horse body hint
-      ctx.globalAlpha=0.25;
-      ctx.fillStyle=light;
-      roundRect(ctx, -20, 16, 40, 12, 6, true, false);
-      ctx.globalAlpha=1;
-      ctx.strokeStyle=light;
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(-22, 18); ctx.lineTo(24, -18); ctx.stroke();
-      ctx.lineWidth=2;
-    } else if(unitId==="scout"){
-      // cloak triangle
-      ctx.globalAlpha=0.35;
-      ctx.fillStyle=main;
-      ctx.beginPath();
-      ctx.moveTo(-16,-4); ctx.lineTo(0,28); ctx.lineTo(16,-4); ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha=1;
-      // dagger
-      ctx.strokeStyle=light;
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(10, 8); ctx.lineTo(22, 0); ctx.stroke();
-      ctx.lineWidth=2;
-    }
-
-    ctx.restore();
-  }
-
   /*************************
-   * SAVE / LOAD
+   * SAVE / LOAD (export object + download)
    *************************/
-  function exportSave(){
-    const data = {
-      version: 3,
+  function exportSaveObject(){
+    return {
+      version: 4,
       mapType: "europe_hex",
       day: state.day,
       running: state.running,
@@ -2003,7 +2107,10 @@ const SERVER_ENABLED = false;
       })),
       states: state.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name})),
     };
+  }
 
+  function exportSave(){
+    const data = exportSaveObject();
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -2013,7 +2120,7 @@ const SERVER_ENABLED = false;
     pushNews("Save indirildi (save.json).");
   }
 
-  function importSave(obj){
+  function importSave(obj, silent=false){
     state.day = obj.day||0;
     state.running = !!obj.running;
     state.playerCountryId = obj.playerCountryId;
@@ -2039,7 +2146,6 @@ const SERVER_ENABLED = false;
     }));
     state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name}));
 
-    // ensure images exist
     for(const u of UNITS){
       if(!state.cardImages[u.id]) state.cardImages[u.id] = genCardArt(u.id);
     }
@@ -2048,7 +2154,7 @@ const SERVER_ENABLED = false;
     }
 
     rebuildNeighbors();
-    pushNews("Save yüklendi.");
+    if(!silent) pushNews("Save yüklendi.");
     buildCountryPicker();
     buildShop();
     buildArmyList();
@@ -2092,6 +2198,8 @@ const SERVER_ENABLED = false;
     else pushNews(`${matched} kart resmi uygulandı.`);
     buildShop();
     if(state.battle) buildDeployBar();
+
+    netBroadcastState();
   }
 
   /*************************
@@ -2107,9 +2215,18 @@ const SERVER_ENABLED = false;
 
   $("#btnPause").onclick = ()=>{
     if(state.playerCountryId==null) return;
+
+    // Client modda pause host’a bağlı olmalı
+    if(NET.enabled && NET.role==="CLIENT"){
+      pushNews("Client mod: zaman kontrolü host’ta.");
+      return;
+    }
+
     state.running = !state.running;
     pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
     renderUI();
+
+    netBroadcastState();
   };
 
   $("#btnSave").onclick = exportSave;
@@ -2131,6 +2248,8 @@ const SERVER_ENABLED = false;
     buildShop();
     if(state.battle) buildDeployBar();
     pushNews("Kartlar varsayılan çizime döndü.");
+
+    netBroadcastState();
   };
 
   $("#btnReset").onclick = ()=> initAll();
@@ -2142,6 +2261,43 @@ const SERVER_ENABLED = false;
     state.battle = null;
     drawMap();
     resumeAfterBattle();
+
+    netBroadcastState();
+  };
+
+  // Net UI
+  const netUrlInp = document.getElementById("netUrl");
+  const netRoomInp = document.getElementById("netRoom");
+  document.getElementById("btnNetToggle").onclick = ()=>{
+    NET.enabled = !NET.enabled;
+    NET.url = netUrlInp.value.trim();
+    NET.room = netRoomInp.value.trim() || "room1";
+    if(!NET.enabled){
+      netDisconnect();
+      pushNews("Online kapalı.");
+    } else {
+      netSetStatus("ON (not connected)");
+      pushNews("Online açıldı (sunucu bağlanınca çalışır).");
+    }
+  };
+  document.getElementById("btnNetHost").onclick = ()=>{
+    NET.url = netUrlInp.value.trim();
+    NET.room = netRoomInp.value.trim() || "room1";
+    if(!NET.enabled){ pushNews("Önce Online Aç."); return; }
+    netConnect("HOST");
+    pushNews("HOST mod: oyun state’i yayınlanacak.");
+    // Host: hemen snapshot yolla
+    setTimeout(()=>netBroadcastState(), 300);
+  };
+  document.getElementById("btnNetJoin").onclick = ()=>{
+    NET.url = netUrlInp.value.trim();
+    NET.room = netRoomInp.value.trim() || "room1";
+    if(!NET.enabled){ pushNews("Önce Online Aç."); return; }
+    netConnect("CLIENT");
+    pushNews("CLIENT mod: host’tan state bekleniyor.");
+    // client: local sim kapalı
+    state.running = false;
+    renderUI();
   };
 
   /*************************
@@ -2161,23 +2317,28 @@ const SERVER_ENABLED = false;
 
     aiDailyTick();
     renderUI();
+
+    // Host ise günü snapshotla
+    netBroadcastState();
   }
 
   function loop(now){
     const dt = Math.min(0.05, (now-last)/1000);
     last = now;
 
-    if(state.playerCountryId!=null && state.running){
-      tickAcc += dt;
-      while(tickAcc >= 1.0){
-        tickAcc -= 1.0;
-        dayTick();
+    // CLIENT ise simülasyon yapma (host yayınlar)
+    if(!(NET.enabled && NET.role==="CLIENT")){
+      if(state.playerCountryId!=null && state.running){
+        tickAcc += dt;
+        while(tickAcc >= 1.0){
+          tickAcc -= 1.0;
+          dayTick();
+        }
       }
+      updateBattle(dt);
     }
 
-    updateBattle(dt);
     drawBattle();
-
     requestAnimationFrame(loop);
   }
 
@@ -2193,15 +2354,12 @@ const SERVER_ENABLED = false;
     state.news = [];
     state.battle = null;
 
-    // cards (canvas draw)
     state.cardImages = {};
     for(const u of UNITS) state.cardImages[u.id] = genCardArt(u.id);
 
-    // flags
     state.flags = {};
     for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
 
-    // Europe hex map
     genHexEurope60();
 
     mapView.reset();
@@ -2214,9 +2372,10 @@ const SERVER_ENABLED = false;
 
     $("#btnPause").disabled = true;
     $("#btnPause").textContent = "Duraklat";
+
+    netBroadcastState();
   }
 
-  // start
   initAll();
   resizeCanvas();
   requestAnimationFrame(loop);
@@ -2225,5 +2384,3 @@ const SERVER_ENABLED = false;
 </script>
 </body>
 </html>
-
-
