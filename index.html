@@ -194,6 +194,7 @@
 <body>
 <div class="app">
 
+  <!-- LEFT -->
   <div class="left">
     <div class="card pad">
       <div class="title">Oyuncu</div>
@@ -225,6 +226,9 @@
       <div class="small muted" style="margin-top:6px">
         Not: <b>Ülke seçmeden zaman akmaz.</b>
       </div>
+      <div class="small muted" style="margin-top:6px">
+        Savunma: <b>Her 25 günde 1</b> saldırı gelir. Kazanırsan <b>+850 altın</b>.
+      </div>
     </div>
 
     <div class="card pad">
@@ -242,34 +246,44 @@
         Yeni savaş için <b>10 gün bekleme</b>.
         1 gün = 1 saniye.
       </div>
-      <div class="hr"></div>
-      <div class="muted small">
-        <b>Defans:</b> Her 25 günde bir sınır eyaletine saldırı gelebilir.
-        Savunmayı kazanırsan <b>+850 altın</b>, eyalet gitmez.
-      </div>
     </div>
 
+    <!-- SERVER READY (şimdilik kapalı) -->
     <div class="card pad">
       <div class="title">Online (Server Hazır)</div>
-      <div class="muted small">Şu an tek kişi. Server sonra.</div>
+      <div class="muted small">
+        Şu an tek kişi oynuyorsun. İleride WebSocket sunucu bağlayınca online olacak.
+      </div>
       <div class="hr"></div>
+
       <div class="tag">Durum: <b id="uiNetStatus" style="color:#e8f0ff; margin-left:6px">OFF</b></div>
-      <div style="margin-top:8px" class="muted small">Server URL:</div>
+
+      <div style="margin-top:8px" class="muted small">Server URL (sonra):</div>
       <input class="netInp" id="netUrl" value="ws://localhost:8787" />
-      <div style="margin-top:8px" class="muted small">Oda:</div>
+
+      <div style="margin-top:8px" class="muted small">Oda Kodu (room):</div>
       <input class="netInp" id="netRoom" value="room1" />
+
       <div class="netRow">
         <button class="btn" id="btnNetToggle">Online Aç/Kapat</button>
-        <button class="btn primary" id="btnNetHost">Host</button>
-        <button class="btn good" id="btnNetJoin">Join</button>
+        <button class="btn primary" id="btnNetHost">Host (oda kur)</button>
+        <button class="btn good" id="btnNetJoin">Join (katıl)</button>
+      </div>
+
+      <div class="hr"></div>
+      <div class="muted small">
+        Not: Sunucu yoksa “online” çalışmaz. Ama kod altyapısı hazır.
       </div>
     </div>
   </div>
 
+  <!-- CENTER -->
   <div class="center">
     <div class="card topbar">
       <span class="badge" id="uiMode">HARİTA</span>
-      <div class="news"><span id="uiNews">Ülke seç: oyun başlayacak.</span></div>
+      <div class="news" title="Haberler / olaylar">
+        <span id="uiNews">Ülke seç: oyun başlayacak.</span>
+      </div>
       <button class="btn" id="btnPause" disabled>Duraklat</button>
     </div>
 
@@ -281,6 +295,7 @@
           <span class="chip">20 ülke</span>
           <span class="chip">60 eyalet</span>
           <span class="chip">Zaman: 1gün=1sn</span>
+          <span class="chip">Savunma: 25 günde 1</span>
         </div>
         <div class="muted small" style="margin-top:6px">
           Eyalete tıkla → ülke seçilir. Komşuysa savaş ilan edebilirsin.
@@ -289,12 +304,15 @@
     </div>
   </div>
 
+  <!-- RIGHT -->
   <div class="right">
     <div class="card pad">
       <div class="title">Mağaza (Kartlar)</div>
-      <div class="muted small">5000 altınla başlarsın.</div>
+      <div class="muted small">5000 altınla başlarsın. Kart aldıkça orduna eklenir.</div>
       <div class="hr"></div>
-      <div class="shopCard"><div class="shopGrid" id="shopGrid"></div></div>
+      <div class="shopCard">
+        <div class="shopGrid" id="shopGrid"></div>
+      </div>
     </div>
 
     <div class="card pad">
@@ -306,6 +324,7 @@
   </div>
 </div>
 
+<!-- COUNTRY SELECT -->
 <div class="overlay" id="countryOverlay">
   <div class="modal">
     <div class="modalHead">
@@ -319,13 +338,14 @@
   </div>
 </div>
 
+<!-- UPLOAD CARDS -->
 <div class="overlay" id="cardsOverlay">
   <div class="modal">
     <div class="modalHead">
       <div>
         <div class="title" style="font-size:18px">Kart Resimleri Yükle</div>
         <div class="muted small">
-          Dosya adları ID ile aynı olmalı:
+          Dosya adları şu ID’lerle aynı olursa otomatik eşleşir:
           <span class="kbd">infantry</span> <span class="kbd">archer</span> <span class="kbd">spearman</span> <span class="kbd">cavalry</span> <span class="kbd">crossbow</span>
           <span class="kbd">musketeer</span> <span class="kbd">cannon</span> <span class="kbd">grenadier</span> <span class="kbd">rifleman</span> <span class="kbd">scout</span>
         </div>
@@ -346,8 +366,10 @@
   </div>
 </div>
 
+<!-- LOAD SAVE -->
 <input type="file" id="saveFile" accept="application/json" style="display:none"/>
 
+<!-- BATTLE -->
 <div class="overlay" id="battleOverlay">
   <div class="modal">
     <div class="modalHead">
@@ -372,7 +394,7 @@
             <b id="uiBattleYou">—</b>
           </div>
           <div class="muted small">Sahadaki Birim: <b id="uiYouUnits">0</b></div>
-          <div class="muted small">Depo: <b id="uiYouPool">—</b></div>
+          <div class="muted small">Kalan Depo: <b id="uiYouPool">—</b></div>
         </div>
         <div class="box" style="text-align:right">
           <div class="muted small">Düşman</div>
@@ -381,57 +403,113 @@
             <span class="flagBox" style="width:38px;height:28px"><img id="uiFlagEnemy" alt=""></span>
           </div>
           <div class="muted small">Sahadaki Birim: <b id="uiEnemyUnits">0</b></div>
-          <div class="muted small">Depo: <b id="uiEnemyPool">—</b></div>
+          <div class="muted small">Kalan Depo: <b id="uiEnemyPool">—</b></div>
         </div>
       </div>
 
-      <div class="deployBar" id="deployBar"></div>
+      <div class="deployBar" id="deployBar" title="Kartları buradan sürükle"></div>
     </div>
 
-    <div class="muted small" style="margin-top:10px">
-      Kural: Savaş sonunda <b>yalnızca ölenler eksilir</b>. Depodakiler kalır. Yaşayanlar envantere döner.
-      <br>
-      <b>Defans savaşı</b> kazanırsan eyalet gitmez ve <b>+850 altın</b>.
+    <div class="muted small" style="margin-top:10px" id="battleRulesLine">
+      Savaş sonu: <b>sadece yaşayan birimler</b> envantere döner.
+      Kazanan: <b>+2000 altın + 1 eyalet</b>.
+      Kaybeden: <b>-1000 altın</b> (0 altına düşmez).
     </div>
   </div>
 </div>
 
 <script>
 /***************************************
- * ONLINE (şimdilik kapalı - bozmuyor)
+ * ONLINE / SERVER-READY LAYER
  ***************************************/
-const NET = { enabled:false, role:"OFF", url:"ws://localhost:8787", room:"room1", ws:null, lastSeq:0 };
-function netSetStatus(t){ const el=document.getElementById("uiNetStatus"); if(el) el.textContent=t; }
-function netDisconnect(){ try{NET.ws&&NET.ws.close()}catch(_){} NET.ws=null; NET.role="OFF"; netSetStatus(NET.enabled?"ON (not connected)":"OFF"); }
+const NET = {
+  enabled: false,
+  role: "OFF",          // OFF | HOST | CLIENT
+  url: "ws://localhost:8787",
+  room: "room1",
+  ws: null,
+  lastSeq: 0,
+};
+
+function netSetStatus(txt){
+  const el = document.getElementById("uiNetStatus");
+  if(el) el.textContent = txt;
+}
+function netDisconnect(){
+  try{ NET.ws && NET.ws.close(); }catch(_){}
+  NET.ws = null;
+  NET.role = NET.enabled ? "OFF" : "OFF";
+  netSetStatus(NET.enabled ? "ON (not connected)" : "OFF");
+}
 function netConnect(role){
   if(!NET.enabled){ netSetStatus("OFF"); return; }
-  netDisconnect(); NET.role=role; netSetStatus(role+" (connecting...)");
-  const ws=new WebSocket(NET.url); NET.ws=ws;
-  ws.onopen=()=>{ netSetStatus(role+" (connected)"); ws.send(JSON.stringify({t:"HELLO",v:1,room:NET.room,role})); };
-  ws.onmessage=(ev)=>{
-    let msg=null; try{msg=JSON.parse(ev.data)}catch(_){return;}
-    if(msg?.t==="STATE" && NET.role==="CLIENT" && msg.payload){
-      importSave(msg.payload,true); state.running=false; renderUI(); drawMap();
+  netDisconnect();
+  NET.role = role;
+  netSetStatus(role + " (connecting...)");
+
+  const ws = new WebSocket(NET.url);
+  NET.ws = ws;
+
+  ws.onopen = () => {
+    netSetStatus(role + " (connected)");
+    ws.send(JSON.stringify({t:"HELLO", v:1, room:NET.room, role}));
+  };
+
+  ws.onmessage = (ev) => {
+    let msg=null;
+    try{ msg = JSON.parse(ev.data); }catch(_){ return; }
+    if(!msg || !msg.t) return;
+
+    if(msg.t==="STATE" && NET.role==="CLIENT" && msg.payload){
+      try{
+        importSave(msg.payload, true);
+        state.running = false;
+        renderUI();
+        drawMap();
+      }catch(err){
+        console.warn("STATE apply failed", err);
+      }
+    }
+    if(msg.t==="ACTION" && NET.role==="HOST"){
+      console.log("ACTION from client:", msg);
     }
   };
-  ws.onerror=()=>netSetStatus(role+" (error)");
-  ws.onclose=()=>{ netSetStatus(role+" (closed)"); NET.ws=null; };
-}
-function netSend(o){ if(!NET.enabled||!NET.ws||NET.ws.readyState!==1) return; NET.ws.send(JSON.stringify(o)); }
-function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSend({t:"STATE",room:NET.room,seq:(++NET.lastSeq),payload:exportSaveObject()}); }
 
-/***************************************
- * GAME
- ***************************************/
+  ws.onerror = () => netSetStatus(role + " (error)");
+  ws.onclose = () => {
+    netSetStatus(role + " (closed)");
+    NET.ws = null;
+  };
+}
+function netSend(obj){
+  if(!NET.enabled || !NET.ws || NET.ws.readyState!==1) return;
+  NET.ws.send(JSON.stringify(obj));
+}
+function netBroadcastState(){
+  if(!NET.enabled || NET.role!=="HOST") return;
+  const payload = exportSaveObject();
+  netSend({t:"STATE", room:NET.room, seq:(++NET.lastSeq), payload});
+}
+function netSendAction(action, payload){
+  if(!NET.enabled || NET.role!=="CLIENT") return;
+  netSend({t:"ACTION", room:NET.room, action, payload});
+}
+
 (() => {
+  /*************************
+   * CONFIG
+   *************************/
   const START_GOLD = 5000;
   const WAR_COOLDOWN = 10;
   const ARMISTICE_DAYS = 20;
   const NEWS_QUEUE_MAX = 6;
 
-  // DEFANS AYARI
+  const WIN_GOLD = 2000;
+  const LOSE_GOLD = 1000;
+
+  // Savunma (senin istediğin)
   const DEFENSE_EVERY_DAYS = 25;
-  const DEFENSE_REWARD = 850;
+  const DEFENSE_WIN_GOLD = 850;
 
   const COUNTRY_NAMES = [
     "Alderyn","Varkûn","Solmara","Kryth",
@@ -454,6 +532,9 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     { id:"scout",      name:"İzci",           type:"mid",   cost:300, hp:90,  dmg:8,  range:90,  speed:55 },
   ];
 
+  /*************************
+   * STATE
+   *************************/
   const state = {
     day: 0,
     running: false,
@@ -466,15 +547,28 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     flags: {},
     news: [],
     battle: null,
-    map: { hexSize: 22, hexes: [], byQR: new Map(), neighbors: null }
+    lastDefenseDay: -999,   // tekrar spam olmasın
+
+    map: {
+      hexSize: 22,
+      hexes: [],
+      byQR: new Map(),
+      neighbors: null,
+    }
   };
 
+  /*************************
+   * DOM
+   *************************/
   const $ = s => document.querySelector(s);
   const mapCanvas = $("#mapCanvas");
   const mapCtx = mapCanvas.getContext("2d");
   const battleCanvas = $("#battleCanvas");
   const battleCtx = battleCanvas.getContext("2d");
 
+  /*************************
+   * UTIL
+   *************************/
   const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
   const rand = (a,b)=>Math.floor(Math.random()*(b-a+1))+a;
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
@@ -482,6 +576,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
   function pillClass(t){ return t==="melee"?"melee":(t==="mid"?"mid":"range"); }
   function getCountry(id){ return state.countries.find(c=>c.id===id); }
   function getState(id){ return state.states.find(s=>s.id===id); }
+
   function pushNews(text){
     state.news.unshift(`[Gün ${state.day}] ${text}`);
     if(state.news.length > NEWS_QUEUE_MAX) state.news.pop();
@@ -497,17 +592,23 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     }
   }
 
+  /*************************
+   * FLAGS
+   *************************/
   function genFlagDataURL(countryId){
     const r = mulberry32(1000 + countryId*97);
     const w=44, h=32;
-    const c = document.createElement("canvas"); c.width=w; c.height=h;
+    const c = document.createElement("canvas");
+    c.width=w; c.height=h;
     const ctx=c.getContext("2d");
+
     const pal = [
       `hsl(${Math.floor(r()*360)},80%,55%)`,
       `hsl(${Math.floor(r()*360)},85%,60%)`,
       `hsl(${Math.floor(r()*360)},70%,45%)`,
       "#0b1020", "#f2f6ff"
     ];
+
     ctx.fillStyle = pal[0]; ctx.fillRect(0,0,w,h);
     const style = Math.floor(r()*4);
     ctx.globalAlpha = 0.95;
@@ -581,6 +682,9 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     return c.toDataURL("image/png");
   }
 
+  /*************************
+   * CARD ART
+   *************************/
   function roundRect(ctx, x, y, w, h, r, fill, stroke){
     const rr = Math.min(r, w/2, h/2);
     ctx.beginPath();
@@ -592,6 +696,120 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     ctx.closePath();
     if(fill) ctx.fill();
     if(stroke) ctx.stroke();
+  }
+
+  function drawUnitIcon(ctx, unitId, cx, cy, scale=1){
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = "rgba(255,255,255,.90)";
+    ctx.strokeStyle = "rgba(0,0,0,.35)";
+    ctx.lineWidth = 2;
+
+    const drawHead = () => {
+      ctx.beginPath();
+      ctx.arc(0, -12, 7, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+    };
+    const drawTorso = () => {
+      roundRect(ctx, -10, -6, 20, 22, 6, true, true);
+    };
+    const drawShield = () => {
+      ctx.fillStyle = "rgba(255,209,102,.90)";
+      ctx.beginPath();
+      ctx.moveTo(14, -2);
+      ctx.quadraticCurveTo(24, 6, 14, 18);
+      ctx.quadraticCurveTo(6, 8, 14, -2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+    };
+    const drawSpear = () => {
+      ctx.strokeStyle = "rgba(255,255,255,.90)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(-18, 20);
+      ctx.lineTo(18, -18);
+      ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(18, -18);
+      ctx.lineTo(26, -22);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(0,0,0,.35)";
+      ctx.lineWidth = 2;
+    };
+    const drawBow = () => {
+      ctx.strokeStyle = "rgba(255,209,102,.95)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(-18, 4, 14, -Math.PI/2, Math.PI/2);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,.85)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-18, -10);
+      ctx.lineTo(-18, 18);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(0,0,0,.35)";
+      ctx.lineWidth = 2;
+    };
+    const drawGun = () => {
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      roundRect(ctx, -28, 2, 28, 6, 3, true, true);
+      roundRect(ctx, -12, 8, 10, 10, 3, true, true);
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+    };
+    const drawCannon = () => {
+      ctx.fillStyle = "rgba(255,255,255,.85)";
+      roundRect(ctx, -28, 2, 34, 10, 5, true, true);
+      ctx.beginPath(); ctx.arc(-18, 18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+    };
+    const drawGrenade = () => {
+      ctx.fillStyle = "rgba(255,92,122,.85)";
+      ctx.beginPath(); ctx.arc(-18, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+    };
+
+    drawHead();
+    drawTorso();
+
+    if(unitId==="infantry"){
+      drawShield();
+    } else if(unitId==="spearman"){
+      drawSpear();
+    } else if(unitId==="archer"){
+      drawBow();
+    } else if(unitId==="crossbow"){
+      drawBow();
+      drawGun();
+    } else if(unitId==="musketeer" || unitId==="rifleman"){
+      drawGun();
+    } else if(unitId==="grenadier"){
+      drawGrenade();
+      drawGun();
+    } else if(unitId==="cannon"){
+      drawCannon();
+    } else if(unitId==="cavalry"){
+      ctx.fillStyle = "rgba(255,255,255,.25)";
+      roundRect(ctx, -18, 18, 36, 10, 6, true, false);
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+      drawSpear();
+    } else if(unitId==="scout"){
+      ctx.fillStyle = "rgba(77,212,255,.35)";
+      ctx.beginPath();
+      ctx.moveTo(-12, -2); ctx.lineTo(0, 24); ctx.lineTo(12, -2); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.90)";
+      drawBow();
+    }
+
+    ctx.restore();
   }
 
   function genCardArt(unitId){
@@ -613,16 +831,14 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     ctx.fillStyle = "rgba(0,0,0,.18)";
     roundRect(ctx, 14,14,68,52,14, true, false);
 
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = "bold 34px system-ui";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText(u.name[0], 48, 40);
+    drawUnitIcon(ctx, unitId, 48, 40, 1.0);
 
     ctx.fillStyle = "rgba(0,0,0,.25)";
     roundRect(ctx, 14,70,68,14,9, true, false);
 
     ctx.fillStyle = "rgba(255,255,255,.92)";
     ctx.font = "bold 12px system-ui";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
     ctx.fillText((u.name.length>10?u.name.slice(0,10)+"…":u.name), 48, 77);
 
     ctx.globalAlpha = 0.25;
@@ -635,9 +851,16 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     return c.toDataURL("image/png");
   }
 
+  /*************************
+   * HEX MAP
+   *************************/
   function keyQR(q,r){ return q + "," + r; }
+
   function axialToPixel(q,r,size){
-    return { x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r), y: size * (3/2 * r) };
+    return {
+      x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r),
+      y: size * (3/2 * r),
+    };
   }
   function axialNeighbors(q,r){
     return [
@@ -662,7 +885,9 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       for(let r=r1;r<=r2;r++){
         const dist = (Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2;
         if(dist > 7) continue;
+
         let keep = true;
+
         if(q < -5 && r > -2) keep = false;
         if(q < -1 && q > -5 && r < -1 && r > -4) keep = keep && (Math.random() > 0.15);
         if(r < -4 && q > -2) keep = true;
@@ -670,6 +895,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
         if(q < -3 && r > 2) keep = true;
         if(q > 4 && r < 2) keep = true;
         if(q > 1 && q < 4 && r > 3) keep = keep && (Math.abs(q-2) + Math.abs(r-5) < 3);
+
         if(keep) pool.push({q,r});
       }
     }
@@ -678,11 +904,21 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
 
   function pickConnected60(pool){
     const set = new Set(pool.map(h=>keyQR(h.q,h.r)));
-    let start = pool.find(h=>h.q===0 && h.r===0) || pool[0];
+    let start = pool.find(h=>h.q===0 && h.r===0);
+    if(!start){
+      let best=pool[0], bestD=1e18;
+      for(const h of pool){
+        const d = h.q*h.q + h.r*h.r;
+        if(d<bestD){ bestD=d; best=h; }
+      }
+      start = best;
+    }
+
     const out=[];
     const seen=new Set();
     const q=[start];
     seen.add(keyQR(start.q,start.r));
+
     while(q.length && out.length<60){
       const cur = q.shift();
       out.push(cur);
@@ -694,8 +930,10 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
         q.push(nb);
       }
     }
+
     if(out.length<60){
       const remain = pool.filter(h=>!seen.has(keyQR(h.q,h.r)));
+      remain.sort((a,b)=> (a.q*a.q+a.r*a.r) - (b.q*b.q+b.r*b.r));
       while(out.length<60 && remain.length) out.push(remain.shift());
     }
     return out.slice(0,60);
@@ -752,6 +990,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
             if(hexes[nb].countryId===-1) frontier.push(nb);
           }
         }
+
         let chosen=null;
         if(frontier.length){
           const seedH = hexes[seeds[cid]];
@@ -766,6 +1005,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
           const anyFree = hexes.find(h=>h.countryId===-1);
           if(anyFree) chosen = anyFree.id;
         }
+
         if(chosen!=null) hexes[chosen].countryId = cid;
       }
     }
@@ -786,7 +1026,9 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
 
     for(const h of state.map.hexes){
       for(const other of neighborsOfHex(h)){
-        if(other.countryId!==h.countryId) neighbors[h.countryId].add(other.countryId);
+        if(other.countryId!==h.countryId){
+          neighbors[h.countryId].add(other.countryId);
+        }
       }
     }
     state.map.neighbors = neighbors;
@@ -808,7 +1050,8 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     state.countries = [];
     for(let i=0;i<20;i++){
       state.countries.push({
-        id:i, name:COUNTRY_NAMES[i],
+        id:i,
+        name:COUNTRY_NAMES[i],
         gold: START_GOLD,
         allyId: null,
         inventory: Object.fromEntries(UNITS.map(u=>[u.id,0])),
@@ -830,6 +1073,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
 
     state.states = [];
     for(const c of state.countries) c.states = [];
+
     for(let sid=0; sid<60; sid++){
       const owner = state.map.hexes[sid].countryId;
       state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.length+1)}` });
@@ -839,10 +1083,24 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     rebuildNeighbors();
   }
 
+  /*************************
+   * MAP VIEW
+   *************************/
   const mapView = {
-    scale: 1.0, ox: 0, oy: 0, dragging: false, lastX: 0, lastY: 0,
-    reset(){ this.scale=1.0; this.ox=0; this.oy=0; },
-    screenToWorld(px,py){ return { x:(px - this.ox)/this.scale, y:(py - this.oy)/this.scale }; }
+    scale: 1.0,
+    ox: 0,
+    oy: 0,
+    dragging: false,
+    lastX: 0,
+    lastY: 0,
+    reset(){
+      this.scale = 1.0;
+      this.ox = 0;
+      this.oy = 0;
+    },
+    screenToWorld(px,py){
+      return { x:(px - this.ox)/this.scale, y:(py - this.oy)/this.scale };
+    }
   };
 
   function resizeCanvas(){
@@ -945,10 +1203,13 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     const rect = mapCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
     const p = mapView.screenToWorld(px,py);
+
     const cx = (w/2)/mapView.scale;
     const cy = (h/2)/mapView.scale;
+
     const wx = p.x - cx;
     const wy = p.y - cy;
+
     let best=null, bestD=1e18;
     for(const hx of state.map.hexes){
       const dx = wx - hx.x, dy = wy - hx.y;
@@ -956,10 +1217,15 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       if(d<bestD){ bestD=d; best=hx; }
     }
     const maxD = (state.map.hexSize*state.map.hexSize*1.8);
-    if(best && bestD<=maxD) return {sea:false, stateId: best.stateId, countryId: best.countryId};
+    if(best && bestD<=maxD){
+      return {sea:false, stateId: best.stateId, countryId: best.countryId};
+    }
     return {sea:true};
   }
 
+  /*************************
+   * UI BUILDERS
+   *************************/
   function buildShop(){
     const grid = $("#shopGrid");
     grid.innerHTML = "";
@@ -1027,15 +1293,20 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     $("#uiAlly").textContent = (you && you.allyId!=null) ? getCountry(you.allyId).name : "Yok";
     $("#uiSelectedCountry").textContent = state.selectedCountryId!=null ? getCountry(state.selectedCountryId).name : "—";
     $("#uiSelectedState").textContent = state.selectedStateId!=null ? getState(state.selectedStateId).name : "—";
+
     const enabled = (state.playerCountryId!=null);
     $("#btnPause").disabled = !enabled;
     $("#btnDeclareWar").disabled = !enabled;
     $("#btnOfferAlliance").disabled = !enabled;
     $("#btnBreakAlliance").disabled = !enabled;
     $("#btnRequestPassage").disabled = !enabled;
+
     $("#btnPause").textContent = state.running ? "Duraklat" : "Devam";
   }
 
+  /*************************
+   * RULES
+   *************************/
   function areNeighbors(a,b){
     if(a==null||b==null) return false;
     return state.map.neighbors[a].has(b);
@@ -1046,6 +1317,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     const target = getCountry(targetId);
     if(!you || !target) return {ok:false, reason:"Ülke seçili değil."};
     if(youId===targetId) return {ok:false, reason:"Kendine savaş açamazsın."};
+
     if(!areNeighbors(youId,targetId) && !you.passage.has(targetId)){
       return {ok:false, reason:"Sadece komşuya savaş açılır. Uzaksa geçiş izni lazım."};
     }
@@ -1053,7 +1325,9 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       return {ok:false, reason:`Yeni savaş için ${WAR_COOLDOWN} gün beklemelisin.`};
     }
     const until = you.armistice.get(targetId) || 0;
-    if(state.day < until) return {ok:false, reason:`Ateşkes var. ${until}. güne kadar savaş açamazsın.`};
+    if(state.day < until){
+      return {ok:false, reason:`Ateşkes var. ${until}. güne kadar savaş açamazsın.`};
+    }
     return {ok:true, reason:""};
   }
 
@@ -1064,19 +1338,61 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     return sum;
   }
 
+  /*************************
+   * BORDER HELPERS (savunma için)
+   *************************/
+  function getBorderStatesBetween(defenderId, attackerId){
+    const res=[];
+    const byQR = state.map.byQR;
+    for(const sid of getCountry(defenderId).states){
+      const hx = state.map.hexes[sid];
+      for(const nb of axialNeighbors(hx.q,hx.r)){
+        const nid = byQR.get(keyQR(nb.q,nb.r));
+        if(nid==null) continue;
+        const nh = state.map.hexes[nid];
+        if(nh.countryId === attackerId){
+          res.push(sid);
+          break;
+        }
+      }
+    }
+    return res;
+  }
+
+  /*************************
+   * PLAYER ACTIONS
+   *************************/
   function choosePlayerCountry(cid){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("chooseCountry", {cid});
+      pushNews("Client mod: ülke seçimi host tarafından onaylanacak.");
+      return;
+    }
+
     state.playerCountryId = cid;
     state.selectedCountryId = cid;
     state.selectedStateId = state.countries[cid].states[0];
+
     state.running = true;
     state.day = Math.max(1, state.day);
+
     $("#countryOverlay").style.display = "none";
     pushNews(`Sen "${getCountry(cid).name}" oldun. Zaman başladı.`);
-    buildShop(); buildArmyList(); renderUI(); drawMap();
+    buildShop();
+    buildArmyList();
+    renderUI();
+    drawMap();
+
     netBroadcastState();
   }
 
   function buyUnit(unitId){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("buyUnit", {unitId});
+      pushNews("Client mod: satın alma host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     if(youId==null){ pushNews("Önce ülke seç."); return; }
     const you = getCountry(youId);
@@ -1085,98 +1401,136 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     you.gold -= unit.cost;
     you.inventory[unitId] = (you.inventory[unitId]||0) + 1;
     pushNews(`${unit.name} satın alındı (+1).`);
-    renderUI(); buildArmyList(); buildShop();
+    renderUI();
+    buildArmyList();
+    buildShop();
+
     netBroadcastState();
   }
 
   function requestPassage(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("requestPassage", {targetId: state.selectedCountryId});
+      pushNews("Client mod: geçiş izni host tarafından hesaplanacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     const targetId = state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
     if(youId===targetId){ pushNews("Kendinden geçiş izni istemezsin :)"); return; }
+
     const you = getCountry(youId);
     const until = you.armistice.get(targetId) || 0;
     const accept = (state.day>=until) && Math.random() < (areNeighbors(youId,targetId)?0.62:0.45);
-    if(accept){ you.passage.add(targetId); pushNews(`${getCountry(targetId).name} geçiş izni verdi.`); }
-    else pushNews(`${getCountry(targetId).name} geçiş iznini reddetti.`);
-    renderUI(); netBroadcastState();
+    if(accept){
+      you.passage.add(targetId);
+      pushNews(`${getCountry(targetId).name} geçiş izni verdi.`);
+    } else {
+      pushNews(`${getCountry(targetId).name} geçiş iznini reddetti.`);
+    }
+    renderUI();
+    netBroadcastState();
   }
 
   function offerAlliance(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("offerAlliance", {targetId: state.selectedCountryId});
+      pushNews("Client mod: müttefik host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     const targetId = state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
     if(youId===targetId){ pushNews("Kendinle müttefik olamazsın."); return; }
+
     const you = getCountry(youId);
     const target = getCountry(targetId);
     if(you.allyId!=null){ pushNews("Zaten müttefikin var. Önce boz."); return; }
     if(target.allyId!=null){ pushNews("Hedef ülkenin zaten müttefiki var."); return; }
+
     const p = areNeighbors(youId,targetId) ? 0.62 : 0.38;
     if(Math.random() < p){
-      you.allyId = targetId; target.allyId = youId;
+      you.allyId = targetId;
+      target.allyId = youId;
       pushNews(`${target.name} müttefik teklifini kabul etti.`);
-    } else pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
-    renderUI(); netBroadcastState();
+    } else {
+      pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
+    }
+    renderUI();
+    netBroadcastState();
   }
 
   function breakAlliance(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("breakAlliance", {});
+      pushNews("Client mod: müttefik bozma host tarafından yapılacak.");
+      return;
+    }
+
     const youId = state.playerCountryId;
     if(youId==null){ pushNews("Önce ülke seç."); return; }
     const you = getCountry(youId);
     if(you.allyId==null){ pushNews("Müttefikin yok."); return; }
     const ally = getCountry(you.allyId);
-    ally.allyId = null; you.allyId = null;
+    ally.allyId = null;
+    you.allyId = null;
     pushNews("Müttefik bozuldu.");
-    renderUI(); netBroadcastState();
-  }
-
-  function declareWar(){
-    const youId = state.playerCountryId;
-    const targetId = state.selectedCountryId;
-    if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
-    const chk = canDeclareWar(youId, targetId);
-    if(!chk.ok){ pushNews(chk.reason); return; }
-    startBattle({
-      mode: "war",
-      attackerId: youId,
-      defenderId: targetId,
-      defendedStateId: null
-    });
+    renderUI();
     netBroadcastState();
   }
 
+  function declareWar(){
+    if(NET.enabled && NET.role==="CLIENT"){
+      netSendAction("declareWar", {targetId: state.selectedCountryId});
+      pushNews("Client mod: savaş başlatma host tarafından yapılacak.");
+      return;
+    }
+
+    const youId = state.playerCountryId;
+    const targetId = state.selectedCountryId;
+    if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
+
+    const chk = canDeclareWar(youId, targetId);
+    if(!chk.ok){ pushNews(chk.reason); return; }
+
+    startBattle(attackerId=youId, defenderId=targetId, youId=youId, mode="WAR", defenseStateId=null);
+    netBroadcastState();
+  }
+
+  /*************************
+   * AI TICK (daha az agresif)
+   *************************/
   function aiDailyTick(){
     if(state.playerCountryId==null) return;
 
-    // AI satın alma
     for(const c of state.countries){
       if(c.id === state.playerCountryId) continue;
+
+      // alışveriş
       if(Math.random() < 0.55){
         const affordable = UNITS.filter(u=>c.gold>=u.cost);
         if(affordable.length){
-          affordable.sort((a,b)=> (b.dmg/b.cost) - (a.dmg/a.cost));
+          affordable.sort((a,b)=> (b.dmg/b.cost) - (a.dmg/b.cost));
           const pickU = (Math.random()<0.70) ? affordable[0] : affordable[Math.floor(Math.random()*Math.min(4,affordable.length))];
           c.gold -= pickU.cost;
           c.inventory[pickU.id] = (c.inventory[pickU.id]||0)+1;
         }
       }
-    }
 
-    // AI vs AI agresif olmasın (çok düşük)
-    if(Math.random() < 0.006){
-      const a = pick(state.countries);
-      const neigh = Array.from(state.map.neighbors[a.id]);
-      if(neigh.length){
-        const b = pick(neigh);
-        const A = getCountry(a.id);
-        if(state.day - A.lastWarDay >= WAR_COOLDOWN){
-          const until = A.armistice.get(b) || 0;
-          if(state.day >= until){
-            const winner = (Math.random()<0.5) ? a.id : b;
-            const loser = (winner===a.id) ? b : a.id;
-            resolveAIAIWar(winner, loser);
-          }
-        }
+      // AI vs AI çok nadir (ama var)
+      if(Math.random() < 0.010){
+        const neigh = Array.from(state.map.neighbors[c.id]).filter(t=>t!==state.playerCountryId);
+        if(neigh.length===0) continue;
+        const t = pick(neigh);
+        if(state.day - c.lastWarDay < WAR_COOLDOWN) continue;
+        const until = c.armistice.get(t) || 0;
+        if(state.day < until) continue;
+
+        const winner = (Math.random()<0.5) ? c.id : t;
+        const loser = (winner===c.id) ? t : c.id;
+        resolveAIAIWar(winner, loser);
       }
     }
   }
@@ -1185,8 +1539,10 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     const st = getState(stateId);
     const old = getCountry(st.countryId);
     const neu = getCountry(newCountryId);
+
     old.states = old.states.filter(x=>x!==stateId);
     neu.states.push(stateId);
+
     st.countryId = newCountryId;
     state.map.hexes[stateId].countryId = newCountryId;
   }
@@ -1195,67 +1551,76 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     const win = getCountry(winnerId);
     const lose = getCountry(loserId);
     if(lose.states.length<=0) return;
+
     const captured = pick(lose.states);
     transferState(captured, winnerId);
+
     win.gold += 900;
+
     win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
     lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
     win.lastWarDay = state.day;
     lose.lastWarDay = state.day;
+
     pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. 1 eyalet aldı (+900).`);
-    rebuildNeighbors(); drawMap(); renderUI();
+    rebuildNeighbors();
+    drawMap();
+    renderUI();
+
     netBroadcastState();
   }
 
-  // DEFANS: oyuncunun sınır eyaletine saldırı
-  function scheduleDefenseIfNeeded(){
+  /*************************
+   * DEFENSE SYSTEM (25 günde 1)
+   *************************/
+  function maybeTriggerDefense(){
     if(state.playerCountryId==null) return;
-    if(state.day <= 0) return;
+    if(state.battle) return; // savaş varken tetikleme
+    if(state.day<=0) return;
+
     if(state.day % DEFENSE_EVERY_DAYS !== 0) return;
+    if(state.lastDefenseDay === state.day) return; // aynı gün tekrar yok
+    state.lastDefenseDay = state.day;
 
-    const youId = state.playerCountryId;
-    // Sınır eyaletlerini bul (komşu ülke ile temas eden eyalet)
-    const borderStates = [];
-    for(const sid of getCountry(youId).states){
-      const hx = state.map.hexes[sid];
-      for(const nb of axialNeighbors(hx.q,hx.r)){
-        const id = state.map.byQR.get(keyQR(nb.q,nb.r));
-        if(id==null) continue;
-        const otherC = state.map.hexes[id].countryId;
-        if(otherC !== youId){ borderStates.push({sid, enemyId: otherC}); break; }
-      }
-    }
-    if(!borderStates.length){
-      pushNews("Defans: Sınırın yok, saldırı çıkmadı.");
+    const defenderId = state.playerCountryId;
+    const defender = getCountry(defenderId);
+
+    const possibleAttackers = Array.from(state.map.neighbors[defenderId])
+      .filter(a=>{
+        const ca = getCountry(a);
+        if(!ca) return false;
+        if(defender.allyId === a) return false;
+        const until = defender.armistice.get(a) || 0;
+        return state.day >= until; // ateşkes yoksa
+      });
+
+    if(!possibleAttackers.length){
+      pushNews("Savunma yok: komşularla ateşkes / müttefik durumundan saldırı gelmedi.");
       return;
     }
 
-    const pickBorder = pick(borderStates);
-    const enemyId = pickBorder.enemyId;
-    const defendedStateId = pickBorder.sid;
+    const attackerId = pick(possibleAttackers);
+    const borderStates = getBorderStatesBetween(defenderId, attackerId);
+    const defenseStateId = borderStates.length ? pick(borderStates) : pick(defender.states);
 
-    const you = getCountry(youId);
-    const until = you.armistice.get(enemyId) || 0;
-    if(state.day < until){
-      pushNews(`Defans: ${getCountry(enemyId).name} saldırmak istedi ama ateşkes var.`);
-      return;
-    }
+    const atkName = getCountry(attackerId).name;
+    const stName = getState(defenseStateId).name;
 
-    pushNews(`DEFANS! ${getCountry(enemyId).name}, ${getState(defendedStateId).name} eyaletine saldırıyor!`);
-    startBattle({
-      mode: "defense",
-      attackerId: enemyId,
-      defenderId: youId,
-      defendedStateId
-    });
+    pushNews(`SAVUNMA! ${atkName} saldırıyor: ${stName} için savaş!`);
+    startBattle(attackerId, defenderId, defenderId, "DEFENSE", defenseStateId);
+    netBroadcastState();
   }
 
+  /*************************
+   * MAP INPUT
+   *************************/
   mapCanvas.addEventListener("contextmenu", e => e.preventDefault());
   mapCanvas.addEventListener("mousedown",(e)=>{
     if(e.button===2){
       state.selectedStateId = null;
       state.selectedCountryId = null;
-      renderUI(); drawMap();
+      renderUI();
+      drawMap();
       return;
     }
     mapView.dragging = true;
@@ -1266,8 +1631,10 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     if(!mapView.dragging) return;
     const dx = e.clientX - mapView.lastX;
     const dy = e.clientY - mapView.lastY;
-    mapView.lastX = e.clientX; mapView.lastY = e.clientY;
-    mapView.ox += dx; mapView.oy += dy;
+    mapView.lastX = e.clientX;
+    mapView.lastY = e.clientY;
+    mapView.ox += dx;
+    mapView.oy += dy;
     drawMap();
   });
   window.addEventListener("mouseup", ()=> mapView.dragging=false);
@@ -1296,10 +1663,15 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     if(!hit || hit.sea) return;
     state.selectedStateId = hit.stateId;
     state.selectedCountryId = hit.countryId;
-    renderUI(); drawMap();
+    renderUI();
+    drawMap();
   });
 
-  // BATTLE
+  /*************************
+   * BATTLE SYSTEM (WAR + DEFENSE)
+   *************************/
+  const battleView = { };
+
   function pauseForBattle(){
     state._wasRunningBeforeBattle = state.running;
     state.running = false;
@@ -1311,57 +1683,80 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     renderUI();
   }
 
-  function startBattle({mode, attackerId, defenderId, defendedStateId}){
-    // UI kullanım kolaylığı: oyuncu her zaman TEAM A (altta)
-    const youId = state.playerCountryId;
-    const enemyId = (youId===attackerId) ? defenderId : attackerId;
+  // mode: "WAR" | "DEFENSE"
+  // defenseStateId sadece DEFENSE modunda dolu
+  function startBattle(attackerId, defenderId, youId, mode="WAR", defenseStateId=null){
+    const att = getCountry(attackerId);
+    const def = getCountry(defenderId);
 
     pauseForBattle();
 
+    const youSide = (youId===attackerId) ? "A" : "B";
+    const enemySide = (youSide==="A") ? "B" : "A";
+
     state.battle = {
-      mode, // "war" | "defense"
-      attackerId, defenderId,
-      defendedStateId: defendedStateId ?? null,
-
-      // TEAM A = oyuncu (altta), TEAM B = düşman (üstte)
-      teamAId: youId,
-      teamBId: enemyId,
-
+      mode,
+      attackerId,
+      defenderId,
+      youId,
+      youSide,       // "A" ya da "B"
+      enemyId: (youId===attackerId) ? defenderId : attackerId,
       phase:"deploy",
-      aField: [],
-      bField: [],
+      fieldA: [],
+      fieldB: [],
       t: 0,
       ended:false,
-      aDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
-      bDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      defenseStateId,
+      youDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      enemyDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
     };
 
-    $("#uiMode").textContent = mode==="defense" ? "DEFANS" : "SAVAŞ";
-    $("#battleTitle").textContent = (mode==="defense")
-      ? `DEFANS: ${getCountry(enemyId).name} saldırıyor!`
-      : `Savaş: ${getCountry(attackerId).name} → ${getCountry(defenderId).name}`;
+    $("#uiMode").textContent = (mode==="DEFENSE") ? "SAVUNMA" : "SAVAŞ";
 
-    $("#uiBattleYou").textContent = getCountry(youId).name;
-    $("#uiBattleEnemy").textContent = getCountry(enemyId).name;
-    $("#uiFlagYou").src = state.flags[youId];
-    $("#uiFlagEnemy").src = state.flags[enemyId];
+    if(mode==="DEFENSE"){
+      const stName = defenseStateId!=null ? getState(defenseStateId).name : "Sınır";
+      $("#battleTitle").textContent = `SAVUNMA: ${def.name} (sen) ← ${att.name} | ${stName}`;
+      $("#battleRulesLine").innerHTML =
+        `Savunma: Kazanırsan <b>+${DEFENSE_WIN_GOLD} altın</b>, eyalet kaybı yok. Kaybedersen <b>1 eyalet düşer</b>.`;
+    } else {
+      $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
+      $("#battleRulesLine").innerHTML =
+        `Savaş sonu: <b>sadece yaşayan birimler</b> envantere döner.
+         Kazanan: <b>+${WIN_GOLD} altın + 1 eyalet</b>.
+         Kaybeden: <b>-${LOSE_GOLD} altın</b> (0 altına düşmez).`;
+    }
+
+    // HUD: Sen ve düşman bayrak/isim
+    const youC = getCountry(youId);
+    const enemyC = getCountry(state.battle.enemyId);
+
+    $("#uiBattleYou").textContent = youC.name;
+    $("#uiBattleEnemy").textContent = enemyC.name;
+    $("#uiFlagYou").src = state.flags[youC.id];
+    $("#uiFlagEnemy").src = state.flags[enemyC.id];
 
     $("#uiYouUnits").textContent = "0";
     $("#uiEnemyUnits").textContent = "0";
-    $("#uiYouPool").textContent = totalInventory(youId);
-    $("#uiEnemyPool").textContent = totalInventory(enemyId);
+    $("#uiYouPool").textContent = totalInventory(youC.id);
+    $("#uiEnemyPool").textContent = totalInventory(enemyC.id);
 
     buildDeployBar();
     $("#battleOverlay").style.display="flex";
     drawBattle();
   }
 
+  function getBattleArraysBySide(side){
+    const b = state.battle;
+    return (side==="A") ? b.fieldA : b.fieldB;
+  }
+
   function buildDeployBar(){
+    const b = state.battle;
     const bar = $("#deployBar");
     bar.innerHTML = "";
-    const b = state.battle;
     if(!b) return;
-    const you = getCountry(b.teamAId);
+
+    const you = getCountry(b.youId);
 
     for(const u of UNITS){
       const count = you.inventory[u.id] || 0;
@@ -1376,7 +1771,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
         </div>
         <div style="min-width:0">
           <div style="font-weight:900; font-size:12px">${u.name}</div>
-          <div class="muted small">Depo: <b>${count}</b></div>
+          <div class="muted small">Elde: <b>${count}</b></div>
         </div>
       `;
 
@@ -1386,60 +1781,78 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       bar.appendChild(mini);
     }
 
-    battleCanvas.addEventListener("dragover", (e)=> e.preventDefault());
-    battleCanvas.addEventListener("drop", (e)=>{
+    // Drop handler (tek sefer değil: her savaşta lazım)
+    battleCanvas.ondragover = (e)=> e.preventDefault();
+    battleCanvas.ondrop = (e)=>{
       e.preventDefault();
       const id = e.dataTransfer.getData("text/plain");
-      if(id) tryDeployUnitA(id, e.offsetX, e.offsetY);
-    }, {once:true});
+      if(id) tryDeployUnit(id, e.offsetX, e.offsetY);
+    };
   }
 
-  function tryDeployUnitA(unitId, sx, sy){
+  function tryDeployUnit(unitId, sx, sy){
     const b = state.battle;
     if(!b || b.phase!=="deploy") return;
 
-    const you = getCountry(b.teamAId);
+    const you = getCountry(b.youId);
     if((you.inventory[unitId]||0) <= 0){ pushNews("Bu kart sende yok."); return; }
 
-    // TEAM A alt yarıda deploy
     const rect = battleCanvas.getBoundingClientRect();
     const h = rect.height;
     const centerY = h/2;
-    const minY = centerY + 70;
-    if(sy < minY){ pushNews("Kendi tarafına (alta) koymalısın."); return; }
+
+    // Kendi tarafına koyma kuralı:
+    // Sen A isen alt yarı (y > center + 70), sen B isen üst yarı (y < center - 70)
+    const margin = 70;
+    const ok =
+      (b.youSide==="A" && sy > centerY + margin) ||
+      (b.youSide==="B" && sy < centerY - margin);
+
+    if(!ok){
+      pushNews("Kendi tarafına koymalısın (üst/alt).");
+      return;
+    }
 
     const def = UNITS.find(x=>x.id===unitId);
 
-    // IMPORTANT: sadece deploy edilen düşer, depo kalan kalır
+    // EN ÖNEMLİ FIX: deploy yapınca envanter azalır,
+    // ama savaş iptal edilirse geri veriyoruz (cancelBattle içinde).
     you.inventory[unitId] -= 1;
-    b.aDeployedByType[unitId]++;
+    b.youDeployedByType[unitId]++;
 
-    b.aField.push({
+    const arr = getBattleArraysBySide(b.youSide);
+    arr.push({
       unitId, maxHp:def.hp, hp:def.hp,
       x:sx, y:sy,
-      team:"A", cd:0,
+      team:b.youSide, cd:0,
       bob: Math.random()*10,
       hitFlash: 0
     });
 
-    $("#uiYouPool").textContent = totalInventory(b.teamAId);
+    $("#uiYouPool").textContent = totalInventory(b.youId);
     buildDeployBar();
     buildArmyList();
     renderUI();
     drawBattle();
+
     netBroadcastState();
   }
 
-  // BOT DEPLOY: toplam ordunun %50'si sahaya, kalan depo kalır
-  function aiDeployB(){
+  // BOT DEPLOY: artık %50 depo kullanıyor (senin istediğin)
+  function aiDeploy(){
     const b = state.battle;
-    const enemy = getCountry(b.teamBId);
+    const enemyId = b.enemyId;
+    const enemy = getCountry(enemyId);
+    const enemySide = (b.youSide==="A") ? "B" : "A";
+
     const rect = battleCanvas.getBoundingClientRect();
     const w = rect.width, h = rect.height;
 
-    const total = totalInventory(b.teamBId);
-    let want = Math.floor(total * 0.50);
-    want = clamp(want, 6, 18);
+    const power = totalInventory(enemyId);
+    // yaklaşık yarısı
+    let want = Math.floor(power * 0.50);
+    want = clamp(want, 6, 14); // çok kalabalık olmasın
+    if(power < 6) want = power;
 
     const ids = [...UNITS].sort((a,b)=>{
       const sa = (a.dmg*1.2 + a.hp*0.05 + a.range*0.03) / a.cost;
@@ -1448,45 +1861,51 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     }).map(u=>u.id);
 
     let tries=0;
-    while(want>0 && tries<1400){
+    while(want>0 && tries<1200){
       tries++;
       const uid = (Math.random()<0.70) ? ids[0] : pick(ids.slice(0,4));
       if((enemy.inventory[uid]||0) <= 0) continue;
-
       const def = UNITS.find(x=>x.id===uid);
+
       const x = rand(60, Math.floor(w-60));
-      const y = rand(60, Math.floor(h/2 - 90));
+      let y;
+      if(enemySide==="B"){
+        y = rand(60, Math.floor(h/2 - 90));
+      } else {
+        y = rand(Math.floor(h/2 + 90), Math.floor(h - 160));
+      }
 
-      // sadece deploy edilen düşer, kalan depo kalır
       enemy.inventory[uid] -= 1;
-      b.bDeployedByType[uid]++;
+      b.enemyDeployedByType[uid]++;
 
-      b.bField.push({
+      const arr = getBattleArraysBySide(enemySide);
+      arr.push({
         unitId:uid, maxHp:def.hp, hp:def.hp,
-        x, y, team:"B", cd:0,
+        x, y, team:enemySide, cd:0,
         bob: Math.random()*10,
         hitFlash: 0
       });
-
       want--;
     }
 
-    $("#uiEnemyPool").textContent = totalInventory(b.teamBId);
+    $("#uiEnemyPool").textContent = totalInventory(enemyId);
   }
 
   function battleStart(){
     const b = state.battle;
     if(!b || b.phase!=="deploy") return;
-
-    aiDeployB();
+    aiDeploy();
     b.phase="fight";
     b.t=0;
 
-    if(b.mode==="defense"){
-      pushNews(`Defans savaşı başladı! Savunmayı kazanırsan +${DEFENSE_REWARD} altın.`);
+    if(b.mode==="DEFENSE"){
+      const atk = getCountry(b.attackerId).name;
+      const def = getCountry(b.defenderId).name;
+      pushNews(`Savunma başladı: ${def} savunuyor, ${atk} saldırıyor.`);
     } else {
       pushNews(`Savaş başladı: ${getCountry(b.attackerId).name} vs ${getCountry(b.defenderId).name}`);
     }
+
     drawBattle();
     netBroadcastState();
   }
@@ -1495,69 +1914,116 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     country.gold = Math.max(0, country.gold + delta);
   }
 
-  function battleEnd(winnerTeam){
+  function applyArmisticeAfterBattle(attackerId, defenderId){
+    const a = getCountry(attackerId);
+    const d = getCountry(defenderId);
+    a.armistice.set(defenderId, state.day + ARMISTICE_DAYS);
+    d.armistice.set(attackerId, state.day + ARMISTICE_DAYS);
+    a.lastWarDay = state.day;
+    d.lastWarDay = state.day;
+  }
+
+  function battleEnd(winnerSide){
     const b = state.battle;
     if(!b || b.ended) return;
     b.ended=true;
     b.phase="done";
 
-    const winnerId = (winnerTeam==="A") ? b.teamAId : b.teamBId;
-    const loserId  = (winnerTeam==="A") ? b.teamBId : b.teamAId;
+    const winnerId = (winnerSide==="A") ? b.attackerId : b.defenderId;
+    const loserId  = (winnerSide==="A") ? b.defenderId : b.attackerId;
 
     const winner = getCountry(winnerId);
     const loser  = getCountry(loserId);
 
-    // YAŞAYANLAR geri dönsün, ÖLENLER eksilsin
-    // (Deployde zaten düşürmüştük; şimdi sahada yaşayanları geri ekliyoruz)
-    for(const unit of b.aField){ if(unit.team==="A") getCountry(b.teamAId).inventory[unit.unitId] = (getCountry(b.teamAId).inventory[unit.unitId]||0) + 1; }
-    for(const unit of b.bField){ if(unit.team==="B") getCountry(b.teamBId).inventory[unit.unitId] = (getCountry(b.teamBId).inventory[unit.unitId]||0) + 1; }
+    // Hayatta kalanları geri ver (A -> attacker, B -> defender)
+    const aliveA = b.fieldA.filter(x=>x.hp>0);
+    const aliveB = b.fieldB.filter(x=>x.hp>0);
 
-    // MODE: DEFENSE
-    if(b.mode==="defense"){
-      // Savunmayı kazanan = defenderId
-      if(winnerId === b.defenderId){
-        applyGoldChange(winner, +DEFENSE_REWARD);
-        pushNews(`DEFANS BAŞARILI! Eyalet korunuyor. +${DEFENSE_REWARD} altın.`);
+    for(const unit of aliveA){
+      const c = getCountry(b.attackerId);
+      c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
+    }
+    for(const unit of aliveB){
+      const c = getCountry(b.defenderId);
+      c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
+    }
+
+    if(b.mode==="DEFENSE"){
+      const defId = b.defenderId;
+      const atkId = b.attackerId;
+      const defC = getCountry(defId);
+      const atkC = getCountry(atkId);
+
+      const stId = b.defenseStateId;
+      const stName = (stId!=null) ? getState(stId).name : "sınır eyaleti";
+
+      if(winnerId === defId){
+        // savunma başarılı
+        applyGoldChange(defC, +DEFENSE_WIN_GOLD);
+        pushNews(`Savunma başarılı! ${stName} korundu. +${DEFENSE_WIN_GOLD} altın.`);
       } else {
-        // saldıran kazandı: hedef eyalet geçsin
-        const sid = b.defendedStateId;
-        if(sid!=null && getState(sid).countryId === b.defenderId){
-          transferState(sid, b.attackerId);
-          pushNews(`DEFANS KAYIP! ${getState(sid).name} eyaleti düştü. ${getCountry(b.attackerId).name} +${DEFENSE_REWARD} altın aldı.`);
+        // savunma kayıp -> saldıran o eyaleti alır
+        if(stId!=null && getState(stId).countryId===defId){
+          transferState(stId, atkId);
+          pushNews(`Savunma kaybedildi! ${stName} düştü ve ${atkC.name} aldı.`);
         } else {
-          pushNews(`DEFANS KAYIP! Saldıran kazandı. +${DEFENSE_REWARD} altın.`);
+          pushNews(`Savunma kaybedildi! 1 eyalet düştü.`);
         }
-        applyGoldChange(getCountry(b.attackerId), +DEFENSE_REWARD);
       }
+
+      applyArmisticeAfterBattle(atkId, defId);
     } else {
-      // MODE: WAR (eski mantık)
-      applyGoldChange(winner, +2000);
-      applyGoldChange(loser, -1000);
+      // normal savaş
+      applyGoldChange(winner, +WIN_GOLD);
+      applyGoldChange(loser, -LOSE_GOLD);
 
       if(loser.states.length>0){
         const captured = pick(loser.states);
         transferState(captured, winnerId);
-        pushNews(`${winner.name} kazandı! +2000 altın ve 1 eyalet aldı (${getState(captured).name}).`);
+        pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın ve 1 eyalet aldı (${getState(captured).name}).`);
       } else {
-        pushNews(`${winner.name} kazandı! +2000 altın aldı.`);
+        pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın aldı.`);
       }
       if(loserId===state.playerCountryId){
-        pushNews(`Sen kaybettin: -1000 altın (0 altına düşmez).`);
+        pushNews(`Sen kaybettin: -${LOSE_GOLD} altın (0 altına düşmez).`);
       }
-    }
 
-    // Ateşkes
-    winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
-    loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
-    winner.lastWarDay = state.day;
-    loser.lastWarDay = state.day;
+      applyArmisticeAfterBattle(b.attackerId, b.defenderId);
+    }
 
     rebuildNeighbors();
     drawMap();
+
     buildArmyList();
     buildShop();
     renderUI();
+
     netBroadcastState();
+  }
+
+  // ÇIK / İPTAL: depodan eksilen birimleri geri ver (ölmeyenler)
+  function cancelBattle(){
+    const b = state.battle;
+    if(!b) return;
+
+    // Sahadaki (hayatta olan) birimleri geri ver
+    // (deployde veya fightta çıkınca depo kaybı olmasın)
+    for(const u of b.fieldA){
+      if(u.hp>0){
+        const c = getCountry(b.attackerId);
+        c.inventory[u.unitId] = (c.inventory[u.unitId]||0) + 1;
+      }
+    }
+    for(const u of b.fieldB){
+      if(u.hp>0){
+        const c = getCountry(b.defenderId);
+        c.inventory[u.unitId] = (c.inventory[u.unitId]||0) + 1;
+      }
+    }
+
+    buildArmyList();
+    buildShop();
+    renderUI();
   }
 
   function updateBattle(dt){
@@ -1570,7 +2036,8 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     function pickTarget(u, enemies){
       let best=null, bestD=1e18;
       for(const e of enemies){
-        const d=Math.hypot(e.x-u.x, e.y-u.y);
+        const dx=e.x-u.x, dy=e.y-u.y;
+        const d=Math.hypot(dx,dy);
         if(d<bestD){ bestD=d; best=e; }
       }
       return {best, bestD};
@@ -1580,6 +2047,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       const def = UNITS.find(x=>x.id===u.unitId);
       u.cd = Math.max(0, u.cd - dt);
       u.hitFlash = Math.max(0, u.hitFlash - dt);
+
       const {best, bestD} = pickTarget(u, enemies);
       if(!best) return;
 
@@ -1599,21 +2067,27 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       u.y = clamp(u.y, 18, h-18);
     }
 
-    for(const u of b.aField) stepUnit(u, b.bField);
-    for(const e of b.bField) stepUnit(e, b.aField);
+    for(const u of b.fieldA) stepUnit(u, b.fieldB);
+    for(const e of b.fieldB) stepUnit(e, b.fieldA);
 
-    b.aField = b.aField.filter(u=>u.hp>0);
-    b.bField = b.bField.filter(u=>u.hp>0);
+    b.fieldA = b.fieldA.filter(u=>u.hp>0);
+    b.fieldB = b.fieldB.filter(u=>u.hp>0);
 
-    $("#uiYouUnits").textContent = b.aField.length;
-    $("#uiEnemyUnits").textContent = b.bField.length;
+    // HUD sayıları: "Sen" hangi taraftaysa ona göre
+    const youArr = (b.youSide==="A") ? b.fieldA : b.fieldB;
+    const enemyArr = (b.youSide==="A") ? b.fieldB : b.fieldA;
+
+    $("#uiYouUnits").textContent = youArr.length;
+    $("#uiEnemyUnits").textContent = enemyArr.length;
 
     b.t += dt;
 
-    if(b.aField.length===0 && b.bField.length===0) battleEnd("B");
-    else if(b.bField.length===0) battleEnd("A");
-    else if(b.aField.length===0) battleEnd("B");
-    else if(b.t>70) battleEnd(b.aField.length>=b.bField.length ? "A":"B");
+    const aAlive = b.fieldA.length;
+    const bAlive = b.fieldB.length;
+    if(aAlive===0 && bAlive===0) battleEnd("B");
+    else if(bAlive===0) battleEnd("A");
+    else if(aAlive===0) battleEnd("B");
+    else if(b.t>70) battleEnd(aAlive>=bAlive ? "A":"B");
   }
 
   function drawBattle(){
@@ -1638,17 +2112,123 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       battleCtx.lineTo(w,h/2);
       battleCtx.stroke();
 
+      // kendi taraf sınırı
       battleCtx.strokeStyle = "rgba(255,209,102,.30)";
       battleCtx.setLineDash([8,8]);
       battleCtx.beginPath();
-      battleCtx.moveTo(0,h/2 + 70);
-      battleCtx.lineTo(w,h/2 + 70);
+      if(b.youSide==="A"){
+        battleCtx.moveTo(0,h/2 + 70);
+        battleCtx.lineTo(w,h/2 + 70);
+      } else {
+        battleCtx.moveTo(0,h/2 - 70);
+        battleCtx.lineTo(w,h/2 - 70);
+      }
       battleCtx.stroke();
       battleCtx.setLineDash([]);
     }
 
+    function drawBattleUnit(ctx, unitId, x, y, team, scale=1){
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      const main = team==="A" ? "rgba(77,212,255,.90)" : "rgba(255,92,122,.88)";
+      const dark = "rgba(0,0,0,.35)";
+      const light = "rgba(255,255,255,.92)";
+
+      ctx.fillStyle = main;
+      ctx.strokeStyle = dark;
+      ctx.lineWidth = 2;
+      roundRect(ctx, -11, -6, 22, 26, 7, true, true);
+
+      ctx.fillStyle = light;
+      ctx.beginPath();
+      ctx.arc(0, -14, 7, 0, Math.PI*2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = light;
+      ctx.fillStyle = light;
+
+      if(unitId==="infantry"){
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(22, -12); ctx.stroke();
+        ctx.lineWidth=2;
+
+        ctx.fillStyle = "rgba(255,209,102,.92)";
+        ctx.strokeStyle = dark;
+        ctx.beginPath();
+        ctx.moveTo(-18, -2);
+        ctx.quadraticCurveTo(-28, 6, -18, 18);
+        ctx.quadraticCurveTo(-10, 8, -18, -2);
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+      } else if(unitId==="spearman"){
+        ctx.strokeStyle = "rgba(255,255,255,.92)";
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(-22, 20); ctx.lineTo(24, -18); ctx.stroke();
+        ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(24,-18); ctx.lineTo(30,-22); ctx.stroke();
+      } else if(unitId==="archer"){
+        ctx.strokeStyle="rgba(255,209,102,.95)";
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(18, 6, 14, Math.PI/2, -Math.PI/2, true); ctx.stroke();
+        ctx.strokeStyle="rgba(255,255,255,.85)";
+        ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(18,20); ctx.stroke();
+      } else if(unitId==="crossbow"){
+        ctx.fillStyle="rgba(255,255,255,.90)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, 6, 2, 26, 8, 4, true, true);
+        ctx.strokeStyle="rgba(255,209,102,.95)";
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(-10,6); ctx.stroke();
+      } else if(unitId==="musketeer" || unitId==="rifleman"){
+        ctx.fillStyle="rgba(255,255,255,.88)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, -2, 2, 34, 7, 3, true, true);
+        roundRect(ctx, 6, 9, 10, 10, 3, true, true);
+      } else if(unitId==="grenadier"){
+        ctx.fillStyle="rgba(255,92,122,.85)";
+        ctx.strokeStyle=dark;
+        ctx.beginPath(); ctx.arc(20, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="rgba(255,255,255,.88)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, -2, 2, 28, 7, 3, true, true);
+      } else if(unitId==="cannon"){
+        ctx.fillStyle="rgba(255,255,255,.85)";
+        ctx.strokeStyle=dark;
+        roundRect(ctx, -28, 6, 38, 11, 5, true, true);
+        ctx.beginPath(); ctx.arc(-18, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      } else if(unitId==="cavalry"){
+        ctx.globalAlpha=0.25;
+        ctx.fillStyle=light;
+        roundRect(ctx, -20, 16, 40, 12, 6, true, false);
+        ctx.globalAlpha=1;
+        ctx.strokeStyle=light;
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(-22, 18); ctx.lineTo(24, -18); ctx.stroke();
+        ctx.lineWidth=2;
+      } else if(unitId==="scout"){
+        ctx.globalAlpha=0.35;
+        ctx.fillStyle=main;
+        ctx.beginPath();
+        ctx.moveTo(-16,-4); ctx.lineTo(0,28); ctx.lineTo(16,-4); ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha=1;
+        ctx.strokeStyle=light;
+        ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(10, 8); ctx.lineTo(22, 0); ctx.stroke();
+        ctx.lineWidth=2;
+      }
+
+      ctx.restore();
+    }
+
     function drawFighter(u){
       battleCtx.save();
+
       if(u.hitFlash>0){
         battleCtx.globalAlpha = 0.9;
         battleCtx.fillStyle = "rgba(255,255,255,.55)";
@@ -1657,6 +2237,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
         battleCtx.fill();
         battleCtx.globalAlpha = 1;
       }
+
       battleCtx.globalAlpha = 0.25;
       battleCtx.fillStyle = "#000";
       battleCtx.beginPath();
@@ -1664,10 +2245,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       battleCtx.fill();
       battleCtx.globalAlpha = 1;
 
-      battleCtx.fillStyle = (u.team==="A") ? "rgba(77,212,255,.95)" : "rgba(255,92,122,.92)";
-      battleCtx.strokeStyle = "rgba(0,0,0,.35)";
-      battleCtx.lineWidth = 2;
-      roundRect(battleCtx, u.x-12, u.y-10, 24, 26, 7, true, true);
+      drawBattleUnit(battleCtx, u.unitId, u.x, u.y, u.team, 0.95);
 
       const pct = clamp(u.hp/u.maxHp, 0, 1);
       battleCtx.fillStyle = "rgba(0,0,0,.35)";
@@ -1678,19 +2256,32 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       battleCtx.restore();
     }
 
-    for(const u of b.aField) drawFighter(u);
-    for(const e of b.bField) drawFighter(e);
+    for(const u of b.fieldA) drawFighter(u);
+    for(const e of b.fieldB) drawFighter(e);
+
+    battleCtx.fillStyle = "rgba(0,0,0,.40)";
+    battleCtx.fillRect(12, h-52, 560, 40);
+    battleCtx.fillStyle = "rgba(255,255,255,.88)";
+    battleCtx.font = "12px system-ui";
+    const txt = b.phase==="deploy"
+      ? "DEPLOY: Kartı sürükle-bırak. Sonra 'Savaşı Başlat'. (Zaman durur)"
+      : (b.phase==="fight" ? "FIGHT: Birimler otomatik savaşıyor." : "BİTTİ: Çıkabilirsin.");
+    battleCtx.fillText(txt, 22, h-28);
   }
 
-  // SAVE/LOAD
+  /*************************
+   * SAVE / LOAD
+   *************************/
   function exportSaveObject(){
     return {
       version: 5,
+      mapType: "europe_hex",
       day: state.day,
       running: state.running,
       playerCountryId: state.playerCountryId,
       selectedCountryId: state.selectedCountryId,
       selectedStateId: state.selectedStateId,
+      lastDefenseDay: state.lastDefenseDay,
       cardImages: state.cardImages,
       flags: state.flags,
       map: {
@@ -1707,6 +2298,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
       states: state.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name})),
     };
   }
+
   function exportSave(){
     const data = exportSaveObject();
     const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
@@ -1724,13 +2316,16 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     state.playerCountryId = obj.playerCountryId;
     state.selectedCountryId = obj.selectedCountryId;
     state.selectedStateId = obj.selectedStateId;
+    state.lastDefenseDay = obj.lastDefenseDay ?? -999;
     state.cardImages = obj.cardImages || {};
     state.flags = obj.flags || {};
 
     state.map.hexSize = obj.map?.hexSize ?? state.map.hexSize;
     state.map.hexes = (obj.map?.hexes || []).map(h=>({ ...h }));
     state.map.byQR = new Map();
-    for(const h of state.map.hexes) state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    for(const h of state.map.hexes){
+      state.map.byQR.set(keyQR(h.q,h.r), h.id);
+    }
 
     state.countries = obj.countries.map(c=>({
       id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
@@ -1751,9 +2346,16 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
 
     rebuildNeighbors();
     if(!silent) pushNews("Save yüklendi.");
-    buildCountryPicker(); buildShop(); buildArmyList(); renderUI(); drawMap();
+    buildCountryPicker();
+    buildShop();
+    buildArmyList();
+    renderUI();
+    drawMap();
   }
 
+  /*************************
+   * CARD IMAGE UPLOAD
+   *************************/
   async function filesToDataURLs(files){
     const out = [];
     for(const f of files){
@@ -1767,24 +2369,33 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     }
     return out;
   }
+
   async function applyCardImages(){
     const input = $("#cardsFile");
     const files = Array.from(input.files || []);
     if(files.length===0){ pushNews("Dosya seçmedin."); return; }
     const items = await filesToDataURLs(files);
+
     let matched = 0;
     for(const it of items){
       const name = it.file.name.toLowerCase().replace(/\.(png|jpg|jpeg|webp|gif)$/,"");
       const unit = UNITS.find(u=>u.id===name);
-      if(unit){ state.cardImages[unit.id] = it.url; matched++; }
+      if(unit){
+        state.cardImages[unit.id] = it.url;
+        matched++;
+      }
     }
     if(matched===0) pushNews("Eşleşen kart yok. Dosya adlarını unit ID yap.");
     else pushNews(`${matched} kart resmi uygulandı.`);
     buildShop();
+    if(state.battle) buildDeployBar();
+
     netBroadcastState();
   }
 
-  // BUTTONS
+  /*************************
+   * BUTTONS
+   *************************/
   $("#btnChooseCountry").onclick = ()=> $("#countryOverlay").style.display="flex";
   $("#btnCloseCountry").onclick = ()=> $("#countryOverlay").style.display="none";
 
@@ -1795,6 +2406,10 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
 
   $("#btnPause").onclick = ()=>{
     if(state.playerCountryId==null) return;
+    if(NET.enabled && NET.role==="CLIENT"){
+      pushNews("Client mod: zaman kontrolü host’ta.");
+      return;
+    }
     state.running = !state.running;
     pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
     renderUI();
@@ -1818,6 +2433,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
   $("#btnClearCards").onclick = ()=>{
     for(const u of UNITS) state.cardImages[u.id] = genCardArt(u.id);
     buildShop();
+    if(state.battle) buildDeployBar();
     pushNews("Kartlar varsayılan çizime döndü.");
     netBroadcastState();
   };
@@ -1825,30 +2441,41 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
   $("#btnReset").onclick = ()=> initAll();
 
   $("#btnStartBattle").onclick = battleStart;
+
   $("#btnCloseBattle").onclick = ()=>{
+    // FIX: çıkınca askerler boşa gitmesin
+    cancelBattle();
+
     $("#battleOverlay").style.display="none";
     $("#uiMode").textContent = "HARİTA";
     state.battle = null;
     drawMap();
     resumeAfterBattle();
+
     netBroadcastState();
   };
 
+  // Net UI
   const netUrlInp = document.getElementById("netUrl");
   const netRoomInp = document.getElementById("netRoom");
   document.getElementById("btnNetToggle").onclick = ()=>{
     NET.enabled = !NET.enabled;
     NET.url = netUrlInp.value.trim();
     NET.room = netRoomInp.value.trim() || "room1";
-    if(!NET.enabled){ netDisconnect(); pushNews("Online kapalı."); }
-    else { netSetStatus("ON (not connected)"); pushNews("Online açıldı (sunucu bağlanınca çalışır)."); }
+    if(!NET.enabled){
+      netDisconnect();
+      pushNews("Online kapalı.");
+    } else {
+      netSetStatus("ON (not connected)");
+      pushNews("Online açıldı (sunucu bağlanınca çalışır).");
+    }
   };
   document.getElementById("btnNetHost").onclick = ()=>{
     NET.url = netUrlInp.value.trim();
     NET.room = netRoomInp.value.trim() || "room1";
     if(!NET.enabled){ pushNews("Önce Online Aç."); return; }
     netConnect("HOST");
-    pushNews("HOST mod.");
+    pushNews("HOST mod: oyun state’i yayınlanacak.");
     setTimeout(()=>netBroadcastState(), 300);
   };
   document.getElementById("btnNetJoin").onclick = ()=>{
@@ -1856,12 +2483,14 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     NET.room = netRoomInp.value.trim() || "room1";
     if(!NET.enabled){ pushNews("Önce Online Aç."); return; }
     netConnect("CLIENT");
-    pushNews("CLIENT mod.");
+    pushNews("CLIENT mod: host’tan state bekleniyor.");
     state.running = false;
     renderUI();
   };
 
-  // LOOP
+  /*************************
+   * GAME LOOP (1 day = 1 sec)
+   *************************/
   let tickAcc = 0;
   let last = performance.now();
 
@@ -1876,8 +2505,8 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
 
     aiDailyTick();
 
-    // DEFANS kontrolü (25 günde bir)
-    scheduleDefenseIfNeeded();
+    // Savunma (25 günde 1) burada tetikleniyor
+    maybeTriggerDefense();
 
     renderUI();
     netBroadcastState();
@@ -1887,19 +2516,24 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     const dt = Math.min(0.05, (now-last)/1000);
     last = now;
 
-    if(state.playerCountryId!=null && state.running){
-      tickAcc += dt;
-      while(tickAcc >= 1.0){
-        tickAcc -= 1.0;
-        dayTick();
+    if(!(NET.enabled && NET.role==="CLIENT")){
+      if(state.playerCountryId!=null && state.running){
+        tickAcc += dt;
+        while(tickAcc >= 1.0){
+          tickAcc -= 1.0;
+          dayTick();
+        }
       }
+      updateBattle(dt);
     }
 
-    updateBattle(dt);
     drawBattle();
     requestAnimationFrame(loop);
   }
 
+  /*************************
+   * INIT
+   *************************/
   function initAll(){
     state.day = 0;
     state.running = false;
@@ -1908,6 +2542,7 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     state.selectedStateId = null;
     state.news = [];
     state.battle = null;
+    state.lastDefenseDay = -999;
 
     state.cardImages = {};
     for(const u of UNITS) state.cardImages[u.id] = genCardArt(u.id);
@@ -1916,18 +2551,25 @@ function netBroadcastState(){ if(!NET.enabled||NET.role!=="HOST") return; netSen
     for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
 
     genHexEurope60();
+
     mapView.reset();
     pushNews("Avrupa HEX harita hazır. Ülke seçince oyun başlar.");
-    buildCountryPicker(); buildShop(); buildArmyList(); renderUI(); drawMap();
+    buildCountryPicker();
+    buildShop();
+    buildArmyList();
+    renderUI();
+    drawMap();
 
     $("#btnPause").disabled = true;
     $("#btnPause").textContent = "Duraklat";
+
     netBroadcastState();
   }
 
   initAll();
   resizeCanvas();
   requestAnimationFrame(loop);
+
 })();
 </script>
 </body>
