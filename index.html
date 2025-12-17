@@ -28,7 +28,6 @@
     }
     .left,.right{width:320px; display:flex; flex-direction:column; gap:12px}
     .center{flex:1; min-width:680px; display:flex; flex-direction:column; gap:12px}
-
     .pad{padding:12px}
     .title{font-weight:800; letter-spacing:.2px}
     .muted{color:var(--muted)}
@@ -39,7 +38,6 @@
     .kv:last-child{border-bottom:none}
     .small{font-size:12px}
     .kbd{font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; padding:2px 6px; border-radius:8px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06)}
-
     .btn{
       cursor:pointer;
       border:1px solid rgba(255,255,255,.14);
@@ -55,7 +53,6 @@
     .btn.danger{background: rgba(255,92,122,.12); border-color: rgba(255,92,122,.30)}
     .btn.warn{background: rgba(255,209,102,.12); border-color: rgba(255,209,102,.35)}
     .btn[disabled]{opacity:.55; cursor:not-allowed}
-
     .topbar{padding:10px 12px; display:flex; align-items:center; gap:10px}
     .badge{
       font-size:12px; padding:3px 8px; border-radius:999px;
@@ -69,10 +66,8 @@
     }
     .news span{display:inline-block; padding-left:100%; animation: marquee 18s linear infinite;}
     @keyframes marquee { 0%{transform:translateX(0)} 100%{transform:translateX(-100%)} }
-
     .mapWrap{flex:1; min-height:560px; position:relative; overflow:hidden}
     canvas{display:block; width:100%; height:100%}
-
     .hint{
       position:absolute; left:12px; bottom:12px; padding:8px 10px; border-radius:12px;
       background:rgba(0,0,0,.40); border:1px solid rgba(255,255,255,.12);
@@ -84,12 +79,7 @@
       border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.06);
       font-size:12px; color:var(--muted);
     }
-
-    .shopCard{
-      max-height: 440px;
-      overflow:auto;
-      padding-right: 6px;
-    }
+    .shopCard{max-height: 440px; overflow:auto; padding-right: 6px;}
     .shopGrid{display:grid; grid-template-columns:1fr; gap:8px}
     .unitCard{
       border-radius:14px; padding:10px; border:1px solid rgba(255,255,255,.12);
@@ -112,7 +102,6 @@
     .pill.melee{border-color: rgba(255,92,122,.35); color: rgba(255,92,122,.95)}
     .pill.mid{border-color: rgba(255,209,102,.45); color: rgba(255,209,102,.95)}
     .pill.range{border-color: rgba(77,212,255,.40); color: rgba(77,212,255,.95)}
-
     .overlay{
       position:fixed; inset:0; background:rgba(0,0,0,.58);
       display:none; align-items:center; justify-content:center; padding:16px;
@@ -124,7 +113,6 @@
       border:1px solid rgba(255,255,255,.14); box-shadow:var(--shadow);
     }
     .modalHead{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 6px 10px 6px}
-
     .countryGrid{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;}
     .countryBtn{
       padding:12px; border-radius:18px; border:1px solid rgba(255,255,255,.14);
@@ -142,7 +130,6 @@
       flex:0 0 auto;
     }
     .flagBox img{width:100%; height:100%; object-fit:cover}
-
     .battleWrap{height:580px; border-radius:18px; overflow:hidden; position:relative}
     .battleHud{
       position:absolute; left:12px; top:12px; right:12px; display:flex; justify-content:space-between; gap:10px;
@@ -222,6 +209,7 @@
       <div class="muted small">
         Kurallar: Savaş ilanı sonrası <b>20 gün ateşkes</b>.
         Yeni savaş için <b>10 gün bekleme</b>.
+        Bot saldırısı: <b>25 günde bir şans</b>.
         1 gün = 1 saniye.
       </div>
     </div>
@@ -247,7 +235,7 @@
           <span class="chip">Zaman: 1gün=1sn</span>
         </div>
         <div class="muted small" style="margin-top:6px">
-          Eyalete tıkla → ülke seçilir. Komşuysa savaş ilan edebilirsin.
+          Eyalete tıkla → ülke seçilir. Komşuysa “Savaş İlan Et” aktif olur.
         </div>
       </div>
     </div>
@@ -337,7 +325,7 @@
 
       <div class="battleHud">
         <div class="box">
-          <div class="muted small">Sen</div>
+          <div class="muted small" id="uiRoleYou">Sen</div>
           <div style="display:flex; align-items:center; gap:8px">
             <span class="flagBox" style="width:38px;height:28px"><img id="uiFlagYou" alt=""></span>
             <b id="uiBattleYou">—</b>
@@ -346,7 +334,7 @@
           <div class="muted small">Kalan Depo: <b id="uiYouPool">—</b></div>
         </div>
         <div class="box" style="text-align:right">
-          <div class="muted small">Düşman</div>
+          <div class="muted small" id="uiRoleEnemy">Düşman</div>
           <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px">
             <b id="uiBattleEnemy">—</b>
             <span class="flagBox" style="width:38px;height:28px"><img id="uiFlagEnemy" alt=""></span>
@@ -360,29 +348,29 @@
     </div>
 
     <div class="muted small" style="margin-top:10px">
-      Savaş sonu: <b>sadece yaşayan birimler</b> envantere döner.
-      Kazanan: <b>+2000 altın + 1 eyalet</b>.
-      Kaybeden: <b>-450 altın (haraç)</b> (0 altına düşmez).
+      Savaş sonu: <b>sadece yaşayan birimler</b> envantere döner.<br>
+      Kazanan: <b>+2000 altın + (kaybedenden 450 altın)</b> + 1 eyalet.<br>
+      Kaybeden: <b>-450 altın</b> (0 altına düşmez).
     </div>
   </div>
 </div>
 
 <script>
-// GAME MODE
-const GAME_MODE = "SINGLE";
-
-// NETWORK PLACEHOLDER
-const SERVER_ENABLED = false;
-
 (() => {
-
+  /*************************
+   * CONFIG
+   *************************/
   const START_GOLD = 5000;
   const WAR_COOLDOWN = 10;
   const ARMISTICE_DAYS = 20;
-  const NEWS_QUEUE_MAX = 6;
 
-  const WIN_GOLD = 2000; // attacker-win bonus (WAR only)
-  const LOSE_GOLD = 450; // tribute transfer (clamped at 0)
+  const WIN_GOLD = 2000;    // “ülke geliri / maden / halk”
+  const TRIBUTE = 450;      // kaybedenden kazanana transfer (min 0)
+
+  const BOT_DEFENSE_PERIOD = 25;  // botlar 25 günde bir “saldırı fırsatı”
+  const BOT_ATTACK_CHANCE = 0.35; // o gün geldiğinde saldırma ihtimali
+
+  const NEWS_QUEUE_MAX = 6;
 
   const COUNTRY_NAMES = [
     "Alderyn","Varkûn","Solmara","Kryth",
@@ -465,7 +453,7 @@ const SERVER_ENABLED = false;
   }
 
   /*************************
-   * FLAGS (paint-like)
+   * FLAGS
    *************************/
   function genFlagDataURL(countryId){
     const r = mulberry32(1000 + countryId*97);
@@ -555,53 +543,8 @@ const SERVER_ENABLED = false;
   }
 
   /*************************
-   * ADIM 2: CANVAS CARD ART (paint-like)
+   * CANVAS CARD ART + UNIT ICON
    *************************/
-  function genCardArt(unitId){
-    const u = UNITS.find(x=>x.id===unitId);
-    const c = document.createElement("canvas");
-    c.width = 96; c.height = 96;
-    const ctx = c.getContext("2d");
-
-    // background gradient
-    const g = ctx.createLinearGradient(0,0,96,96);
-    g.addColorStop(0,"rgba(77,212,255,.95)");
-    g.addColorStop(1,"rgba(255,92,122,.90)");
-    ctx.fillStyle = g;
-    roundRect(ctx, 6,6,84,84,18, true, false);
-
-    // frame
-    ctx.strokeStyle = "rgba(255,255,255,.22)";
-    ctx.lineWidth = 2;
-    roundRect(ctx, 6,6,84,84,18, false, true);
-
-    // inner panel
-    ctx.fillStyle = "rgba(0,0,0,.18)";
-    roundRect(ctx, 14,14,68,52,14, true, false);
-
-    // draw mini soldier icon in panel
-    drawUnitIcon(ctx, unitId, 48, 40, 1.0);
-
-    // label bar
-    ctx.fillStyle = "rgba(0,0,0,.25)";
-    roundRect(ctx, 14,70,68,14,9, true, false);
-
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = "bold 12px system-ui";
-    ctx.textAlign="center"; ctx.textBaseline="middle";
-    ctx.fillText((u.name.length>10?u.name.slice(0,10)+"…":u.name), 48, 77);
-
-    // tiny stats dots (paint effect)
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = "#000";
-    for(let i=0;i<140;i++){
-      ctx.fillRect(Math.floor(Math.random()*96), Math.floor(Math.random()*96), 1, 1);
-    }
-    ctx.globalAlpha = 1;
-
-    return c.toDataURL("image/png");
-  }
-
   function roundRect(ctx, x, y, w, h, r, fill, stroke){
     const rr = Math.min(r, w/2, h/2);
     ctx.beginPath();
@@ -615,31 +558,19 @@ const SERVER_ENABLED = false;
     if(stroke) ctx.stroke();
   }
 
-  /*************************
-   * ADIM 2: CANVAS UNIT (NOT SQUARE)
-   *************************/
   function drawUnitIcon(ctx, unitId, cx, cy, scale=1){
-    // simple silhouette style per unit
     ctx.save();
     ctx.translate(cx, cy);
     ctx.scale(scale, scale);
 
-    // body base
     ctx.fillStyle = "rgba(255,255,255,.90)";
     ctx.strokeStyle = "rgba(0,0,0,.35)";
     ctx.lineWidth = 2;
 
-    const drawHead = () => {
-      ctx.beginPath();
-      ctx.arc(0, -12, 7, 0, Math.PI*2);
-      ctx.fill();
-      ctx.stroke();
-    };
-    const drawTorso = () => {
-      roundRect(ctx, -10, -6, 20, 22, 6, true, true);
-    };
+    const head = () => { ctx.beginPath(); ctx.arc(0,-12,7,0,Math.PI*2); ctx.fill(); ctx.stroke(); };
+    const torso = () => { roundRect(ctx,-10,-6,20,22,6,true,true); };
 
-    const drawShield = () => {
+    const shield = () => {
       ctx.fillStyle = "rgba(255,209,102,.90)";
       ctx.beginPath();
       ctx.moveTo(14, -2);
@@ -651,110 +582,117 @@ const SERVER_ENABLED = false;
       ctx.fillStyle = "rgba(255,255,255,.90)";
     };
 
-    const drawSpear = () => {
+    const spear = () => {
       ctx.strokeStyle = "rgba(255,255,255,.90)";
       ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(-18, 20);
-      ctx.lineTo(18, -18);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-18,20); ctx.lineTo(18,-18); ctx.stroke();
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(18, -18);
-      ctx.lineTo(26, -22);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(18,-18); ctx.lineTo(26,-22); ctx.stroke();
       ctx.strokeStyle = "rgba(0,0,0,.35)";
       ctx.lineWidth = 2;
     };
 
-    const drawBow = () => {
-      ctx.strokeStyle = "rgba(255,209,102,.95)";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(-18, 4, 14, -Math.PI/2, Math.PI/2);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(255,255,255,.85)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-18, -10);
-      ctx.lineTo(-18, 18);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(0,0,0,.35)";
-      ctx.lineWidth = 2;
+    const bow = () => {
+      ctx.strokeStyle="rgba(255,209,102,.95)";
+      ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(-18,4,14,-Math.PI/2,Math.PI/2); ctx.stroke();
+      ctx.strokeStyle="rgba(255,255,255,.85)";
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(-18,-10); ctx.lineTo(-18,18); ctx.stroke();
+      ctx.strokeStyle="rgba(0,0,0,.35)";
+      ctx.lineWidth=2;
     };
 
-    const drawGun = () => {
-      ctx.fillStyle = "rgba(255,255,255,.85)";
-      roundRect(ctx, -28, 2, 28, 6, 3, true, true);
-      roundRect(ctx, -12, 8, 10, 10, 3, true, true);
-      ctx.fillStyle = "rgba(255,255,255,.90)";
+    const gun = () => {
+      ctx.fillStyle="rgba(255,255,255,.85)";
+      roundRect(ctx,-28,2,28,6,3,true,true);
+      roundRect(ctx,-12,8,10,10,3,true,true);
+      ctx.fillStyle="rgba(255,255,255,.90)";
     };
 
-    const drawCannon = () => {
-      ctx.fillStyle = "rgba(255,255,255,.85)";
-      roundRect(ctx, -28, 2, 34, 10, 5, true, true);
-      // wheels
-      ctx.beginPath(); ctx.arc(-18, 18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0, 18, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "rgba(255,255,255,.90)";
+    const cannon = () => {
+      ctx.fillStyle="rgba(255,255,255,.85)";
+      roundRect(ctx,-28,2,34,10,5,true,true);
+      ctx.beginPath(); ctx.arc(-18,18,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,18,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle="rgba(255,255,255,.90)";
     };
 
-    const drawGrenade = () => {
-      ctx.fillStyle = "rgba(255,92,122,.85)";
-      ctx.beginPath(); ctx.arc(-18, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "rgba(255,255,255,.90)";
+    const grenade = () => {
+      ctx.fillStyle="rgba(255,92,122,.85)";
+      ctx.beginPath(); ctx.arc(-18,10,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle="rgba(255,255,255,.90)";
     };
 
-    // base person
-    drawHead();
-    drawTorso();
+    head(); torso();
 
-    // weapon by type
-    if(unitId==="infantry"){
-      drawShield();
-    } else if(unitId==="spearman"){
-      drawSpear();
-    } else if(unitId==="archer"){
-      drawBow();
-    } else if(unitId==="crossbow"){
-      drawBow();
-      drawGun();
-    } else if(unitId==="musketeer" || unitId==="rifleman"){
-      drawGun();
-    } else if(unitId==="grenadier"){
-      drawGrenade();
-      drawGun();
-    } else if(unitId==="cannon"){
-      drawCannon();
-    } else if(unitId==="cavalry"){
-      // horse hint
-      ctx.fillStyle = "rgba(255,255,255,.25)";
-      roundRect(ctx, -18, 18, 36, 10, 6, true, false);
-      ctx.fillStyle = "rgba(255,255,255,.90)";
-      drawSpear();
-    } else if(unitId==="scout"){
-      // cloak
-      ctx.fillStyle = "rgba(77,212,255,.35)";
-      ctx.beginPath();
-      ctx.moveTo(-12, -2); ctx.lineTo(0, 24); ctx.lineTo(12, -2); ctx.closePath();
+    if(unitId==="infantry"){ shield(); }
+    else if(unitId==="spearman"){ spear(); }
+    else if(unitId==="archer"){ bow(); }
+    else if(unitId==="crossbow"){ bow(); gun(); }
+    else if(unitId==="musketeer" || unitId==="rifleman"){ gun(); }
+    else if(unitId==="grenadier"){ grenade(); gun(); }
+    else if(unitId==="cannon"){ cannon(); }
+    else if(unitId==="cavalry"){
+      ctx.fillStyle="rgba(255,255,255,.25)";
+      roundRect(ctx,-18,18,36,10,6,true,false);
+      ctx.fillStyle="rgba(255,255,255,.90)";
+      spear();
+    }
+    else if(unitId==="scout"){
+      ctx.fillStyle="rgba(77,212,255,.35)";
+      ctx.beginPath(); ctx.moveTo(-12,-2); ctx.lineTo(0,24); ctx.lineTo(12,-2); ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "rgba(255,255,255,.90)";
-      drawBow();
+      ctx.fillStyle="rgba(255,255,255,.90)";
+      bow();
     }
 
     ctx.restore();
+  }
+
+  function genCardArt(unitId){
+    const u = UNITS.find(x=>x.id===unitId);
+    const c = document.createElement("canvas");
+    c.width=96; c.height=96;
+    const ctx=c.getContext("2d");
+
+    const g = ctx.createLinearGradient(0,0,96,96);
+    g.addColorStop(0,"rgba(77,212,255,.95)");
+    g.addColorStop(1,"rgba(255,92,122,.90)");
+    ctx.fillStyle=g;
+    roundRect(ctx,6,6,84,84,18,true,false);
+
+    ctx.strokeStyle="rgba(255,255,255,.22)";
+    ctx.lineWidth=2;
+    roundRect(ctx,6,6,84,84,18,false,true);
+
+    ctx.fillStyle="rgba(0,0,0,.18)";
+    roundRect(ctx,14,14,68,52,14,true,false);
+
+    drawUnitIcon(ctx, unitId, 48, 40, 1.0);
+
+    ctx.fillStyle="rgba(0,0,0,.25)";
+    roundRect(ctx,14,70,68,14,9,true,false);
+
+    ctx.fillStyle="rgba(255,255,255,.92)";
+    ctx.font="bold 12px system-ui";
+    ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillText((u.name.length>10?u.name.slice(0,10)+"…":u.name), 48, 77);
+
+    ctx.globalAlpha=0.25;
+    ctx.fillStyle="#000";
+    for(let i=0;i<140;i++) ctx.fillRect(Math.floor(Math.random()*96),Math.floor(Math.random()*96),1,1);
+    ctx.globalAlpha=1;
+
+    return c.toDataURL("image/png");
   }
 
   /*************************
    * HEX MAP: Europe-like + CONNECTED 60 + contiguous countries
    *************************/
   function keyQR(q,r){ return q + "," + r; }
-
   function axialToPixel(q,r,size){
-    return {
-      x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r),
-      y: size * (3/2 * r),
-    };
+    return { x: size * (Math.sqrt(3) * q + Math.sqrt(3)/2 * r), y: size * (3/2 * r) };
   }
   function axialNeighbors(q,r){
     return [
@@ -771,38 +709,22 @@ const SERVER_ENABLED = false;
   }
 
   function genEuropeHexPool(){
-    const R = 7;
+    const R=7;
     const pool=[];
     for(let q=-R;q<=R;q++){
       const r1=Math.max(-R, -q-R);
       const r2=Math.min(R, -q+R);
       for(let r=r1;r<=r2;r++){
-        const dist = (Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2;
-        if(dist > 7) continue;
+        const dist=(Math.abs(q)+Math.abs(r)+Math.abs(q+r))/2;
+        if(dist>7) continue;
 
-        let keep = true;
-
-        // Atlantic west cut
-        if(q < -5 && r > -2) keep = false;
-
-        // North sea / Baltic carve
-        if(q < -1 && q > -5 && r < -1 && r > -4) keep = keep && (Math.random() > 0.15);
-
-        // Scandinavia extension
-        if(r < -4 && q > -2) keep = true;
-
-        // Mediterranean thinning
-        if(r > 4 && Math.abs(q) > 2) keep = false;
-
-        // Iberia bump
-        if(q < -3 && r > 2) keep = true;
-
-        // East extension
-        if(q > 4 && r < 2) keep = true;
-
-        // Italy tail
-        if(q > 1 && q < 4 && r > 3) keep = keep && (Math.abs(q-2) + Math.abs(r-5) < 3);
-
+        let keep=true;
+        if(q < -5 && r > -2) keep=false;              // Atlantic cut
+        if(r > 4 && Math.abs(q) > 2) keep=false;      // Mediterranean thinning
+        if(q > 4 && r < 2) keep=true;                 // East extension
+        if(q < -3 && r > 2) keep=true;                // Iberia bump
+        if(r < -4 && q > -2) keep=true;               // Scandinavia extension
+        if(q > 1 && q < 4 && r > 3) keep = keep && (Math.abs(q-2)+Math.abs(r-5) < 3); // Italy tail
         if(keep) pool.push({q,r});
       }
     }
@@ -810,37 +732,26 @@ const SERVER_ENABLED = false;
   }
 
   function pickConnected60(pool){
-    const set = new Set(pool.map(h=>keyQR(h.q,h.r)));
-    let start = pool.find(h=>h.q===0 && h.r===0);
-    if(!start){
-      let best=pool[0], bestD=1e18;
-      for(const h of pool){
-        const d = h.q*h.q + h.r*h.r;
-        if(d<bestD){ bestD=d; best=h; }
-      }
-      start = best;
-    }
+    const set=new Set(pool.map(h=>keyQR(h.q,h.r)));
+    let start=pool.find(h=>h.q===0 && h.r===0) || pool[0];
 
-    const out=[];
-    const seen=new Set();
-    const q=[start];
+    const out=[], seen=new Set(), q=[start];
     seen.add(keyQR(start.q,start.r));
 
     while(q.length && out.length<60){
-      const cur = q.shift();
+      const cur=q.shift();
       out.push(cur);
       for(const nb of axialNeighbors(cur.q,cur.r)){
-        const k = keyQR(nb.q,nb.r);
+        const k=keyQR(nb.q,nb.r);
         if(seen.has(k)) continue;
         if(!set.has(k)) continue;
         seen.add(k);
         q.push(nb);
       }
     }
-
     if(out.length<60){
-      const remain = pool.filter(h=>!seen.has(keyQR(h.q,h.r)));
-      remain.sort((a,b)=> (a.q*a.q+a.r*a.r) - (b.q*b.q+b.r*b.r));
+      const remain=pool.filter(h=>!seen.has(keyQR(h.q,h.r)));
+      remain.sort((a,b)=>(a.q*a.q+a.r*a.r)-(b.q*b.q+b.r*b.r));
       while(out.length<60 && remain.length) out.push(remain.shift());
     }
     return out.slice(0,60);
@@ -849,7 +760,7 @@ const SERVER_ENABLED = false;
   function assignCountriesContiguous(hexes, countryCount=20, perCountry=3){
     const byQR = new Map(hexes.map(h=>[keyQR(h.q,h.r), h.id]));
     const neighIds = (hid)=>{
-      const h = hexes[hid];
+      const h=hexes[hid];
       const out=[];
       for(const nb of axialNeighbors(h.q,h.r)){
         const id = byQR.get(keyQR(nb.q,nb.r));
@@ -858,23 +769,21 @@ const SERVER_ENABLED = false;
       return out;
     };
 
-    // seeds spaced out
-    const free = new Set(hexes.map(h=>h.id));
+    const free=new Set(hexes.map(h=>h.id));
     const seeds=[];
-    let first = hexes.reduce((best,h)=>{
+    const first = hexes.reduce((best,h)=>{
       const d=h.q*h.q+h.r*h.r;
-      return d < (best.d??1e18) ? {h, d} : best;
-    }, {}).h;
-    seeds.push(first.id);
-    free.delete(first.id);
+      return d < (best.d??1e18) ? {h,d} : best;
+    },{}).h;
+    seeds.push(first.id); free.delete(first.id);
 
-    while(seeds.length < countryCount){
+    while(seeds.length<countryCount){
       let bestId=null, bestScore=-1;
       for(const hid of free){
-        const a = hexes[hid];
+        const a=hexes[hid];
         let minD=1e18;
         for(const sid of seeds){
-          const b = hexes[sid];
+          const b=hexes[sid];
           const d=(a.q-b.q)*(a.q-b.q)+(a.r-b.r)*(a.r-b.r);
           if(d<minD) minD=d;
         }
@@ -884,13 +793,11 @@ const SERVER_ENABLED = false;
       free.delete(bestId);
     }
 
-    for(const h of hexes) h.countryId = -1;
-    for(let cid=0; cid<countryCount; cid++){
-      hexes[seeds[cid]].countryId = cid;
-    }
+    for(const h of hexes) h.countryId=-1;
+    for(let cid=0;cid<countryCount;cid++) hexes[seeds[cid]].countryId=cid;
 
-    for(let step=1; step<perCountry; step++){
-      for(let cid=0; cid<countryCount; cid++){
+    for(let step=1;step<perCountry;step++){
+      for(let cid=0;cid<countryCount;cid++){
         const owned = hexes.filter(h=>h.countryId===cid).map(h=>h.id);
         const frontier=[];
         for(const hid of owned){
@@ -898,54 +805,76 @@ const SERVER_ENABLED = false;
             if(hexes[nb].countryId===-1) frontier.push(nb);
           }
         }
-
         let chosen=null;
         if(frontier.length){
-          const seedH = hexes[seeds[cid]];
+          const seedH=hexes[seeds[cid]];
           frontier.sort((a,b)=>{
             const A=hexes[a], B=hexes[b];
-            const da=(A.q-seedH.q)*(A.q-seedH.q)+(A.r-seedH.r)*(A.r-seedH.r);
-            const db=(B.q-seedH.q)*(B.q-seedH.q)+(B.r-seedH.r)*(B.r-seedH.r);
+            const da=(A.q-seedH.q)**2+(A.r-seedH.r)**2;
+            const db=(B.q-seedH.q)**2+(B.r-seedH.r)**2;
             return da-db;
           });
-          chosen = frontier[0];
+          chosen=frontier[0];
         } else {
-          // fallback
-          const anyFree = hexes.find(h=>h.countryId===-1);
-          if(anyFree) chosen = anyFree.id;
+          const anyFree=hexes.find(h=>h.countryId===-1);
+          if(anyFree) chosen=anyFree.id;
         }
-
-        if(chosen!=null) hexes[chosen].countryId = cid;
+        if(chosen!=null) hexes[chosen].countryId=cid;
       }
     }
   }
 
+  function rebuildNeighbors(){
+    const neighbors = Array.from({length:20}, ()=>new Set());
+    const byQR = state.map.byQR;
+
+    function neighborsOfHex(h){
+      const out=[];
+      for(const nb of axialNeighbors(h.q,h.r)){
+        const id=byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null) out.push(state.map.hexes[id]);
+      }
+      return out;
+    }
+
+    for(const h of state.map.hexes){
+      for(const other of neighborsOfHex(h)){
+        if(other.countryId!==h.countryId){
+          neighbors[h.countryId].add(other.countryId);
+        }
+      }
+    }
+    state.map.neighbors = neighbors;
+  }
+
+  function areNeighbors(a,b){
+    if(a==null||b==null) return false;
+    return state.map.neighbors[a].has(b);
+  }
+
   function genHexEurope60(){
-    const size = state.map.hexSize;
-    const pool = genEuropeHexPool();
-    const land60 = pickConnected60(pool);
+    const size=state.map.hexSize;
+    const pool=genEuropeHexPool();
+    const land60=pickConnected60(pool);
 
     state.map.hexes = land60.map((h,i)=>{
-      const p = axialToPixel(h.q,h.r,size);
+      const p=axialToPixel(h.q,h.r,size);
       return { id:i, q:h.q, r:h.r, x:p.x, y:p.y, countryId:-1, stateId:i };
     });
 
     state.map.byQR = new Map();
     for(const h of state.map.hexes) state.map.byQR.set(keyQR(h.q,h.r), h.id);
 
-    // countries init
-    state.countries = [];
+    state.countries=[];
     for(let i=0;i<20;i++){
       state.countries.push({
-        id:i,
-        name:COUNTRY_NAMES[i],
-        gold: START_GOLD,
-        allyId: null,
-        inventory: Object.fromEntries(UNITS.map(u=>[u.id,0])),
-        states: [],
-        armistice: new Map(),
-        lastWarDay: -999,
-        passage: new Set(),
+        id:i, name:COUNTRY_NAMES[i], gold:START_GOLD,
+        allyId:null,
+        inventory:Object.fromEntries(UNITS.map(u=>[u.id,0])),
+        states:[],
+        armistice:new Map(),
+        lastWarDay:-999,
+        passage:new Set(),
       });
     }
 
@@ -957,15 +886,12 @@ const SERVER_ENABLED = false;
       c.inventory.scout += 2;
     }
 
-    // assign contiguous 3 hex per country
     assignCountriesContiguous(state.map.hexes, 20, 3);
 
-    // states + country state lists
-    state.states = [];
-    for(const c of state.countries) c.states = [];
-
-    for(let sid=0; sid<60; sid++){
-      const owner = state.map.hexes[sid].countryId;
+    state.states=[];
+    for(const c of state.countries) c.states=[];
+    for(let sid=0;sid<60;sid++){
+      const owner=state.map.hexes[sid].countryId;
       state.states.push({ id:sid, countryId:owner, name:`${COUNTRY_NAMES[owner]}-${(state.countries[owner].states.length+1)}` });
       state.countries[owner].states.push(sid);
     }
@@ -974,23 +900,12 @@ const SERVER_ENABLED = false;
   }
 
   /*************************
-   * MAP VIEW (zoom/pan)
+   * MAP VIEW
    *************************/
   const mapView = {
-    scale: 1.0,
-    ox: 0,
-    oy: 0,
-    dragging: false,
-    lastX: 0,
-    lastY: 0,
-    reset(){
-      this.scale = 1.0;
-      this.ox = 0;
-      this.oy = 0;
-    },
-    screenToWorld(px,py){
-      return { x:(px - this.ox)/this.scale, y:(py - this.oy)/this.scale };
-    }
+    scale:1.0, ox:0, oy:0, dragging:false, lastX:0, lastY:0,
+    reset(){ this.scale=1.0; this.ox=0; this.oy=0; },
+    screenToWorld(px,py){ return { x:(px-this.ox)/this.scale, y:(py-this.oy)/this.scale }; }
   };
 
   function resizeCanvas(){
@@ -1014,42 +929,37 @@ const SERVER_ENABLED = false;
   window.addEventListener("resize", resizeCanvas);
 
   function countryColor(cid){
-    const hue = (cid * 23) % 360;
+    const hue=(cid*23)%360;
     return `hsl(${hue},70%,52%)`;
   }
 
   function drawMap(){
     const rect = mapCanvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
+    const w=rect.width, h=rect.height;
     mapCtx.clearRect(0,0,w,h);
 
-    // sea background
     const g = mapCtx.createLinearGradient(0,0,w,h);
     g.addColorStop(0,"rgba(8,16,40,.95)");
     g.addColorStop(1,"rgba(6,10,28,.98)");
-    mapCtx.fillStyle = g;
+    mapCtx.fillStyle=g;
     mapCtx.fillRect(0,0,w,h);
 
-    // stars
-    mapCtx.globalAlpha = 0.10;
-    mapCtx.fillStyle = "#b9d0ff";
+    mapCtx.globalAlpha=0.10;
+    mapCtx.fillStyle="#b9d0ff";
     for(let i=0;i<200;i++){
-      const x = (i*73)%w;
-      const y = (i*119)%h;
+      const x=(i*73)%w, y=(i*119)%h;
       mapCtx.fillRect(x,y,1,1);
     }
-    mapCtx.globalAlpha = 1;
+    mapCtx.globalAlpha=1;
 
     mapCtx.save();
     mapCtx.translate(mapView.ox, mapView.oy);
     mapCtx.scale(mapView.scale, mapView.scale);
 
-    const cx = (w/2)/mapView.scale;
-    const cy = (h/2)/mapView.scale;
+    const cx=(w/2)/mapView.scale;
+    const cy=(h/2)/mapView.scale;
+    const size=state.map.hexSize;
 
-    const size = state.map.hexSize;
-
-    // hex draw
     for(const hx of state.map.hexes){
       const pts = hexCorners(hx.x+cx, hx.y+cy, size);
       mapCtx.beginPath();
@@ -1060,61 +970,55 @@ const SERVER_ENABLED = false;
       mapCtx.fillStyle = countryColor(hx.countryId);
       mapCtx.fill();
 
-      mapCtx.lineWidth = 2;
-      mapCtx.strokeStyle = "rgba(0,0,0,.35)";
+      mapCtx.lineWidth=2;
+      mapCtx.strokeStyle="rgba(0,0,0,.35)";
       mapCtx.stroke();
 
       if(state.selectedStateId === hx.stateId){
-        mapCtx.lineWidth = 4;
-        mapCtx.strokeStyle = "rgba(255,255,255,.85)";
+        mapCtx.lineWidth=4;
+        mapCtx.strokeStyle="rgba(255,255,255,.85)";
         mapCtx.stroke();
       }
     }
 
-    // labels smaller + centered
-    mapCtx.font = "10px system-ui";
-    mapCtx.textAlign = "center";
-    mapCtx.textBaseline = "middle";
-    mapCtx.globalAlpha = 0.80;
-    mapCtx.lineWidth = 3;
-    mapCtx.strokeStyle = "rgba(0,0,0,.65)";
-    mapCtx.fillStyle = "rgba(255,255,255,.88)";
+    mapCtx.font="10px system-ui";
+    mapCtx.textAlign="center";
+    mapCtx.textBaseline="middle";
+    mapCtx.globalAlpha=0.80;
+    mapCtx.lineWidth=3;
+    mapCtx.strokeStyle="rgba(0,0,0,.65)";
+    mapCtx.fillStyle="rgba(255,255,255,.88)";
 
-    for(let cid=0; cid<20; cid++){
-      const list = state.map.hexes.filter(hx=>hx.countryId===cid);
+    for(let cid=0;cid<20;cid++){
+      const list=state.map.hexes.filter(hx=>hx.countryId===cid);
       if(!list.length) continue;
-      const mx = list.reduce((a,hx)=>a+hx.x,0)/list.length + cx;
-      const my = list.reduce((a,hx)=>a+hx.y,0)/list.length + cy;
-      const name = state.countries[cid]?.name ?? "";
+      const mx=list.reduce((a,hx)=>a+hx.x,0)/list.length + cx;
+      const my=list.reduce((a,hx)=>a+hx.y,0)/list.length + cy;
+      const name=state.countries[cid]?.name ?? "";
       mapCtx.strokeText(name, mx, my);
       mapCtx.fillText(name, mx, my);
     }
-    mapCtx.globalAlpha = 1;
-
+    mapCtx.globalAlpha=1;
     mapCtx.restore();
   }
 
   function hitTest(px,py){
-    const rect = mapCanvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
-    const p = mapView.screenToWorld(px,py);
-
-    const cx = (w/2)/mapView.scale;
-    const cy = (h/2)/mapView.scale;
-
-    const wx = p.x - cx;
-    const wy = p.y - cy;
+    const rect=mapCanvas.getBoundingClientRect();
+    const w=rect.width, h=rect.height;
+    const p=mapView.screenToWorld(px,py);
+    const cx=(w/2)/mapView.scale;
+    const cy=(h/2)/mapView.scale;
+    const wx=p.x - cx;
+    const wy=p.y - cy;
 
     let best=null, bestD=1e18;
     for(const hx of state.map.hexes){
-      const dx = wx - hx.x, dy = wy - hx.y;
-      const d = dx*dx + dy*dy;
+      const dx=wx-hx.x, dy=wy-hx.y;
+      const d=dx*dx+dy*dy;
       if(d<bestD){ bestD=d; best=hx; }
     }
     const maxD = (state.map.hexSize*state.map.hexSize*1.8);
-    if(best && bestD<=maxD){
-      return {sea:false, stateId: best.stateId, countryId: best.countryId};
-    }
+    if(best && bestD<=maxD) return {sea:false, stateId:best.stateId, countryId:best.countryId};
     return {sea:true};
   }
 
@@ -1122,12 +1026,12 @@ const SERVER_ENABLED = false;
    * UI BUILDERS
    *************************/
   function buildShop(){
-    const grid = $("#shopGrid");
-    grid.innerHTML = "";
+    const grid=$("#shopGrid");
+    grid.innerHTML="";
     for(const u of UNITS){
-      const card = document.createElement("div");
-      card.className = "unitCard";
-      card.innerHTML = `
+      const card=document.createElement("div");
+      card.className="unitCard";
+      card.innerHTML=`
         <div class="unitImg"><img alt="" src="${state.cardImages[u.id]}"></div>
         <div class="unitMeta">
           <div class="name">${u.name}</div>
@@ -1137,35 +1041,35 @@ const SERVER_ENABLED = false;
         </div>
         <button class="btn good" style="padding:7px 10px" ${state.playerCountryId==null ? "disabled":""}>Al</button>
       `;
-      card.querySelector("button").onclick = () => buyUnit(u.id);
+      card.querySelector("button").onclick=()=>buyUnit(u.id);
       grid.appendChild(card);
     }
   }
 
   function buildArmyList(){
-    const el = $("#armyList");
-    el.innerHTML = "";
-    const youId = state.playerCountryId;
-    if(youId == null){
-      el.innerHTML = `<div class="muted small">Ülke seçilmedi.</div>`;
+    const el=$("#armyList");
+    el.innerHTML="";
+    const youId=state.playerCountryId;
+    if(youId==null){
+      el.innerHTML=`<div class="muted small">Ülke seçilmedi.</div>`;
       return;
     }
-    const you = getCountry(youId);
+    const you=getCountry(youId);
     for(const u of UNITS){
-      const row = document.createElement("div");
-      row.className = "kv";
-      row.innerHTML = `<span class="muted">${u.name}</span><b>${you.inventory[u.id]||0}</b>`;
+      const row=document.createElement("div");
+      row.className="kv";
+      row.innerHTML=`<span class="muted">${u.name}</span><b>${you.inventory[u.id]||0}</b>`;
       el.appendChild(row);
     }
   }
 
   function buildCountryPicker(){
-    const grid = $("#countryGrid");
-    grid.innerHTML = "";
+    const grid=$("#countryGrid");
+    grid.innerHTML="";
     for(const c of state.countries){
-      const btn = document.createElement("div");
-      btn.className = "countryBtn";
-      btn.innerHTML = `
+      const btn=document.createElement("div");
+      btn.className="countryBtn";
+      btn.innerHTML=`
         <div style="display:flex;align-items:center;gap:10px">
           <span class="flagBox"><img alt="" src="${state.flags[c.id]}"></span>
           <div>
@@ -1175,7 +1079,7 @@ const SERVER_ENABLED = false;
         </div>
         <div class="muted small">Seç</div>
       `;
-      btn.onclick = () => choosePlayerCountry(c.id);
+      btn.onclick=()=>choosePlayerCountry(c.id);
       grid.appendChild(btn);
     }
   }
@@ -1191,10 +1095,16 @@ const SERVER_ENABLED = false;
 
     const enabled = (state.playerCountryId!=null);
     $("#btnPause").disabled = !enabled;
-    $("#btnDeclareWar").disabled = !enabled;
-    $("#btnOfferAlliance").disabled = !enabled;
+
+    // Diplomasi butonları
+    const targetOk = enabled && state.selectedCountryId!=null && state.selectedCountryId!==state.playerCountryId;
+    $("#btnOfferAlliance").disabled = !targetOk;
     $("#btnBreakAlliance").disabled = !enabled;
-    $("#btnRequestPassage").disabled = !enabled;
+    $("#btnRequestPassage").disabled = !targetOk;
+
+    // WAR butonu: gerçekten savaş açılabiliyorsa aktif et
+    const warOk = targetOk && canDeclareWar(state.playerCountryId, state.selectedCountryId).ok;
+    $("#btnDeclareWar").disabled = !warOk;
 
     $("#btnPause").textContent = state.running ? "Duraklat" : "Devam";
   }
@@ -1202,42 +1112,14 @@ const SERVER_ENABLED = false;
   /*************************
    * RULES
    *************************/
-  function rebuildNeighbors(){
-    const neighbors = Array.from({length:20}, ()=>new Set());
-    const byQR = state.map.byQR;
-
-    function neighborsOfHex(h){
-      const out=[];
-      for(const nb of axialNeighbors(h.q,h.r)){
-        const id = byQR.get(keyQR(nb.q,nb.r));
-        if(id!=null) out.push(state.map.hexes[id]);
-      }
-      return out;
-    }
-
-    for(const h of state.map.hexes){
-      for(const other of neighborsOfHex(h)){
-        if(other.countryId!==h.countryId){
-          neighbors[h.countryId].add(other.countryId);
-        }
-      }
-    }
-    state.map.neighbors = neighbors;
-  }
-
-  function areNeighbors(a,b){
-    if(a==null||b==null) return false;
-    return state.map.neighbors[a].has(b);
-  }
-
   function canDeclareWar(youId, targetId){
-    const you = getCountry(youId);
-    const target = getCountry(targetId);
+    const you=getCountry(youId);
+    const target=getCountry(targetId);
     if(!you || !target) return {ok:false, reason:"Ülke seçili değil."};
     if(youId===targetId) return {ok:false, reason:"Kendine savaş açamazsın."};
 
     if(!areNeighbors(youId,targetId) && !you.passage.has(targetId)){
-      return {ok:false, reason:"Sadece komşuya savaş açılır. Uzaksa geçiş izni lazım."};
+      return {ok:false, reason:"Sadece komşuya savaş açılır. (Uzaksa geçiş izni lazım.)"};
     }
     if(state.day - you.lastWarDay < WAR_COOLDOWN){
       return {ok:false, reason:`Yeni savaş için ${WAR_COOLDOWN} gün beklemelisin.`};
@@ -1250,7 +1132,7 @@ const SERVER_ENABLED = false;
   }
 
   function totalInventory(countryId){
-    const c = getCountry(countryId);
+    const c=getCountry(countryId);
     let sum=0;
     for(const u of UNITS) sum += (c.inventory[u.id]||0);
     return sum;
@@ -1260,14 +1142,14 @@ const SERVER_ENABLED = false;
    * PLAYER ACTIONS
    *************************/
   function choosePlayerCountry(cid){
-    state.playerCountryId = cid;
-    state.selectedCountryId = cid;
-    state.selectedStateId = state.countries[cid].states[0];
+    state.playerCountryId=cid;
+    state.selectedCountryId=cid;
+    state.selectedStateId=state.countries[cid].states[0];
 
-    state.running = true;
-    state.day = Math.max(1, state.day);
+    state.running=true;
+    state.day=Math.max(1,state.day);
 
-    $("#countryOverlay").style.display = "none";
+    $("#countryOverlay").style.display="none";
     pushNews(`Sen "${getCountry(cid).name}" oldun. Zaman başladı.`);
     buildShop();
     buildArmyList();
@@ -1276,328 +1158,278 @@ const SERVER_ENABLED = false;
   }
 
   function buyUnit(unitId){
-    const youId = state.playerCountryId;
+    const youId=state.playerCountryId;
     if(youId==null){ pushNews("Önce ülke seç."); return; }
-    const you = getCountry(youId);
-    const unit = UNITS.find(u=>u.id===unitId);
+    const you=getCountry(youId);
+    const unit=UNITS.find(u=>u.id===unitId);
     if(you.gold < unit.cost){ pushNews("Yetersiz altın."); return; }
     you.gold -= unit.cost;
-    you.inventory[unitId] = (you.inventory[unitId]||0) + 1;
+    you.inventory[unitId]=(you.inventory[unitId]||0)+1;
     pushNews(`${unit.name} satın alındı (+1).`);
-    renderUI();
-    buildArmyList();
-    buildShop();
+    renderUI(); buildArmyList(); buildShop();
   }
 
   function requestPassage(){
-    const youId = state.playerCountryId;
-    const targetId = state.selectedCountryId;
+    const youId=state.playerCountryId;
+    const targetId=state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
     if(youId===targetId){ pushNews("Kendinden geçiş izni istemezsin :)"); return; }
 
-    const you = getCountry(youId);
-    const until = you.armistice.get(targetId) || 0;
-    const accept = (state.day>=until) && Math.random() < (areNeighbors(youId,targetId)?0.62:0.45);
-    if(accept){
-      you.passage.add(targetId);
-      pushNews(`${getCountry(targetId).name} geçiş izni verdi.`);
-    } else {
-      pushNews(`${getCountry(targetId).name} geçiş iznini reddetti.`);
-    }
+    const you=getCountry(youId);
+    const until=you.armistice.get(targetId) || 0;
+    const accept=(state.day>=until) && Math.random() < (areNeighbors(youId,targetId)?0.62:0.45);
+    if(accept){ you.passage.add(targetId); pushNews(`${getCountry(targetId).name} geçiş izni verdi.`); }
+    else pushNews(`${getCountry(targetId).name} geçiş iznini reddetti.`);
     renderUI();
   }
 
   function offerAlliance(){
-    const youId = state.playerCountryId;
-    const targetId = state.selectedCountryId;
+    const youId=state.playerCountryId;
+    const targetId=state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
     if(youId===targetId){ pushNews("Kendinle müttefik olamazsın."); return; }
 
-    const you = getCountry(youId);
-    const target = getCountry(targetId);
+    const you=getCountry(youId), target=getCountry(targetId);
     if(you.allyId!=null){ pushNews("Zaten müttefikin var. Önce boz."); return; }
     if(target.allyId!=null){ pushNews("Hedef ülkenin zaten müttefiki var."); return; }
 
     const p = areNeighbors(youId,targetId) ? 0.62 : 0.38;
     if(Math.random() < p){
-      you.allyId = targetId;
-      target.allyId = youId;
+      you.allyId=targetId; target.allyId=youId;
       pushNews(`${target.name} müttefik teklifini kabul etti.`);
-    } else {
-      pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
-    }
+    } else pushNews(`${target.name} müttefik teklifini reddetti (şimdilik).`);
     renderUI();
   }
 
   function breakAlliance(){
-    const youId = state.playerCountryId;
+    const youId=state.playerCountryId;
     if(youId==null){ pushNews("Önce ülke seç."); return; }
-    const you = getCountry(youId);
+    const you=getCountry(youId);
     if(you.allyId==null){ pushNews("Müttefikin yok."); return; }
-    const ally = getCountry(you.allyId);
-    ally.allyId = null;
-    you.allyId = null;
+    const ally=getCountry(you.allyId);
+    ally.allyId=null; you.allyId=null;
     pushNews("Müttefik bozuldu.");
     renderUI();
   }
 
   function declareWar(){
-    const youId = state.playerCountryId;
-    const targetId = state.selectedCountryId;
+    const youId=state.playerCountryId;
+    const targetId=state.selectedCountryId;
     if(youId==null || targetId==null){ pushNews("Hedef ülke seç."); return; }
 
     const chk = canDeclareWar(youId, targetId);
     if(!chk.ok){ pushNews(chk.reason); return; }
-    startBattle(youId, targetId);
-  }
 
-  /*************************
-   * AI TICK (improved)
-   *************************/
-  function aiDailyTick(){
-    if(state.playerCountryId==null) return;
-
-    for(const c of state.countries){
-      if(c.id === state.playerCountryId) continue;
-
-      // smarter buying: prefer affordable best dmg
-      if(Math.random() < 0.55){
-        const affordable = UNITS.filter(u=>c.gold>=u.cost);
-        if(affordable.length){
-          affordable.sort((a,b)=> (b.dmg/b.cost) - (a.dmg/a.cost));
-          const pickU = (Math.random()<0.70) ? affordable[0] : affordable[Math.floor(Math.random()*Math.min(4,affordable.length))];
-          c.gold -= pickU.cost;
-          c.inventory[pickU.id] = (c.inventory[pickU.id]||0)+1;
-        }
-      }
-
-      // rare AI-AI war
-      if(Math.random() < 0.018){
-        const neigh = Array.from(state.map.neighbors[c.id]);
-        if(neigh.length===0) continue;
-        const t = pick(neigh);
-        if(state.day - c.lastWarDay < WAR_COOLDOWN) continue;
-        const until = c.armistice.get(t) || 0;
-        if(state.day < until) continue;
-
-        const winner = (Math.random()<0.5) ? c.id : t;
-        const loser = (winner===c.id) ? t : c.id;
-        resolveAIAIWar(winner, loser);
-      }
-    }
-  }
-
-  function resolveAIAIWar(winnerId, loserId){
-    const win = getCountry(winnerId);
-    const lose = getCountry(loserId);
-    if(lose.states.length<=0) return;
-
-    const captured = pick(lose.states);
-    transferState(captured, winnerId);
-
-    win.gold += 900;
-
-    win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
-    lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
-    win.lastWarDay = state.day;
-    lose.lastWarDay = state.day;
-
-    pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. 1 eyalet aldı (+900).`);
-    rebuildNeighbors();
-    drawMap();
-    renderUI();
+    // ATTACK: player attacker
+    startBattle({ attackerId: youId, defenderId: targetId, mode: "attack" });
   }
 
   /*************************
    * OWNERSHIP
    *************************/
   function transferState(stateId, newCountryId){
-    const st = getState(stateId);
-    const old = getCountry(st.countryId);
-    const neu = getCountry(newCountryId);
+    const st=getState(stateId);
+    const old=getCountry(st.countryId);
+    const neu=getCountry(newCountryId);
 
     old.states = old.states.filter(x=>x!==stateId);
     neu.states.push(stateId);
 
-    st.countryId = newCountryId;
-    state.map.hexes[stateId].countryId = newCountryId;
+    st.countryId=newCountryId;
+    state.map.hexes[stateId].countryId=newCountryId;
   }
 
   /*************************
    * MAP INPUT
    *************************/
-  mapCanvas.addEventListener("contextmenu", e => e.preventDefault());
+  mapCanvas.addEventListener("contextmenu", e=>e.preventDefault());
   mapCanvas.addEventListener("mousedown",(e)=>{
     if(e.button===2){
-      state.selectedStateId = null;
-      state.selectedCountryId = null;
-      renderUI();
-      drawMap();
+      state.selectedStateId=null;
+      state.selectedCountryId=null;
+      renderUI(); drawMap();
       return;
     }
-    mapView.dragging = true;
-    mapView.lastX = e.clientX;
-    mapView.lastY = e.clientY;
+    mapView.dragging=true;
+    mapView.lastX=e.clientX; mapView.lastY=e.clientY;
   });
   mapCanvas.addEventListener("mousemove",(e)=>{
     if(!mapView.dragging) return;
-    const dx = e.clientX - mapView.lastX;
-    const dy = e.clientY - mapView.lastY;
-    mapView.lastX = e.clientX;
-    mapView.lastY = e.clientY;
-    mapView.ox += dx;
-    mapView.oy += dy;
+    const dx=e.clientX-mapView.lastX;
+    const dy=e.clientY-mapView.lastY;
+    mapView.lastX=e.clientX; mapView.lastY=e.clientY;
+    mapView.ox += dx; mapView.oy += dy;
     drawMap();
   });
-  window.addEventListener("mouseup", ()=> mapView.dragging=false);
+  window.addEventListener("mouseup",()=>mapView.dragging=false);
 
   mapCanvas.addEventListener("wheel",(e)=>{
     e.preventDefault();
-    const delta = -Math.sign(e.deltaY) * 0.10;
-    const old = mapView.scale;
-    const next = clamp(old*(1+delta), 0.65, 3.0);
+    const delta = -Math.sign(e.deltaY)*0.10;
+    const old=mapView.scale;
+    const next=clamp(old*(1+delta),0.65,3.0);
 
-    const rect = mapCanvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-    const before = mapView.screenToWorld(mx,my);
-    mapView.scale = next;
-    const after = mapView.screenToWorld(mx,my);
-    mapView.ox += (after.x - before.x) * mapView.scale;
-    mapView.oy += (after.y - before.y) * mapView.scale;
-
+    const rect=mapCanvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const before=mapView.screenToWorld(mx,my);
+    mapView.scale=next;
+    const after=mapView.screenToWorld(mx,my);
+    mapView.ox += (after.x-before.x)*mapView.scale;
+    mapView.oy += (after.y-before.y)*mapView.scale;
     drawMap();
-  }, {passive:false});
+  },{passive:false});
 
   mapCanvas.addEventListener("click",(e)=>{
-    const rect = mapCanvas.getBoundingClientRect();
-    const hit = hitTest(e.clientX-rect.left, e.clientY-rect.top);
+    const rect=mapCanvas.getBoundingClientRect();
+    const hit=hitTest(e.clientX-rect.left, e.clientY-rect.top);
     if(!hit || hit.sea) return;
-    state.selectedStateId = hit.stateId;
-    state.selectedCountryId = hit.countryId;
+    state.selectedStateId=hit.stateId;
+    state.selectedCountryId=hit.countryId;
     renderUI();
     drawMap();
   });
 
   /*************************
-   * BATTLE SYSTEM
+   * BATTLE SYSTEM (ATTACK + DEF)
    *************************/
   const battleView = { draggingUnit:null };
 
   function pauseForBattle(){
-    // savaş açılınca zaman dursun
     state._wasRunningBeforeBattle = state.running;
-    state.running = false;
-    $("#btnPause").textContent = "Devam";
+    state.running=false;
+    $("#btnPause").textContent="Devam";
   }
   function resumeAfterBattle(){
-    if(state._wasRunningBeforeBattle) state.running = true;
-    state._wasRunningBeforeBattle = false;
+    if(state._wasRunningBeforeBattle) state.running=true;
+    state._wasRunningBeforeBattle=false;
     renderUI();
   }
 
-  function startBattle(attackerId, defenderId){
-    const att = getCountry(attackerId);
-    const def = getCountry(defenderId);
+  // startBattle({attackerId, defenderId, mode:"attack"|"def"})
+  function startBattle(opts){
+    const attackerId=opts.attackerId;
+    const defenderId=opts.defenderId;
+    const mode=opts.mode;
+
+    const att=getCountry(attackerId);
+    const def=getCountry(defenderId);
 
     pauseForBattle();
 
+    // Player role depends on mode:
+    // - attack: player is attacker
+    // - def: player is defender
+    const youId = (mode==="attack") ? attackerId : defenderId;
+    const enemyId = (mode==="attack") ? defenderId : attackerId;
+
     state.battle = {
       attackerId, defenderId,
-      youId: attackerId,
-      enemyId: defenderId,
+      mode,
+      youId, enemyId,
       phase:"deploy",
-      youField: [],
-      enemyField: [],
-      t: 0,
+      youField:[],
+      enemyField:[],
+      t:0,
       ended:false,
-      // pool counts for end-of-battle "only survivors return"
-      youDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
-      enemyDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      youDeployedByType:Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      enemyDeployedByType:Object.fromEntries(UNITS.map(u=>[u.id,0])),
     };
 
-    $("#uiMode").textContent = "SAVAŞ";
-    $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
-    $("#uiBattleYou").textContent = att.name;
-    $("#uiBattleEnemy").textContent = def.name;
-    $("#uiFlagYou").src = state.flags[attackerId];
-    $("#uiFlagEnemy").src = state.flags[defenderId];
+    $("#uiMode").textContent="SAVAŞ";
+    $("#battleTitle").textContent = (mode==="attack")
+      ? `Saldırı: ${att.name} → ${def.name}`
+      : `Savunma: ${def.name} (Sen) ← ${att.name}`;
 
-    $("#uiYouUnits").textContent = "0";
-    $("#uiEnemyUnits").textContent = "0";
-    $("#uiYouPool").textContent = totalInventory(attackerId);
-    $("#uiEnemyPool").textContent = totalInventory(defenderId);
+    $("#uiBattleYou").textContent = getCountry(youId).name;
+    $("#uiBattleEnemy").textContent = getCountry(enemyId).name;
+    $("#uiFlagYou").src = state.flags[youId];
+    $("#uiFlagEnemy").src = state.flags[enemyId];
 
+    $("#uiRoleYou").textContent = (mode==="attack") ? "Sen (Saldırı)" : "Sen (Savunma)";
+    $("#uiRoleEnemy").textContent = (mode==="attack") ? "Düşman (Savunma)" : "Düşman (Saldırı)";
+
+    $("#uiYouUnits").textContent="0";
+    $("#uiEnemyUnits").textContent="0";
+    $("#uiYouPool").textContent=totalInventory(youId);
+    $("#uiEnemyPool").textContent=totalInventory(enemyId);
+
+    $("#battleSub").textContent = "Kartları sürükleyip kendi tarafına yerleştir. Sonra 'Savaşı Başlat'.";
     buildDeployBar();
     $("#battleOverlay").style.display="flex";
     drawBattle();
+
+    // Haber
+    if(mode==="def"){
+      pushNews(`Uyarı! ${att.name} sana saldırıyor. Savunma savaşı başladı.`);
+    }
   }
 
   function buildDeployBar(){
-    const bar = $("#deployBar");
-    bar.innerHTML = "";
-    const you = getCountry(state.battle.youId);
+    const bar=$("#deployBar");
+    bar.innerHTML="";
+    const b=state.battle;
+    if(!b) return;
+    const you=getCountry(b.youId);
 
     for(const u of UNITS){
-      const count = you.inventory[u.id] || 0;
+      const count=you.inventory[u.id]||0;
       if(count<=0) continue;
 
-      const mini = document.createElement("div");
-      mini.className = "miniCard";
-      mini.draggable = true;
-      mini.innerHTML = `
+      const mini=document.createElement("div");
+      mini.className="miniCard";
+      mini.draggable=true;
+      mini.innerHTML=`
         <div class="unitImg" style="width:38px;height:38px;border-radius:14px">
           <img alt="" src="${state.cardImages[u.id]}">
         </div>
         <div style="min-width:0">
           <div style="font-weight:900; font-size:12px">${u.name}</div>
-          <div class="muted small">Elde: <b>${count}</b> • ${u.cost}g</div>
+          <div class="muted small">Elde: <b>${count}</b></div>
         </div>
       `;
-
       mini.addEventListener("dragstart",(e)=>{
-        battleView.draggingUnit = {unitId:u.id};
+        battleView.draggingUnit={unitId:u.id};
         e.dataTransfer.setData("text/plain", u.id);
       });
       bar.appendChild(mini);
     }
 
-    battleCanvas.addEventListener("dragover", (e)=> e.preventDefault());
-    battleCanvas.addEventListener("drop", (e)=>{
+    battleCanvas.addEventListener("dragover",(e)=>e.preventDefault());
+    battleCanvas.addEventListener("drop",(e)=>{
       e.preventDefault();
-      const id = e.dataTransfer.getData("text/plain");
+      const id=e.dataTransfer.getData("text/plain");
       if(id) tryDeployUnit(id, e.offsetX, e.offsetY);
     }, {once:true});
   }
 
   function tryDeployUnit(unitId, sx, sy){
-    const b = state.battle;
+    const b=state.battle;
     if(!b || b.phase!=="deploy") return;
 
-    const you = getCountry(b.youId);
-    if((you.inventory[unitId]||0) <= 0){ pushNews("Bu kart sende yok."); return; }
+    const you=getCountry(b.youId);
+    if((you.inventory[unitId]||0)<=0){ pushNews("Bu kart sende yok."); return; }
 
-    const rect = battleCanvas.getBoundingClientRect();
-    const h = rect.height;
-    const centerY = h/2;
-    const maxY = centerY + 70;
-    if(sy < centerY){ pushNews("Kendi tarafına koymalısın."); return; }
+    const rect=battleCanvas.getBoundingClientRect();
+    const h=rect.height;
+    const centerY=h/2;
+    const maxY=centerY+70;
+
+    // player always deploys on bottom half
+    if(sy < centerY){ pushNews("Kendi tarafına koymalısın (alt taraf)."); return; }
     if(sy < maxY){ pushNews("Sınır çizgisine çok yakın, biraz aşağı koy."); return; }
 
-    const def = UNITS.find(x=>x.id===unitId);
-    you.inventory[unitId] -= 1;
+    const def=UNITS.find(x=>x.id===unitId);
+    you.inventory[unitId]-=1;
     b.youDeployedByType[unitId]++;
 
     b.youField.push({
       unitId, maxHp:def.hp, hp:def.hp,
       x:sx, y:sy,
       team:"A", cd:0,
-      // animation
-      bob: Math.random()*10,
-      hitFlash: 0
+      bob:Math.random()*10, hitFlash:0
     });
 
-    $("#uiYouPool").textContent = totalInventory(b.youId);
+    $("#uiYouPool").textContent=totalInventory(b.youId);
     buildDeployBar();
     buildArmyList();
     renderUI();
@@ -1605,47 +1437,45 @@ const SERVER_ENABLED = false;
   }
 
   function aiDeploy(){
-    const b = state.battle;
-    const enemy = getCountry(b.enemyId);
-    const rect = battleCanvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
+    const b=state.battle;
+    const enemy=getCountry(b.enemyId);
+    const rect=battleCanvas.getBoundingClientRect();
+    const w=rect.width, h=rect.height;
 
-    // improved: deploy based on strength
-    const power = totalInventory(b.enemyId);
-    let want = clamp(power, 6, 22); // use (almost) all inventory, cap for performance
+    // Enemy uses MOST of its inventory (not leaving half unused)
+    const total = totalInventory(b.enemyId);
+    let want = clamp(Math.floor(total*0.90), 8, 22);
 
-    // choose better units first
-    const ids = [...UNITS].sort((a,b)=>{
-      const sa = (a.dmg*1.2 + a.hp*0.05 + a.range*0.03) / a.cost;
-      const sb = (b.dmg*1.2 + b.hp*0.05 + b.range*0.03) / b.cost;
+    const ids=[...UNITS].sort((a,b)=>{
+      const sa=(a.dmg*1.2 + a.hp*0.05 + a.range*0.03)/a.cost;
+      const sb=(b.dmg*1.2 + b.hp*0.05 + b.range*0.03)/b.cost;
       return sb-sa;
     }).map(u=>u.id);
 
     let tries=0;
-    while(want>0 && tries<1200){
+    while(want>0 && tries<2000){
       tries++;
-      const uid = (Math.random()<0.70) ? ids[0] : pick(ids.slice(0,4));
-      if((enemy.inventory[uid]||0) <= 0) continue;
-      const def = UNITS.find(x=>x.id===uid);
+      const uid=(Math.random()<0.75)? ids[0] : pick(ids.slice(0,4));
+      if((enemy.inventory[uid]||0)<=0) continue;
+      const def=UNITS.find(x=>x.id===uid);
 
-      const x = rand(60, Math.floor(w-60));
-      const y = rand(60, Math.floor(h/2 - 90));
-      enemy.inventory[uid] -= 1;
+      const x=rand(60, Math.floor(w-60));
+      const y=rand(60, Math.floor(h/2 - 90)); // top half
+      enemy.inventory[uid]-=1;
       b.enemyDeployedByType[uid]++;
 
       b.enemyField.push({
         unitId:uid, maxHp:def.hp, hp:def.hp,
         x, y, team:"B", cd:0,
-        bob: Math.random()*10,
-        hitFlash: 0
+        bob:Math.random()*10, hitFlash:0
       });
       want--;
     }
-    $("#uiEnemyPool").textContent = totalInventory(b.enemyId);
+    $("#uiEnemyPool").textContent=totalInventory(b.enemyId);
   }
 
   function battleStart(){
-    const b = state.battle;
+    const b=state.battle;
     if(!b || b.phase!=="deploy") return;
     aiDeploy();
     b.phase="fight";
@@ -1659,215 +1489,240 @@ const SERVER_ENABLED = false;
   }
 
   function battleEnd(winnerSide){
-    const b = state.battle;
+    const b=state.battle;
     if(!b || b.ended) return;
     b.ended=true;
     b.phase="done";
 
-    const winnerId = (winnerSide==="A") ? b.attackerId : b.defenderId;
-    const loserId  = (winnerSide==="A") ? b.defenderId : b.attackerId;
+    // Side mapping:
+    // A = player side on battlefield, B = enemy side
+    // But actual winner/loser countries depend on "mode"
+    const winnerId = (winnerSide==="A") ? b.youId : b.enemyId;
+    const loserId  = (winnerSide==="A") ? b.enemyId : b.youId;
 
-    const winner = getCountry(winnerId);
-    const loser  = getCountry(loserId);
+    const winner=getCountry(winnerId);
+    const loser=getCountry(loserId);
 
     // ONLY SURVIVORS RETURN:
-    // survivors are literally the units still alive on each side
-    const aliveA = b.youField.filter(x=>x.team==="A");
-    const aliveB = b.enemyField.filter(x=>x.team==="B");
-
-    // return to inventories exactly by type
+    const aliveA=b.youField.filter(x=>x.team==="A");
+    const aliveB=b.enemyField.filter(x=>x.team==="B");
     for(const unit of aliveA){
-      const c = getCountry(b.attackerId);
-      c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
+      const c=getCountry(b.youId);
+      c.inventory[unit.unitId]=(c.inventory[unit.unitId]||0)+1;
     }
     for(const unit of aliveB){
-      const c = getCountry(b.defenderId);
-      c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
+      const c=getCountry(b.enemyId);
+      c.inventory[unit.unitId]=(c.inventory[unit.unitId]||0)+1;
     }
 
-    // gold rules
-    if(winnerId===b.attackerId){
-      
-    // --- GOLD & TERRITORY RULES ---
-    // Tribute: loser pays up to LOSE_GOLD (can't go negative). Winner receives that amount.
-    const tribute = Math.min(LOSE_GOLD, loser.gold);
-    applyGoldChange(loser, -tribute);
-    applyGoldChange(winner, +tribute);
+    // GOLD: +2000 to winner, and loser pays 450 to winner (min 0)
+    applyGoldChange(winner, +WIN_GOLD);
 
-    // Bonus: only when attacker wins an ATTACK (WAR)
-    if(b.mode === "WAR" && winnerId === b.attackerId){
-      applyGoldChange(winner, +WIN_GOLD);
+    const pay = Math.min(TRIBUTE, loser.gold);
+    applyGoldChange(loser, -pay);
+    applyGoldChange(winner, +pay);
+
+    // CAPTURE 1 STATE from loser (if any)
+    if(loser.states.length>0){
+      const captured = pick(loser.states);
+      transferState(captured, winnerId);
+      pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın ve ${pay} altın aldı. 1 eyalet ele geçirdi: ${getState(captured).name}`);
+    } else {
+      pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın ve ${pay} altın aldı.`);
+    }
+    if(loserId===state.playerCountryId){
+      pushNews(`Sen kaybettin: -${pay} altın (0 altına düşmez).`);
     }
 
-    // Territory: only when attacker wins (WAR or DEFENSE). Take the specific targeted/defended state.
-    let captured = null;
-    if(winnerId === b.attackerId && b.defenseStateId != null){
-      captured = b.defenseStateId;
-      // safety: only transfer if it was actually owned by the loser
-      if(getState(captured).countryId === loserId){
-        transferState(captured, winnerId);
-      }
-    }
-
-    // News / result text
-    if(b.mode === "DEFENSE"){
-      if(winnerId === b.defenderId){
-        pushNews(`${winner.name} savundu! +${tribute} altın (haraç). Eyalet korundu.`);
-      } else {
-        pushNews(`${winner.name} saldırıyı kazandı! +${tribute} altın (haraç) ve 1 eyalet aldı (${getState(captured).name}).`);
-      }
-    } else { // WAR
-      if(winnerId === b.attackerId){
-        pushNews(`${winner.name} saldırıyı kazandı! +${WIN_GOLD}+${tribute} altın ve 1 eyalet aldı (${getState(captured).name}).`);
-      } else {
-        pushNews(`${winner.name} savundu! +${tribute} altın (haraç). Eyalet korundu.`);
-      }
-    }
-
+    // armistice + cooldown
     winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
     loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
-    winner.lastWarDay = state.day;
-    loser.lastWarDay = state.day;
+    winner.lastWarDay=state.day;
+    loser.lastWarDay=state.day;
 
     rebuildNeighbors();
     drawMap();
-
     buildArmyList();
     buildShop();
     renderUI();
   }
 
   function updateBattle(dt){
-    const b = state.battle;
+    const b=state.battle;
     if(!b || b.phase!=="fight" || b.ended) return;
 
-    const rect = battleCanvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
-    const centerY = h/2;
+    const rect=battleCanvas.getBoundingClientRect();
+    const w=rect.width, h=rect.height;
 
     function pickTarget(u, enemies){
       let best=null, bestD=1e18;
       for(const e of enemies){
-        const dx=e.x-u.x, dy=e.y-u.y;
-        const d=Math.hypot(dx,dy);
+        const d=Math.hypot(e.x-u.x, e.y-u.y);
         if(d<bestD){ bestD=d; best=e; }
       }
       return {best, bestD};
     }
 
     function stepUnit(u, enemies){
-      const def = UNITS.find(x=>x.id===u.unitId);
-      u.cd = Math.max(0, u.cd - dt);
-      u.hitFlash = Math.max(0, u.hitFlash - dt);
+      const def=UNITS.find(x=>x.id===u.unitId);
+      u.cd=Math.max(0,u.cd-dt);
+      u.hitFlash=Math.max(0,u.hitFlash-dt);
 
-      const {best, bestD} = pickTarget(u, enemies);
+      const {best, bestD}=pickTarget(u, enemies);
       if(!best) return;
 
-      // movement
       if(bestD > def.range){
         const dx=best.x-u.x, dy=best.y-u.y;
         const d=Math.max(0.001, Math.hypot(dx,dy));
-        // slight formation noise
         const jitter = 1 + (Math.sin((u.bob+=dt*6))*0.03);
         u.x += (dx/d)*def.speed*dt*jitter;
         u.y += (dy/d)*def.speed*dt*jitter;
       } else if(u.cd<=0){
-        // attack
         best.hp -= def.dmg;
-        best.hitFlash = 0.18;
+        best.hitFlash=0.18;
         u.cd = (def.type==="melee" ? 0.42 : (def.type==="mid" ? 0.60 : 0.78));
       }
 
-      // bounds: fight mode no border lock
-      u.x = clamp(u.x, 18, w-18);
-      u.y = clamp(u.y, 18, h-18);
+      u.x=clamp(u.x,18,w-18);
+      u.y=clamp(u.y,18,h-18);
     }
 
     for(const u of b.youField) stepUnit(u, b.enemyField);
     for(const e of b.enemyField) stepUnit(e, b.youField);
 
-    b.youField = b.youField.filter(u=>u.hp>0);
-    b.enemyField = b.enemyField.filter(u=>u.hp>0);
+    b.youField=b.youField.filter(u=>u.hp>0);
+    b.enemyField=b.enemyField.filter(u=>u.hp>0);
 
-    $("#uiYouUnits").textContent = b.youField.length;
-    $("#uiEnemyUnits").textContent = b.enemyField.length;
+    $("#uiYouUnits").textContent=b.youField.length;
+    $("#uiEnemyUnits").textContent=b.enemyField.length;
 
-    b.t += dt;
+    b.t+=dt;
 
-    if(b.youField.length===0 && b.enemyField.length===0) battleEnd("B");
+    if(b.enemyField.length===0 && b.youField.length===0) battleEnd("B");
     else if(b.enemyField.length===0) battleEnd("A");
     else if(b.youField.length===0) battleEnd("B");
     else if(b.t>70) battleEnd(b.youField.length>=b.enemyField.length ? "A":"B");
   }
 
   function drawBattle(){
-    const rect = battleCanvas.getBoundingClientRect();
-    const w = rect.width, h = rect.height;
+    const rect=battleCanvas.getBoundingClientRect();
+    const w=rect.width, h=rect.height;
     battleCtx.clearRect(0,0,w,h);
 
-    // grass
-    const bg = battleCtx.createLinearGradient(0,0,w,h);
-    bg.addColorStop(0,"rgba(80, 180, 110, .26)");
-    bg.addColorStop(1,"rgba(40, 120, 80, .22)");
-    battleCtx.fillStyle = bg;
+    const bg=battleCtx.createLinearGradient(0,0,w,h);
+    bg.addColorStop(0,"rgba(80,180,110,.26)");
+    bg.addColorStop(1,"rgba(40,120,80,.22)");
+    battleCtx.fillStyle=bg;
     battleCtx.fillRect(0,0,w,h);
 
-    const b = state.battle;
+    const b=state.battle;
 
-    // deploy lines only in deploy phase
-    if(b && b.phase === "deploy"){
-      battleCtx.strokeStyle = "rgba(255,255,255,.25)";
-      battleCtx.lineWidth = 3;
-      battleCtx.beginPath();
-      battleCtx.moveTo(0,h/2);
-      battleCtx.lineTo(w,h/2);
-      battleCtx.stroke();
+    if(b && b.phase==="deploy"){
+      battleCtx.strokeStyle="rgba(255,255,255,.25)";
+      battleCtx.lineWidth=3;
+      battleCtx.beginPath(); battleCtx.moveTo(0,h/2); battleCtx.lineTo(w,h/2); battleCtx.stroke();
 
-      battleCtx.strokeStyle = "rgba(255,209,102,.30)";
+      battleCtx.strokeStyle="rgba(255,209,102,.30)";
       battleCtx.setLineDash([8,8]);
-      battleCtx.beginPath();
-      battleCtx.moveTo(0,h/2 + 70);
-      battleCtx.lineTo(w,h/2 + 70);
-      battleCtx.stroke();
+      battleCtx.beginPath(); battleCtx.moveTo(0,h/2+70); battleCtx.lineTo(w,h/2+70); battleCtx.stroke();
       battleCtx.setLineDash([]);
     }
 
     if(!b) return;
 
-    function drawFighter(u){
-      const def = UNITS.find(x=>x.id===u.unitId);
+    function drawBattleUnit(ctx, unitId, x, y, team, scale=1){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.scale(scale,scale);
 
-      // team tint glow
-      battleCtx.save();
-      if(u.hitFlash>0){
-        battleCtx.globalAlpha = 0.9;
-        battleCtx.fillStyle = "rgba(255,255,255,.55)";
-        battleCtx.beginPath();
-        battleCtx.arc(u.x, u.y, 18, 0, Math.PI*2);
-        battleCtx.fill();
-        battleCtx.globalAlpha = 1;
+      const main = team==="A" ? "rgba(77,212,255,.90)" : "rgba(255,92,122,.88)";
+      const dark = "rgba(0,0,0,.35)";
+      const light= "rgba(255,255,255,.92)";
+
+      ctx.fillStyle=main; ctx.strokeStyle=dark; ctx.lineWidth=2;
+      roundRect(ctx,-11,-6,22,26,7,true,true);
+
+      ctx.fillStyle=light;
+      ctx.beginPath(); ctx.arc(0,-14,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+      ctx.strokeStyle=light; ctx.fillStyle=light;
+
+      if(unitId==="infantry"){
+        ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(22,-12); ctx.stroke();
+        ctx.fillStyle="rgba(255,209,102,.92)"; ctx.strokeStyle=dark;
+        ctx.beginPath();
+        ctx.moveTo(-18,-2);
+        ctx.quadraticCurveTo(-28,6,-18,18);
+        ctx.quadraticCurveTo(-10,8,-18,-2);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      } else if(unitId==="spearman"){
+        ctx.strokeStyle="rgba(255,255,255,.92)";
+        ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-22,20); ctx.lineTo(24,-18); ctx.stroke();
+        ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(24,-18); ctx.lineTo(30,-22); ctx.stroke();
+      } else if(unitId==="archer"){
+        ctx.strokeStyle="rgba(255,209,102,.95)";
+        ctx.lineWidth=3; ctx.beginPath(); ctx.arc(18,6,14,Math.PI/2,-Math.PI/2,true); ctx.stroke();
+        ctx.strokeStyle="rgba(255,255,255,.85)";
+        ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(18,20); ctx.stroke();
+      } else if(unitId==="crossbow"){
+        ctx.fillStyle="rgba(255,255,255,.90)"; ctx.strokeStyle=dark;
+        roundRect(ctx,6,2,26,8,4,true,true);
+        ctx.strokeStyle="rgba(255,209,102,.95)"; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(-10,6); ctx.stroke();
+      } else if(unitId==="musketeer" || unitId==="rifleman"){
+        ctx.fillStyle="rgba(255,255,255,.88)"; ctx.strokeStyle=dark;
+        roundRect(ctx,-2,2,34,7,3,true,true);
+        roundRect(ctx,6,9,10,10,3,true,true);
+      } else if(unitId==="grenadier"){
+        ctx.fillStyle="rgba(255,92,122,.85)"; ctx.strokeStyle=dark;
+        ctx.beginPath(); ctx.arc(20,10,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle="rgba(255,255,255,.88)"; ctx.strokeStyle=dark;
+        roundRect(ctx,-2,2,28,7,3,true,true);
+      } else if(unitId==="cannon"){
+        ctx.fillStyle="rgba(255,255,255,.85)"; ctx.strokeStyle=dark;
+        roundRect(ctx,-28,6,38,11,5,true,true);
+        ctx.beginPath(); ctx.arc(-18,22,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0,22,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      } else if(unitId==="cavalry"){
+        ctx.globalAlpha=0.25; ctx.fillStyle=light;
+        roundRect(ctx,-20,16,40,12,6,true,false);
+        ctx.globalAlpha=1;
+        ctx.strokeStyle=light; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(-22,18); ctx.lineTo(24,-18); ctx.stroke();
+      } else if(unitId==="scout"){
+        ctx.globalAlpha=0.35; ctx.fillStyle=main;
+        ctx.beginPath(); ctx.moveTo(-16,-4); ctx.lineTo(0,28); ctx.lineTo(16,-4); ctx.closePath();
+        ctx.fill(); ctx.globalAlpha=1;
+        ctx.strokeStyle=light; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(10,8); ctx.lineTo(22,0); ctx.stroke();
       }
 
-      // tiny shadow
-      battleCtx.globalAlpha = 0.25;
-      battleCtx.fillStyle = "#000";
-      battleCtx.beginPath();
-      battleCtx.ellipse(u.x, u.y+16, 12, 5, 0, 0, Math.PI*2);
-      battleCtx.fill();
-      battleCtx.globalAlpha = 1;
+      ctx.restore();
+    }
 
-      // draw "character"
-      const scale = (u.team==="A") ? 0.95 : 0.95;
-      const icon = document.createElement("canvas");
-      icon.width=1; icon.height=1; // dummy (not used)
-      drawBattleUnit(battleCtx, u.unitId, u.x, u.y, u.team, scale);
+    function drawFighter(u){
+      const def=UNITS.find(x=>x.id===u.unitId);
 
-      // hp bar
-      const pct = clamp(u.hp/u.maxHp, 0, 1);
-      battleCtx.fillStyle = "rgba(0,0,0,.35)";
-      battleCtx.fillRect(u.x-16, u.y-26, 32, 6);
-      battleCtx.fillStyle = "rgba(255,255,255,.75)";
-      battleCtx.fillRect(u.x-16, u.y-26, 32*pct, 6);
+      battleCtx.save();
+      if(u.hitFlash>0){
+        battleCtx.globalAlpha=0.9;
+        battleCtx.fillStyle="rgba(255,255,255,.55)";
+        battleCtx.beginPath(); battleCtx.arc(u.x,u.y,18,0,Math.PI*2); battleCtx.fill();
+        battleCtx.globalAlpha=1;
+      }
+
+      battleCtx.globalAlpha=0.25;
+      battleCtx.fillStyle="#000";
+      battleCtx.beginPath(); battleCtx.ellipse(u.x,u.y+16,12,5,0,0,Math.PI*2); battleCtx.fill();
+      battleCtx.globalAlpha=1;
+
+      drawBattleUnit(battleCtx, u.unitId, u.x, u.y, u.team, 0.95);
+
+      const pct=clamp(u.hp/u.maxHp,0,1);
+      battleCtx.fillStyle="rgba(0,0,0,.35)";
+      battleCtx.fillRect(u.x-16,u.y-26,32,6);
+      battleCtx.fillStyle="rgba(255,255,255,.75)";
+      battleCtx.fillRect(u.x-16,u.y-26,32*pct,6);
 
       battleCtx.restore();
     }
@@ -1875,123 +1730,14 @@ const SERVER_ENABLED = false;
     for(const u of b.youField) drawFighter(u);
     for(const e of b.enemyField) drawFighter(e);
 
-    // status
-    battleCtx.fillStyle = "rgba(0,0,0,.40)";
-    battleCtx.fillRect(12, h-52, 460, 40);
-    battleCtx.fillStyle = "rgba(255,255,255,.88)";
-    battleCtx.font = "12px system-ui";
+    battleCtx.fillStyle="rgba(0,0,0,.40)";
+    battleCtx.fillRect(12, h-52, 520, 40);
+    battleCtx.fillStyle="rgba(255,255,255,.88)";
+    battleCtx.font="12px system-ui";
     const txt = b.phase==="deploy"
       ? "DEPLOY: Kartı sürükle-bırak. Sonra 'Savaşı Başlat'. (Zaman durur)"
       : (b.phase==="fight" ? "FIGHT: Birimler otomatik savaşıyor." : "BİTTİ: Çıkabilirsin.");
     battleCtx.fillText(txt, 22, h-28);
-  }
-
-  // draw battle unit character (not square)
-  function drawBattleUnit(ctx, unitId, x, y, team, scale=1){
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-
-    // team colors
-    const main = team==="A" ? "rgba(77,212,255,.90)" : "rgba(255,92,122,.88)";
-    const dark = "rgba(0,0,0,.35)";
-    const light = "rgba(255,255,255,.92)";
-
-    // cape/armor base
-    ctx.fillStyle = main;
-    ctx.strokeStyle = dark;
-    ctx.lineWidth = 2;
-    roundRect(ctx, -11, -6, 22, 26, 7, true, true);
-
-    // head
-    ctx.fillStyle = light;
-    ctx.beginPath();
-    ctx.arc(0, -14, 7, 0, Math.PI*2);
-    ctx.fill();
-    ctx.stroke();
-
-    // weapon based on unitId
-    ctx.strokeStyle = light;
-    ctx.fillStyle = light;
-
-    if(unitId==="infantry"){
-      // sword
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(22, -12); ctx.stroke();
-      ctx.lineWidth=2;
-      // shield
-      ctx.fillStyle = "rgba(255,209,102,.92)";
-      ctx.strokeStyle = dark;
-      ctx.beginPath();
-      ctx.moveTo(-18, -2);
-      ctx.quadraticCurveTo(-28, 6, -18, 18);
-      ctx.quadraticCurveTo(-10, 8, -18, -2);
-      ctx.closePath();
-      ctx.fill(); ctx.stroke();
-    } else if(unitId==="spearman"){
-      ctx.strokeStyle = "rgba(255,255,255,.92)";
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(-22, 20); ctx.lineTo(24, -18); ctx.stroke();
-      ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(24,-18); ctx.lineTo(30,-22); ctx.stroke();
-    } else if(unitId==="archer"){
-      ctx.strokeStyle="rgba(255,209,102,.95)";
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.arc(18, 6, 14, Math.PI/2, -Math.PI/2, true); ctx.stroke();
-      ctx.strokeStyle="rgba(255,255,255,.85)";
-      ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(18,20); ctx.stroke();
-    } else if(unitId==="crossbow"){
-      ctx.fillStyle="rgba(255,255,255,.90)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, 6, 2, 26, 8, 4, true, true);
-      ctx.strokeStyle="rgba(255,209,102,.95)";
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(6,6); ctx.lineTo(-10,6); ctx.stroke();
-    } else if(unitId==="musketeer" || unitId==="rifleman"){
-      ctx.fillStyle="rgba(255,255,255,.88)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, -2, 2, 34, 7, 3, true, true);
-      roundRect(ctx, 6, 9, 10, 10, 3, true, true);
-    } else if(unitId==="grenadier"){
-      ctx.fillStyle="rgba(255,92,122,.85)";
-      ctx.strokeStyle=dark;
-      ctx.beginPath(); ctx.arc(20, 10, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle="rgba(255,255,255,.88)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, -2, 2, 28, 7, 3, true, true);
-    } else if(unitId==="cannon"){
-      ctx.fillStyle="rgba(255,255,255,.85)";
-      ctx.strokeStyle=dark;
-      roundRect(ctx, -28, 6, 38, 11, 5, true, true);
-      ctx.beginPath(); ctx.arc(-18, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.arc(0, 22, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-    } else if(unitId==="cavalry"){
-      // horse body hint
-      ctx.globalAlpha=0.25;
-      ctx.fillStyle=light;
-      roundRect(ctx, -20, 16, 40, 12, 6, true, false);
-      ctx.globalAlpha=1;
-      ctx.strokeStyle=light;
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(-22, 18); ctx.lineTo(24, -18); ctx.stroke();
-      ctx.lineWidth=2;
-    } else if(unitId==="scout"){
-      // cloak triangle
-      ctx.globalAlpha=0.35;
-      ctx.fillStyle=main;
-      ctx.beginPath();
-      ctx.moveTo(-16,-4); ctx.lineTo(0,28); ctx.lineTo(16,-4); ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha=1;
-      // dagger
-      ctx.strokeStyle=light;
-      ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(10, 8); ctx.lineTo(22, 0); ctx.stroke();
-      ctx.lineWidth=2;
-    }
-
-    ctx.restore();
   }
 
   /*************************
@@ -1999,8 +1745,7 @@ const SERVER_ENABLED = false;
    *************************/
   function exportSave(){
     const data = {
-      version: 3,
-      mapType: "europe_hex",
+      version: 4,
       day: state.day,
       running: state.running,
       playerCountryId: state.playerCountryId,
@@ -2015,96 +1760,83 @@ const SERVER_ENABLED = false;
       countries: state.countries.map(c=>({
         id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
         inventory:c.inventory, states:c.states,
-        armistice: Array.from(c.armistice.entries()),
+        armistice:Array.from(c.armistice.entries()),
         lastWarDay:c.lastWarDay,
-        passage: Array.from(c.passage.values()),
+        passage:Array.from(c.passage.values()),
       })),
-      states: state.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name})),
+      states: state.states.map(s=>({id:s.id,countryId:s.countryId,name:s.name})),
     };
 
-    const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "save.json";
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="save.json";
     a.click();
     URL.revokeObjectURL(a.href);
     pushNews("Save indirildi (save.json).");
   }
 
   function importSave(obj){
-    state.day = obj.day||0;
-    state.running = !!obj.running;
-    state.playerCountryId = obj.playerCountryId;
-    state.selectedCountryId = obj.selectedCountryId;
-    state.selectedStateId = obj.selectedStateId;
-    state.cardImages = obj.cardImages || {};
-    state.flags = obj.flags || {};
+    state.day=obj.day||0;
+    state.running=!!obj.running;
+    state.playerCountryId=obj.playerCountryId;
+    state.selectedCountryId=obj.selectedCountryId;
+    state.selectedStateId=obj.selectedStateId;
+    state.cardImages=obj.cardImages||{};
+    state.flags=obj.flags||{};
 
-    state.map.hexSize = obj.map?.hexSize ?? state.map.hexSize;
-    state.map.hexes = (obj.map?.hexes || []).map(h=>({ ...h }));
-    state.map.byQR = new Map();
-    for(const h of state.map.hexes){
-      state.map.byQR.set(keyQR(h.q,h.r), h.id);
-    }
+    state.map.hexSize=obj.map?.hexSize ?? state.map.hexSize;
+    state.map.hexes=(obj.map?.hexes||[]).map(h=>({...h}));
+    state.map.byQR=new Map();
+    for(const h of state.map.hexes) state.map.byQR.set(keyQR(h.q,h.r), h.id);
 
-    state.countries = obj.countries.map(c=>({
+    state.countries=obj.countries.map(c=>({
       id:c.id, name:c.name, gold:c.gold, allyId:c.allyId,
       inventory:c.inventory || Object.fromEntries(UNITS.map(u=>[u.id,0])),
-      states:c.states || [],
-      armistice: new Map(c.armistice || []),
-      lastWarDay: c.lastWarDay ?? -999,
-      passage: new Set(c.passage || []),
+      states:c.states||[],
+      armistice:new Map(c.armistice||[]),
+      lastWarDay:c.lastWarDay ?? -999,
+      passage:new Set(c.passage||[]),
     }));
-    state.states = obj.states.map(s=>({id:s.id, countryId:s.countryId, name:s.name}));
+    state.states=obj.states.map(s=>({id:s.id,countryId:s.countryId,name:s.name}));
 
-    // ensure images exist
-    for(const u of UNITS){
-      if(!state.cardImages[u.id]) state.cardImages[u.id] = genCardArt(u.id);
-    }
-    for(let i=0;i<20;i++){
-      if(!state.flags[i]) state.flags[i] = genFlagDataURL(i);
-    }
+    for(const u of UNITS) if(!state.cardImages[u.id]) state.cardImages[u.id]=genCardArt(u.id);
+    for(let i=0;i<20;i++) if(!state.flags[i]) state.flags[i]=genFlagDataURL(i);
 
     rebuildNeighbors();
     pushNews("Save yüklendi.");
-    buildCountryPicker();
-    buildShop();
-    buildArmyList();
-    renderUI();
-    drawMap();
+    buildCountryPicker(); buildShop(); buildArmyList();
+    renderUI(); drawMap();
   }
 
   /*************************
    * CARD IMAGE UPLOAD
    *************************/
   async function filesToDataURLs(files){
-    const out = [];
+    const out=[];
     for(const f of files){
-      const url = await new Promise((res, rej)=>{
-        const r = new FileReader();
-        r.onload = ()=>res(r.result);
-        r.onerror = rej;
+      const url = await new Promise((res,rej)=>{
+        const r=new FileReader();
+        r.onload=()=>res(r.result);
+        r.onerror=rej;
         r.readAsDataURL(f);
       });
-      out.push({file:f, url});
+      out.push({file:f,url});
     }
     return out;
   }
 
   async function applyCardImages(){
-    const input = $("#cardsFile");
-    const files = Array.from(input.files || []);
+    const input=$("#cardsFile");
+    const files=Array.from(input.files||[]);
     if(files.length===0){ pushNews("Dosya seçmedin."); return; }
-    const items = await filesToDataURLs(files);
+    const items=await filesToDataURLs(files);
 
-    let matched = 0;
+    let matched=0;
     for(const it of items){
-      const name = it.file.name.toLowerCase().replace(/\.(png|jpg|jpeg|webp|gif)$/,"");
-      const unit = UNITS.find(u=>u.id===name);
-      if(unit){
-        state.cardImages[unit.id] = it.url;
-        matched++;
-      }
+      const name=it.file.name.toLowerCase().replace(/\.(png|jpg|jpeg|webp|gif)$/,"");
+      const unit=UNITS.find(u=>u.id===name);
+      if(unit){ state.cardImages[unit.id]=it.url; matched++; }
     }
     if(matched===0) pushNews("Eşleşen kart yok. Dosya adlarını unit ID yap.");
     else pushNews(`${matched} kart resmi uygulandı.`);
@@ -2115,75 +1847,121 @@ const SERVER_ENABLED = false;
   /*************************
    * BUTTONS
    *************************/
-  $("#btnChooseCountry").onclick = ()=> $("#countryOverlay").style.display="flex";
-  $("#btnCloseCountry").onclick = ()=> $("#countryOverlay").style.display="none";
+  $("#btnChooseCountry").onclick=()=>$("#countryOverlay").style.display="flex";
+  $("#btnCloseCountry").onclick=()=>$("#countryOverlay").style.display="none";
 
-  $("#btnDeclareWar").onclick = declareWar;
-  $("#btnOfferAlliance").onclick = offerAlliance;
-  $("#btnBreakAlliance").onclick = breakAlliance;
-  $("#btnRequestPassage").onclick = requestPassage;
+  $("#btnDeclareWar").onclick=declareWar;
+  $("#btnOfferAlliance").onclick=offerAlliance;
+  $("#btnBreakAlliance").onclick=breakAlliance;
+  $("#btnRequestPassage").onclick=requestPassage;
 
-  $("#btnPause").onclick = ()=>{
+  $("#btnPause").onclick=()=>{
     if(state.playerCountryId==null) return;
-    state.running = !state.running;
+    state.running=!state.running;
     pushNews(state.running ? "Zaman akışı devam ediyor." : "Zaman durduruldu.");
     renderUI();
   };
 
-  $("#btnSave").onclick = exportSave;
-  $("#btnLoad").onclick = ()=> $("#saveFile").click();
+  $("#btnSave").onclick=exportSave;
+  $("#btnLoad").onclick=()=>$("#saveFile").click();
   $("#saveFile").addEventListener("change", async (e)=>{
-    const file = e.target.files && e.target.files[0];
+    const file=e.target.files && e.target.files[0];
     if(!file) return;
-    const text = await file.text();
+    const text=await file.text();
     try{ importSave(JSON.parse(text)); }
     catch(err){ pushNews("Save okunamadı (JSON hatası)."); console.error(err); }
-    e.target.value = "";
+    e.target.value="";
   });
 
-  $("#btnUploadCards").onclick = ()=> $("#cardsOverlay").style.display="flex";
-  $("#btnCloseCards").onclick = ()=> $("#cardsOverlay").style.display="none";
-  $("#btnApplyCards").onclick = applyCardImages;
-  $("#btnClearCards").onclick = ()=>{
-    for(const u of UNITS) state.cardImages[u.id] = genCardArt(u.id);
+  $("#btnUploadCards").onclick=()=>$("#cardsOverlay").style.display="flex";
+  $("#btnCloseCards").onclick=()=>$("#cardsOverlay").style.display="none";
+  $("#btnApplyCards").onclick=applyCardImages;
+  $("#btnClearCards").onclick=()=>{
+    for(const u of UNITS) state.cardImages[u.id]=genCardArt(u.id);
     buildShop();
     if(state.battle) buildDeployBar();
     pushNews("Kartlar varsayılan çizime döndü.");
   };
 
-  $("#btnReset").onclick = ()=> initAll();
+  $("#btnReset").onclick=()=>initAll();
 
-  $("#btnStartBattle").onclick = battleStart;
-  $("#btnCloseBattle").onclick = ()=>{
+  $("#btnStartBattle").onclick=battleStart;
+  $("#btnCloseBattle").onclick=()=>{
     $("#battleOverlay").style.display="none";
-    $("#uiMode").textContent = "HARİTA";
-    state.battle = null;
+    $("#uiMode").textContent="HARİTA";
+    state.battle=null;
     drawMap();
     resumeAfterBattle();
   };
 
   /*************************
+   * AI (BOT) — 25 günde bir DEF saldırısı
+   *************************/
+  function aiBuyTick(){
+    // bots buy smarter
+    for(const c of state.countries){
+      if(state.playerCountryId!=null && c.id===state.playerCountryId) continue;
+
+      if(Math.random()<0.55){
+        const affordable = UNITS.filter(u=>c.gold>=u.cost);
+        if(!affordable.length) continue;
+        affordable.sort((a,b)=>(b.dmg/b.cost)-(a.dmg/a.cost));
+        const pickU = (Math.random()<0.70) ? affordable[0] : affordable[Math.floor(Math.random()*Math.min(4,affordable.length))];
+        c.gold -= pickU.cost;
+        c.inventory[pickU.id] = (c.inventory[pickU.id]||0) + 1;
+      }
+    }
+  }
+
+  function aiDefenseAttackTick(){
+    // only every 25 days check, and only if player exists and no battle open
+    if(state.playerCountryId==null) return;
+    if(state.battle) return;
+
+    if(state.day % BOT_DEFENSE_PERIOD !== 0) return;
+
+    // pick a bot that neighbors player
+    const playerId = state.playerCountryId;
+    const attackers = state.countries
+      .filter(c=>c.id!==playerId)
+      .filter(c=>areNeighbors(c.id, playerId));
+
+    if(!attackers.length) return;
+    if(Math.random() > BOT_ATTACK_CHANCE) return;
+
+    const bot = pick(attackers);
+
+    // respect cooldown/armistice
+    const chk = canDeclareWar(bot.id, playerId);
+    if(!chk.ok) return;
+
+    // BOT ATTACKS -> player DEF
+    startBattle({ attackerId: bot.id, defenderId: playerId, mode:"def" });
+  }
+
+  /*************************
    * GAME LOOP (1 day = 1 sec)
    *************************/
-  let tickAcc = 0;
-  let last = performance.now();
+  let tickAcc=0;
+  let last=performance.now();
 
   function dayTick(){
     state.day += 1;
 
     if(Math.random()<0.10){
-      const a = pick(state.countries);
-      const b = pick(state.countries.filter(x=>x.id!==a.id));
+      const a=pick(state.countries);
+      const b=pick(state.countries.filter(x=>x.id!==a.id));
       pushNews(`Haber: ${a.name}, ${b.name} sınırında devriye arttırdı.`);
     }
 
-    aiDailyTick();
+    aiBuyTick();
+    aiDefenseAttackTick();
     renderUI();
   }
 
   function loop(now){
-    const dt = Math.min(0.05, (now-last)/1000);
-    last = now;
+    const dt=Math.min(0.05,(now-last)/1000);
+    last=now;
 
     if(state.playerCountryId!=null && state.running){
       tickAcc += dt;
@@ -2203,23 +1981,20 @@ const SERVER_ENABLED = false;
    * INIT
    *************************/
   function initAll(){
-    state.day = 0;
-    state.running = false;
-    state.playerCountryId = null;
-    state.selectedCountryId = null;
-    state.selectedStateId = null;
-    state.news = [];
-    state.battle = null;
+    state.day=0;
+    state.running=false;
+    state.playerCountryId=null;
+    state.selectedCountryId=null;
+    state.selectedStateId=null;
+    state.news=[];
+    state.battle=null;
 
-    // cards (canvas draw)
-    state.cardImages = {};
-    for(const u of UNITS) state.cardImages[u.id] = genCardArt(u.id);
+    state.cardImages={};
+    for(const u of UNITS) state.cardImages[u.id]=genCardArt(u.id);
 
-    // flags
-    state.flags = {};
-    for(let i=0;i<20;i++) state.flags[i] = genFlagDataURL(i);
+    state.flags={};
+    for(let i=0;i<20;i++) state.flags[i]=genFlagDataURL(i);
 
-    // Europe hex map
     genHexEurope60();
 
     mapView.reset();
@@ -2230,8 +2005,8 @@ const SERVER_ENABLED = false;
     renderUI();
     drawMap();
 
-    $("#btnPause").disabled = true;
-    $("#btnPause").textContent = "Duraklat";
+    $("#btnPause").disabled=true;
+    $("#btnPause").textContent="Duraklat";
   }
 
   // start
