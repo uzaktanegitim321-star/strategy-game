@@ -362,7 +362,7 @@
     <div class="muted small" style="margin-top:10px">
       Savaş sonu: <b>sadece yaşayan birimler</b> envantere döner.
       Kazanan: <b>+2000 altın + 1 eyalet</b>.
-      Kaybeden: <b>-450 altın (haraç)</b> (0 altına düşmez).
+      Kaybeden: <b>-1000 altın</b> (0 altına düşmez).
     </div>
   </div>
 </div>
@@ -381,11 +381,11 @@ const SERVER_ENABLED = false;
   const ARMISTICE_DAYS = 20;
   const NEWS_QUEUE_MAX = 6;
 
-  const WIN_GOLD = 2000; // bonus income for winner (mines/people/etc.)
-  const TRIBUTE_GOLD = 450; // loser pays → winner receives (clamped, never negative)
-  const BOT_ATTACK_MIN_DAYS = 15;
-  const BOT_ATTACK_MAX_DAYS = 25;
-  const BOT_ATTACK_CHANCE = 0.35; // daily chance once cooldown reached
+  const WIN_GOLD = 2000;          // saldırı kazanırsan
+  const TRANSFER_GOLD = 450;       // kaybeden -> kazanan (0 altına düşmez)
+  const DEF_WIN_BONUS = 850;       // savunma kazanırsan ekstra
+  const DEF_INTERVAL_MIN = 15;     // bot savunma saldırısı aralığı
+  const DEF_INTERVAL_MAX = 25;
 
   const COUNTRY_NAMES = [
     "Alderyn","Varkûn","Solmara","Kryth",
@@ -948,8 +948,8 @@ const SERVER_ENABLED = false;
         states: [],
         armistice: new Map(),
         lastWarDay: -999,
-        nextPlayerAttackDay: rand(BOT_ATTACK_MIN_DAYS, BOT_ATTACK_MAX_DAYS),
         passage: new Set(),
+        nextDefenseDay: rand(DEF_INTERVAL_MIN, DEF_INTERVAL_MAX),
       });
     }
 
@@ -1195,7 +1195,7 @@ const SERVER_ENABLED = false;
 
     const enabled = (state.playerCountryId!=null);
     $("#btnPause").disabled = !enabled;
-    $("#btnDeclareWar").disabled = !enabled;
+    $("#btnDeclareWar").disabled = !(enabled && state.selectedCountryId!=null && state.selectedCountryId!==state.playerCountryId);
     $("#btnOfferAlliance").disabled = !enabled;
     $("#btnBreakAlliance").disabled = !enabled;
     $("#btnRequestPassage").disabled = !enabled;
@@ -1352,78 +1352,27 @@ const SERVER_ENABLED = false;
 
     const chk = canDeclareWar(youId, targetId);
     if(!chk.ok){ pushNews(chk.reason); return; }
-    startBattle(youId, targetId);
+    startBattle(youId, targetId, "attack", state.selectedStateId);
   }
 
   /*************************
    * AI TICK (improved)
    *************************/
   function aiDailyTick(){
-  if(state.playerCountryId==null) return;
+    if(state.playerCountryId==null) return;
 
-  const playerId = state.playerCountryId;
+    for(const c of state.countries){
+      if(c.id === state.playerCountryId) continue;
 
-  // 1) ECONOMY: bots buy units (not too spammy)
-  for(const c of state.countries){
-    if(c.id === playerId) continue;
-
-    if(Math.random() < 0.55){
-      const affordable = UNITS.filter(u=>c.gold>=u.cost);
-      if(affordable.length){
-        affordable.sort((a,b)=> (b.dmg/b.cost) - (a.dmg/a.cost));
-        const pickU = (Math.random()<0.70) ? affordable[0] : affordable[Math.floor(Math.random()*Math.min(4,affordable.length))];
-        c.gold -= pickU.cost;
-        c.inventory[pickU.id] = (c.inventory[pickU.id]||0)+1;
-      }
-    }
-  }
-
-  // If a battle is already open, bots do not start new wars today.
-  if(state.battle) return;
-
-  // 2) BOT → PLAYER ATTACK (defense battle for player): every 15–25 days, not always
-  // only 1 such attack per day max
-  const bots = state.countries.filter(c=>c.id!==playerId);
-  // shuffle light
-  for(let i=bots.length-1;i>0;i--){
-    const j = (Math.random()*(i+1))|0;
-    [bots[i], bots[j]] = [bots[j], bots[i]];
-  }
-
-  for(const bot of bots){
-    if(state.day < bot.nextPlayerAttackDay) continue;
-    bot.nextPlayerAttackDay = state.day + rand(BOT_ATTACK_MIN_DAYS, BOT_ATTACK_MAX_DAYS); // schedule next window regardless
-
-    // must be neighbor to attack (or have passage), and pass cooldown rules
-    const chk = canDeclareWar(bot.id, playerId);
-    if(!chk.ok) continue;
-
-    if(Math.random() < BOT_ATTACK_CHANCE){
-      pushNews(`Haber: ${bot.name}, ${getCountry(playerId).name} sınırında saldırı hazırlığında! (Savunma)`);
-
-      // Start real battle: bot is attacker, player is defender
-      startBattle(bot.id, playerId);
-      return;
-    }
-  }
-
-  // 3) BOT ↔ BOT WARS (rare), with news and same rules (attacker only gains land if attacker wins)
-  for(const c of bots){
-    if(Math.random() < 0.020){
-      const neigh = Array.from(state.map.neighbors[c.id]);
-      if(neigh.length===0) continue;
-      const t = pick(neigh);
-      if(t === playerId) continue;
-
-      const chk = canDeclareWar(c.id, t);
-      if(!chk.ok) continue;
-
-      resolveAIAIWar(c.id, t);
-      // keep it rare: 1 AI-AI war per day max
-      return;
-    }
-  }
-}
+      // smarter buying: prefer affordable best dmg
+      if(Math.random() < 0.55){
+        const affordable = UNITS.filter(u=>c.gold>=u.cost);
+        if(affordable.length){
+          affordable.sort((a,b)=> (b.dmg/b.cost) - (a.dmg/a.cost));
+          const pickU = (Math.random()<0.70) ? affordable[0] : affordable[Math.floor(Math.random()*Math.min(4,affordable.length))];
+          c.gold -= pickU.cost;
+          c.inventory[pickU.id] = (c.inventory[pickU.id]||0)+1;
+        }
       }
 
       // rare AI-AI war
@@ -1442,58 +1391,76 @@ const SERVER_ENABLED = false;
     }
   }
 
-  function resolveAIAIWar(attackerId, defenderId){
-  const att = getCountry(attackerId);
-  const def = getCountry(defenderId);
-  if(!att || !def) return;
 
-  // quick "power" estimate from inventory
-  function power(c){
-    let p = 0;
-    for(const u of UNITS){
-      const n = c.inventory[u.id]||0;
-      if(!n) continue;
-      p += n * (u.dmg*1.3 + u.hp*0.06 + u.range*0.02 + u.speed*0.04);
+function aiDefenseTick(){
+  const playerId = state.playerCountryId;
+  if(playerId==null) return;
+  const player = getCountry(playerId);
+
+  for(const bot of state.countries){
+    if(bot.id===playerId) continue;
+    if(state.day < (bot.nextDefenseDay||999999)) continue;
+
+    if(!areNeighbors(bot.id, playerId)){
+      bot.nextDefenseDay = state.day + rand(DEF_INTERVAL_MIN, DEF_INTERVAL_MAX);
+      continue;
     }
-    return p;
+
+    // border state of player that touches this bot
+    const border = [];
+    for(const sid of player.states){
+      const hx = state.map.hexes[sid];
+      for(const nb of axialNeighbors(hx.q,hx.r)){
+        const id = state.map.byQR.get(keyQR(nb.q,nb.r));
+        if(id!=null && state.map.hexes[id].countryId===bot.id){ border.push(sid); break; }
+      }
+    }
+    if(border.length===0){
+      bot.nextDefenseDay = state.day + rand(DEF_INTERVAL_MIN, DEF_INTERVAL_MAX);
+      continue;
+    }
+
+    if(state.day - bot.lastWarDay < WAR_COOLDOWN){
+      bot.nextDefenseDay = state.day + rand(DEF_INTERVAL_MIN, DEF_INTERVAL_MAX);
+      continue;
+    }
+    const until = bot.armistice.get(playerId) || 0;
+    if(state.day < until){
+      bot.nextDefenseDay = state.day + rand(DEF_INTERVAL_MIN, DEF_INTERVAL_MAX);
+      continue;
+    }
+
+    const targetStateId = pick(border);
+    pushNews(`Haber: ${bot.name}, ${getState(targetStateId).name} için saldırı başlattı! (Savunma)`);
+
+    // open defense battle (time will pause)
+    startBattle(bot.id, playerId, "defense", targetStateId);
+
+    bot.nextDefenseDay = state.day + rand(DEF_INTERVAL_MIN, DEF_INTERVAL_MAX);
+    break; // only one defense battle at a time
   }
-  const pA = power(att) + 1;
-  const pD = power(def) + 1;
-  const winProb = pA / (pA + pD);
-
-  const attackerWon = (Math.random() < winProb);
-  const winnerId = attackerWon ? attackerId : defenderId;
-  const loserId  = attackerWon ? defenderId : attackerId;
-
-  const winner = getCountry(winnerId);
-  const loser  = getCountry(loserId);
-
-  // GOLD transfer + win bonus
-  const pay = Math.min(TRIBUTE_GOLD, loser.gold);
-  loser.gold = Math.max(0, loser.gold - pay);
-  winner.gold += pay;
-  winner.gold += WIN_GOLD;
-
-  // LAND transfer only if attacker wins
-  if(attackerWon && def.states.length>0){
-    const captured = pick(def.states);
-    transferState(captured, attackerId);
-    pushNews(`Haber: ${att.name} saldırdı ve kazandı! 1 eyalet aldı (${getState(captured).name}) • +${WIN_GOLD} +${pay} haraç.`);
-  } else if(!attackerWon){
-    pushNews(`Haber: ${def.name} savundu ve kazandı! (Eyalet kaybı yok) • +${WIN_GOLD} +${pay} haraç.`);
-  } else {
-    pushNews(`Haber: ${att.name} saldırdı ve kazandı! • +${WIN_GOLD} +${pay} haraç.`);
-  }
-
-  winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
-  loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
-  winner.lastWarDay = state.day;
-  loser.lastWarDay = state.day;
-
-  rebuildNeighbors();
-  drawMap();
-  renderUI();
 }
+
+  function resolveAIAIWar(winnerId, loserId){
+    const win = getCountry(winnerId);
+    const lose = getCountry(loserId);
+    if(lose.states.length<=0) return;
+
+    const captured = pick(lose.states);
+    transferState(captured, winnerId);
+
+    win.gold += 900;
+
+    win.armistice.set(loserId, state.day + ARMISTICE_DAYS);
+    lose.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
+    win.lastWarDay = state.day;
+    lose.lastWarDay = state.day;
+
+    pushNews(`Haber: ${win.name}, ${lose.name} ile savaşı kazandı. 1 eyalet aldı (+900).`);
+    rebuildNeighbors();
+    drawMap();
+    renderUI();
+  }
 
   /*************************
    * OWNERSHIP
@@ -1583,60 +1550,43 @@ const SERVER_ENABLED = false;
     renderUI();
   }
 
-  function startBattle(attackerId, defenderId){
-  const att = getCountry(attackerId);
-  const def = getCountry(defenderId);
+  function startBattle(attackerId, defenderId, kind="attack", captureStateId=null){
+    const att = getCountry(attackerId);
+    const def = getCountry(defenderId);
 
-  pauseForBattle();
+    pauseForBattle();
 
-  const playerId = state.playerCountryId;
-  const playerIsAttacker = (playerId === attackerId);
-  const playerIsDefender = (playerId === defenderId);
+    // DEFENSE: oyuncu savunuyorsa, sahnede sen altta ol diye tarafları değiştiriyoruz
+    const playerId = state.playerCountryId;
+    const isPlayerDefender = (kind==="defense" && playerId!=null && defenderId===playerId);
+    const origAttackerId = attackerId;
+    const origDefenderId = defenderId;
+    if(isPlayerDefender){
+      attackerId = origDefenderId; // oyuncu
+      defenderId = origAttackerId; // bot
+    }
 
-  // Player always plays bottom side ("A" team visually).
-  // If player is defender, we still draw player as "A" and enemy as "B".
-  const youId   = playerIsDefender ? defenderId : attackerId;
-  const enemyId = playerIsDefender ? attackerId : defenderId;
-
-  state.battle = {
-    attackerId, defenderId,
-    youId,
-    enemyId,
-    playerIsAttacker,
-    playerIsDefender,
-    phase:"deploy",
-    youField: [],
-    enemyField: [],
-    t: 0,
-    ended:false,
-    surrendered:false,
-    // counts for end-of-battle "only survivors return"
-    youDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
-    enemyDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
-  };
-
-  $("#uiMode").textContent = "SAVAŞ";
-  $("#battleTitle").textContent = playerIsDefender
-    ? `Savunma: ${def.name} (Sen) ← ${att.name} (Saldıran)`
-    : `Saldırı: ${att.name} (Sen) → ${def.name}`;
-
-  $("#uiBattleYou").textContent = getCountry(youId).name;
-  $("#uiBattleEnemy").textContent = getCountry(enemyId).name;
-  $("#uiFlagYou").src = state.flags[youId];
-  $("#uiFlagEnemy").src = state.flags[enemyId];
-
-  $("#uiYouUnits").textContent = "0";
-  $("#uiEnemyUnits").textContent = "0";
-  $("#uiYouPool").textContent = totalInventory(youId);
-  $("#uiEnemyPool").textContent = totalInventory(enemyId);
-
-  buildDeployBar();
-  $("#battleOverlay").style.display="flex";
-  drawBattle();
-};
+    state.battle = {
+      attackerId, defenderId,
+      origAttackerId, origDefenderId,
+      kind,
+      captureStateId,
+      youId: attackerId,
+      enemyId: defenderId,
+      phase:"deploy",
+      youField: [],
+      enemyField: [],
+      t: 0,
+      ended:false,
+      // pool counts for end-of-battle "only survivors return"
+      youDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+      enemyDeployedByType: Object.fromEntries(UNITS.map(u=>[u.id,0])),
+    };
 
     $("#uiMode").textContent = "SAVAŞ";
-    $("#battleTitle").textContent = `Savaş: ${att.name} → ${def.name}`;
+    $("#battleTitle").textContent = (kind==="defense")
+      ? `SAVUNMA: ${getCountry(origDefenderId).name} saldırıya uğradı! (${getCountry(origAttackerId).name})`
+      : `Savaş: ${att.name} → ${def.name}`;
     $("#uiBattleYou").textContent = att.name;
     $("#uiBattleEnemy").textContent = def.name;
     $("#uiFlagYou").src = state.flags[attackerId];
@@ -1731,7 +1681,7 @@ const SERVER_ENABLED = false;
 
     // improved: deploy based on strength
     const power = totalInventory(b.enemyId);
-    let want = clamp(power, 6, 22); // use (almost) all inventory, cap for performance
+    let want = clamp(Math.floor(power*0.75), 8, 18);
 
     // choose better units first
     const ids = [...UNITS].sort((a,b)=>{
@@ -1777,76 +1727,119 @@ const SERVER_ENABLED = false;
     country.gold = Math.max(0, country.gold + delta);
   }
 
+  function transferGold(loser, winner, amount){
+    const pay = Math.min(amount, loser.gold);
+    loser.gold -= pay;
+    winner.gold += pay;
+    return pay;
+  }
+
+
   function battleEnd(winnerSide){
-  const b = state.battle;
-  if(!b || b.ended) return;
-  b.ended = true;
-  b.phase = "done";
+    const b = state.battle;
+    if(!b || b.ended) return;
+    b.ended = true;
+    b.phase = "done";
 
-  const winnerId = (winnerSide==="A") ? b.youId : b.enemyId;
-  const loserId  = (winnerSide==="A") ? b.enemyId : b.youId;
+    // Battle scene IDs (attackerId is always 'youId' in the scene)
+    const sceneWinnerId = (winnerSide==="A") ? b.attackerId : b.defenderId;
+    const sceneLoserId  = (winnerSide==="A") ? b.defenderId : b.attackerId;
 
-  const winner = getCountry(winnerId);
-  const loser  = getCountry(loserId);
+    // Map back to real-world attacker/defender
+    const realAttackerId = b.origAttackerId;
+    const realDefenderId = b.origDefenderId;
 
-  // ONLY SURVIVORS RETURN (undeployed units were never removed)
-  for(const unit of b.youField){
-    const c = getCountry(b.youId);
-    c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
-  }
-  for(const unit of b.enemyField){
-    const c = getCountry(b.enemyId);
-    c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
-  }
-
-  // GOLD: +WIN_GOLD bonus to winner, plus TRIBUTE transfer (clamped to loser.gold)
-  const pay = Math.min(TRIBUTE_GOLD, loser.gold);
-  loser.gold = Math.max(0, loser.gold - pay);
-  winner.gold += pay;
-  winner.gold += WIN_GOLD;
-
-  // STATE CHANGE: only if ATTACKER wins → takes 1 state from defender
-  const attackerWon = (winnerId === b.attackerId);
-  if(attackerWon){
-    const defender = getCountry(b.defenderId);
-    if(defender.states.length > 0){
-      const captured = pick(defender.states);
-      transferState(captured, b.attackerId);
-      pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın +${pay} haraç ve 1 eyalet aldı (${getState(captured).name}).`);
+    // Determine real winner/loser countries
+    // If this was a defense and we swapped sides, sceneWinnerId may be player while real attacker is bot.
+    let winnerId, loserId;
+    if(b.kind==="defense" && realDefenderId===state.playerCountryId){
+      // player defended: if player wins scene => realDefender wins, else realAttacker wins
+      winnerId = (sceneWinnerId===state.playerCountryId) ? realDefenderId : realAttackerId;
+      loserId  = (winnerId===realDefenderId) ? realAttackerId : realDefenderId;
     } else {
-      pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın +${pay} haraç aldı.`);
+      // normal attack (player is attacker)
+      winnerId = (sceneWinnerId===b.attackerId) ? realAttackerId : realDefenderId;
+      loserId  = (winnerId===realAttackerId) ? realDefenderId : realAttackerId;
     }
-  } else {
-    // defender won
-    pushNews(`${winner.name} savundu ve kazandı! +${WIN_GOLD} altın +${pay} haraç aldı. (Eyalet kaybı yok)`);
-  }
 
-  if(b.surrendered){
-    pushNews(`Not: ${loser.name} savaş sırasında çekildi → teslim sayıldı.`);
-  }
+    const winner = getCountry(winnerId);
+    const loser  = getCountry(loserId);
 
-  // cooldown / armistice
-  winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
-  loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
-  winner.lastWarDay = state.day;
-  loser.lastWarDay = state.day;
-
-  rebuildNeighbors();
-  drawMap();
-
-  buildArmyList();
-  buildShop();
-  renderUI();
-}
+    // ONLY SURVIVORS RETURN (scene inventories)
+    const aliveA = b.youField.filter(x=>x.team==="A");
+    const aliveB = b.enemyField.filter(x=>x.team==="B");
+    for(const unit of aliveA){
+      const c = getCountry(b.attackerId);
+      c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
+    }
     for(const unit of aliveB){
       const c = getCountry(b.defenderId);
       c.inventory[unit.unitId] = (c.inventory[unit.unitId]||0) + 1;
     }
 
-    // gold rules
-    if(winnerId===b.attackerId){
-      
-    function updateBattle(dt){
+    // GOLD TRANSFER
+    const paid = transferGold(loser, winner, TRANSFER_GOLD);
+
+    // WIN BONUS
+    if(b.kind==="attack"){
+      applyGoldChange(winner, +WIN_GOLD);
+    } else {
+      // defense: only the defender (player) gets DEF_WIN_BONUS on win
+      if(winnerId === state.playerCountryId){
+        applyGoldChange(winner, +DEF_WIN_BONUS);
+      }
+    }
+
+    // STATE CAPTURE
+    if(b.kind==="attack"){
+      let captured = null;
+      if(b.captureStateId!=null){
+        const st = getState(b.captureStateId);
+        if(st && st.countryId===loserId) captured = b.captureStateId;
+      }
+      if(captured==null && loser.states.length>0) captured = pick(loser.states);
+
+      if(captured!=null){
+        transferState(captured, winnerId);
+        pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın, +${paid} transfer ve 1 eyalet aldı (${getState(captured).name}).`);
+      } else {
+        pushNews(`${winner.name} kazandı! +${WIN_GOLD} altın ve +${paid} transfer aldı.`);
+      }
+    } else {
+      // defense
+      const target = b.captureStateId;
+      if(winnerId === state.playerCountryId){
+        pushNews(`Savunma başarı! +${DEF_WIN_BONUS} altın ve +${paid} transfer kazandın.`);
+      } else {
+        if(target!=null){
+          const st = getState(target);
+          if(st && st.countryId===state.playerCountryId){
+            transferState(target, winnerId);
+            pushNews(`Savunma kaybedildi! Düşman ${getState(target).name} eyaletini aldı. (Transfer: ${paid})`);
+          } else {
+            pushNews(`Savunma kaybedildi! (Transfer: ${paid})`);
+          }
+        } else {
+          pushNews(`Savunma kaybedildi! (Transfer: ${paid})`);
+        }
+      }
+    }
+
+    // armistice + cooldown (real)
+    winner.armistice.set(loserId, state.day + ARMISTICE_DAYS);
+    loser.armistice.set(winnerId, state.day + ARMISTICE_DAYS);
+    winner.lastWarDay = state.day;
+    loser.lastWarDay = state.day;
+
+    rebuildNeighbors();
+    drawMap();
+
+    buildArmyList();
+    buildShop();
+    renderUI();
+  }
+
+  function updateBattle(dt){
     const b = state.battle;
     if(!b || b.phase!=="fight" || b.ended) return;
 
@@ -2264,20 +2257,16 @@ const SERVER_ENABLED = false;
 
   $("#btnStartBattle").onclick = battleStart;
   $("#btnCloseBattle").onclick = ()=>{
-  const b = state.battle;
-
-  // If battle is still active, leaving counts as surrender.
-  if(b && !b.ended && (b.phase==="deploy" || b.phase==="fight")){
-    b.surrendered = true;
-    battleEnd("B"); // player is always side A visually → leaving means side B wins
-  }
-
-  $("#battleOverlay").style.display="none";
-  $("#uiMode").textContent = "HARİTA";
-  state.battle = null;
-  drawMap();
-  resumeAfterBattle();
-};
+    if(state.battle && state.battle.phase!=="done" && !state.battle.ended){
+      // erken çıkış = teslim
+      battleEnd("B");
+    }
+    $("#battleOverlay").style.display="none";
+    $("#uiMode").textContent = "HARİTA";
+    state.battle = null;
+    drawMap();
+    resumeAfterBattle();
+  };
 
   /*************************
    * GAME LOOP (1 day = 1 sec)
@@ -2295,6 +2284,7 @@ const SERVER_ENABLED = false;
     }
 
     aiDailyTick();
+    aiDefenseTick();
     renderUI();
   }
 
@@ -2360,3 +2350,6 @@ const SERVER_ENABLED = false;
 </script>
 </body>
 </html>
+
+
+
